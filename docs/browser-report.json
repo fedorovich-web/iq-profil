@@ -1,0 +1,383 @@
+{
+  "tests": [
+    {
+      "label": "desktop landing title",
+      "passed": true
+    },
+    {
+      "label": "desktop landing no horizontal overflow: {\"scroll\":1440,\"window\":1440}",
+      "passed": true
+    },
+    {
+      "label": "desktop quiz opened",
+      "passed": true
+    },
+    {
+      "label": "desktop quiz no horizontal overflow: {\"scroll\":1440,\"window\":1440}",
+      "passed": true
+    },
+    {
+      "label": "desktop advance to question 2",
+      "passed": true
+    },
+    {
+      "label": "desktop go back",
+      "passed": true
+    },
+    {
+      "label": "desktop selected answer restored",
+      "passed": true
+    },
+    {
+      "label": "desktop revised answer retained",
+      "passed": true
+    },
+    {
+      "label": "desktop timer rendered",
+      "passed": true
+    },
+    {
+      "label": "desktop question 2",
+      "passed": true
+    },
+    {
+      "label": "desktop question 3",
+      "passed": true
+    },
+    {
+      "label": "desktop question 4",
+      "passed": true
+    },
+    {
+      "label": "desktop question 5",
+      "passed": true
+    },
+    {
+      "label": "desktop question 6",
+      "passed": true
+    },
+    {
+      "label": "desktop question 7",
+      "passed": true
+    },
+    {
+      "label": "desktop question 8",
+      "passed": true
+    },
+    {
+      "label": "desktop question 9",
+      "passed": true
+    },
+    {
+      "label": "desktop question 10",
+      "passed": true
+    },
+    {
+      "label": "desktop question 11",
+      "passed": true
+    },
+    {
+      "label": "desktop question 12",
+      "passed": true
+    },
+    {
+      "label": "desktop question 13",
+      "passed": true
+    },
+    {
+      "label": "desktop question 14",
+      "passed": true
+    },
+    {
+      "label": "desktop question 15",
+      "passed": true
+    },
+    {
+      "label": "desktop question 16",
+      "passed": true
+    },
+    {
+      "label": "desktop question 17",
+      "passed": true
+    },
+    {
+      "label": "desktop question 18",
+      "passed": true
+    },
+    {
+      "label": "desktop question 19",
+      "passed": true
+    },
+    {
+      "label": "desktop question 20",
+      "passed": true
+    },
+    {
+      "label": "desktop question 21",
+      "passed": true
+    },
+    {
+      "label": "desktop question 22",
+      "passed": true
+    },
+    {
+      "label": "desktop question 23",
+      "passed": true
+    },
+    {
+      "label": "desktop question 24",
+      "passed": true
+    },
+    {
+      "label": "desktop question 25",
+      "passed": true
+    },
+    {
+      "label": "desktop paywall after 25",
+      "passed": true
+    },
+    {
+      "label": "desktop paywall no horizontal overflow: {\"scroll\":1440,\"window\":1440}",
+      "passed": true
+    },
+    {
+      "label": "desktop result blocked before demo payment",
+      "passed": true
+    },
+    {
+      "label": "desktop demo checkout",
+      "passed": true
+    },
+    {
+      "label": "desktop checkout no horizontal overflow: {\"scroll\":1440,\"window\":1440}",
+      "passed": true
+    },
+    {
+      "label": "desktop result after demo payment",
+      "passed": true
+    },
+    {
+      "label": "desktop individual explanations (25)",
+      "passed": true
+    },
+    {
+      "label": "desktop result no horizontal overflow: {\"scroll\":1440,\"window\":1440}",
+      "passed": true
+    },
+    {
+      "label": "desktop repeated demo confirmation accepted",
+      "passed": true
+    },
+    {
+      "label": "desktop new attempt opened",
+      "passed": true
+    },
+    {
+      "label": "desktop new attempt starts at question one",
+      "passed": true
+    },
+    {
+      "label": "mobile landing title",
+      "passed": true
+    },
+    {
+      "label": "mobile landing no horizontal overflow: {\"scroll\":390,\"window\":390}",
+      "passed": true
+    },
+    {
+      "label": "mobile quiz opened",
+      "passed": true
+    },
+    {
+      "label": "mobile quiz no horizontal overflow: {\"scroll\":390,\"window\":390}",
+      "passed": true
+    },
+    {
+      "label": "mobile advance to question 2",
+      "passed": true
+    },
+    {
+      "label": "mobile go back",
+      "passed": true
+    },
+    {
+      "label": "mobile selected answer restored",
+      "passed": true
+    },
+    {
+      "label": "mobile revised answer retained",
+      "passed": true
+    },
+    {
+      "label": "mobile timer rendered",
+      "passed": true
+    },
+    {
+      "label": "mobile question 2",
+      "passed": true
+    },
+    {
+      "label": "mobile question 3",
+      "passed": true
+    },
+    {
+      "label": "mobile question 4",
+      "passed": true
+    },
+    {
+      "label": "mobile question 5",
+      "passed": true
+    },
+    {
+      "label": "mobile question 6",
+      "passed": true
+    },
+    {
+      "label": "mobile question 7",
+      "passed": true
+    },
+    {
+      "label": "mobile question 8",
+      "passed": true
+    },
+    {
+      "label": "mobile question 9",
+      "passed": true
+    },
+    {
+      "label": "mobile question 10",
+      "passed": true
+    },
+    {
+      "label": "mobile question 11",
+      "passed": true
+    },
+    {
+      "label": "mobile question 12",
+      "passed": true
+    },
+    {
+      "label": "mobile question 13",
+      "passed": true
+    },
+    {
+      "label": "mobile question 14",
+      "passed": true
+    },
+    {
+      "label": "mobile question 15",
+      "passed": true
+    },
+    {
+      "label": "mobile question 16",
+      "passed": true
+    },
+    {
+      "label": "mobile question 17",
+      "passed": true
+    },
+    {
+      "label": "mobile question 18",
+      "passed": true
+    },
+    {
+      "label": "mobile question 19",
+      "passed": true
+    },
+    {
+      "label": "mobile question 20",
+      "passed": true
+    },
+    {
+      "label": "mobile question 21",
+      "passed": true
+    },
+    {
+      "label": "mobile question 22",
+      "passed": true
+    },
+    {
+      "label": "mobile question 23",
+      "passed": true
+    },
+    {
+      "label": "mobile question 24",
+      "passed": true
+    },
+    {
+      "label": "mobile question 25",
+      "passed": true
+    },
+    {
+      "label": "mobile paywall after 25",
+      "passed": true
+    },
+    {
+      "label": "mobile paywall no horizontal overflow: {\"scroll\":390,\"window\":390}",
+      "passed": true
+    },
+    {
+      "label": "mobile result blocked before demo payment",
+      "passed": true
+    },
+    {
+      "label": "mobile demo checkout",
+      "passed": true
+    },
+    {
+      "label": "mobile checkout no horizontal overflow: {\"scroll\":390,\"window\":390}",
+      "passed": true
+    },
+    {
+      "label": "mobile result after demo payment",
+      "passed": true
+    },
+    {
+      "label": "mobile individual explanations (25)",
+      "passed": true
+    },
+    {
+      "label": "mobile result no horizontal overflow: {\"scroll\":390,\"window\":390}",
+      "passed": true
+    },
+    {
+      "label": "mobile repeated demo confirmation accepted",
+      "passed": true
+    },
+    {
+      "label": "mobile new attempt opened",
+      "passed": true
+    },
+    {
+      "label": "mobile new attempt starts at question one",
+      "passed": true
+    },
+    {
+      "label": "different users have different attempt IDs",
+      "passed": true
+    },
+    {
+      "label": "unowned result URL returns 404",
+      "passed": true
+    },
+    {
+      "label": "no browser JavaScript errors",
+      "passed": true
+    }
+  ],
+  "pageErrors": [],
+  "screenshots": [
+    "docs/screenshots/desktop-landing.png",
+    "docs/screenshots/desktop-quiz.png",
+    "docs/screenshots/desktop-paywall.png",
+    "docs/screenshots/desktop-checkout.png",
+    "docs/screenshots/desktop-result.png",
+    "docs/screenshots/mobile-landing.png",
+    "docs/screenshots/mobile-quiz.png",
+    "docs/screenshots/mobile-paywall.png",
+    "docs/screenshots/mobile-checkout.png",
+    "docs/screenshots/mobile-result.png"
+  ],
+  "checkedAt": "2026-11-18T16:17:56.359Z",
+  "status": "passed"
+}

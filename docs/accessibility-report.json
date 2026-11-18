@@ -1,0 +1,22 @@
+[
+  {
+    "name": "landing-mobile",
+    "violations": []
+  },
+  {
+    "name": "quiz-mobile",
+    "violations": []
+  },
+  {
+    "name": "paywall-mobile",
+    "violations": []
+  },
+  {
+    "name": "checkout-mobile",
+    "violations": []
+  },
+  {
+    "name": "result-mobile",
+    "violations": []
+  }
+]
