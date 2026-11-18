@@ -201,6 +201,52 @@ final class AccountSecurityTest extends TestCase
         $this->get('/account?section=reports')->assertOk()->assertSee('/assets/icons/client/download.avif');
     }
 
+    public function test_account_shows_active_and_cancelled_demo_subscription_states(): void
+    {
+        $this->seed(QuestionSeeder::class);
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->get('/account')->assertOk()
+            ->assertSee('Нет активных демо-продлений')
+            ->assertSee('aria-label="Выйти из аккаунта"', false)
+            ->assertSee('assets/icons/client/logout.avif');
+        $this->get('/account?section=subscription')->assertOk()
+            ->assertSee('Нет активных демо-продлений')
+            ->assertDontSee('Отменить демо-продление');
+
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $uuid = (string) session('active_attempt');
+        $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
+        DB::table('quiz_attempts')->where('id', $attemptId)->update([
+            'status' => 'completed',
+            'correct_count' => 0,
+            'elapsed_seconds' => 10,
+            'completed_at' => now(),
+        ]);
+
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->get('/account')->assertOk()
+            ->assertSee('Активное демо-продление')
+            ->assertDontSee('Нет активных демо-продлений');
+        $this->get('/account?section=subscription')->assertOk()
+            ->assertSee('Активна (демо)')
+            ->assertSee('Отменить демо-продление')
+            ->assertSee('499 ₽');
+
+        $this->post('/subscription/cancel', ['confirm_cancel' => 1])
+            ->assertRedirect('/subscription/cancel');
+        $this->assertDatabaseHas('demo_subscriptions', ['attempt_id' => $attemptId, 'status' => 'cancelled']);
+        $this->get('/account')->assertOk()
+            ->assertSee('Нет активных демо-продлений')
+            ->assertDontSee('Активное демо-продление');
+        $this->get('/account?section=subscription')->assertOk()
+            ->assertSee('Нет активных демо-продлений')
+            ->assertDontSee('Отменить демо-продление');
+        $this->get('/result/'.$uuid)->assertOk();
+        $this->get('/checkout/'.$uuid)->assertRedirect('/result/'.$uuid);
+    }
+
     public function test_attempts_and_exports_are_isolated_by_authenticated_owner(): void
     {
         $this->seed(QuestionSeeder::class);

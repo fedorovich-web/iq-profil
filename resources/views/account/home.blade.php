@@ -19,7 +19,7 @@
 @section('content')
 @if($section==='overview')
 <div class="account-overview">
- <div class="account-hero">
+ <div @class(['account-hero', 'account-hero-no-result' => ! $latest])>
    <div class="account-hero-copy">
       <span>Ваш последний результат</span>
       @if($latest)
@@ -40,9 +40,9 @@
  <div class="portal-panel subscription-panel">
    <h2>Подписка</h2>
    <p class="sub-price">499 ₽ <small>/ месяц</small></p>
-   <span class="portal-tag portal-tag-neutral">Демо-модель</span>
-   <p>Платёжный сценарий пока демонстрационный: реальных списаний нет.</p>
-   <a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-подписку →</a>
+   <span @class(['portal-tag', 'portal-tag-green' => $demoActive > 0, 'portal-tag-neutral' => $demoActive === 0])>{{ $demoActive > 0 ? 'Активное демо-продление' : 'Нет активных демо-продлений' }}</span>
+   <p>{{ $demoActive > 0 ? 'Активных виртуальных продлений: '.$demoActive.'.' : 'Подключённых демонстрационных продлений пока нет.' }} Реальных списаний нет.</p>
+   <a class="portal-main-action" href="{{ route('account.home', ['section' => 'subscription']) }}">Управление подпиской →</a>
  </div>
  <nav class="mobile-shortcuts" aria-label="Быстрая навигация">
  @foreach([['history','history','История прохождений'],['reports','reports','Мои отчёты'],['subscription','layers','Подписка'],['profile','profile','Профиль']] as [$key,$icon,$label])
@@ -75,7 +75,7 @@
 @elseif($section==='reports')
 <section class="portal-panel portal-full"><h1>Мои отчёты</h1><p>Открытые отчёты и экспорт персональной сводки в CSV.</p>@include('account.partials.reports',['subset'=>$attempts->filter(fn($a)=>$a->status==='completed' && $a->payment_status==='succeeded')])</section>
 @elseif($section==='subscription')
-<section class="portal-panel portal-full"><h1>Подписка</h1><p class="lead">Тарифная модель: первый доступ — 20 ₽, далее подписка 499 ₽ в месяц. Сейчас реализован демонстрационный сценарий без реальных списаний.</p><span class="portal-tag portal-tag-neutral">Подписка не активна</span><p>Ни один пользователь не получает реальную платную подписку; банковских реквизитов и автоматических списаний нет. Доступ к результатам выдаётся только после подтверждения отдельной демо-оплаты.</p><p>Активных демонстрационных продлений: <strong>{{ $demoActive ?? 0 }}</strong>.</p><a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-подписку →</a></section>
+<section class="portal-panel portal-full"><h1>Подписка</h1><p class="lead">Тарифная модель: первый доступ — 20 ₽, далее подписка 499 ₽ в месяц. Сейчас реализован демонстрационный сценарий без реальных списаний.</p><span @class(['portal-tag', 'portal-tag-green' => $demoActive > 0, 'portal-tag-neutral' => $demoActive === 0])>{{ $demoActive > 0 ? 'Активна (демо)' : 'Нет активных демо-продлений' }}</span><p>Это виртуальная подписка: платёжные реквизиты не запрашиваются, автоматических списаний нет. Открытые отчёты сохраняют доступ после отмены продления.</p><p>Активных демонстрационных продлений: <strong>{{ $demoActive }}</strong>.</p>@if($demoActive > 0)<a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-продление →</a>@else<a class="portal-main-action" href="{{ route('landing') }}#tests">Пройти тест →</a>@endif</section>
 @elseif($section==='profile')
 <section class="portal-panel portal-full"><h1>Личные данные</h1><p>Изменения применяются к вашему аккаунту.</p>
 <form method="post" action="{{ route('account.profile') }}" class="portal-form"><input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH">

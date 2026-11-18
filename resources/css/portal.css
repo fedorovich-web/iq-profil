@@ -237,3 +237,19 @@
 .portal-page .legal-footer{padding-bottom:120px}
 .cancel-form{padding:16px}
 }
+
+/* Account conversion/state QA: keep subscription details readable at every width. */
+.portal-logout img{display:block;width:20px;height:20px;object-fit:contain;flex:none}
+.subscription-panel>.portal-tag{position:static;max-width:100%;white-space:normal;line-height:1.4;margin:0 0 2px}
+.subscription-panel>.sub-price{margin-bottom:10px}
+.subscription-panel>p:not(.sub-price){margin:12px 0;color:#43577a}
+.account-hero-no-result .account-brain{opacity:.19}
+@media(max-width:420px){
+  .account-score-empty{font-size:clamp(23px,7.5vw,29px);line-height:1.14;letter-spacing:-.035em;max-width:100%}
+  .account-hero-no-result .account-brain{opacity:.12;right:-30%;width:68%}
+  .portal-recommendation{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px}
+  .portal-recommendation>.portal-rec-icon{grid-column:1;grid-row:1}
+  .portal-recommendation>div{grid-column:2;grid-row:1;min-width:0}
+  .portal-recommendation>form{grid-column:1/-1;width:100%}
+  .portal-recommendation button{width:100%;min-height:40px}
+}

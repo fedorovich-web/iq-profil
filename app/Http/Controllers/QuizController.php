@@ -48,7 +48,11 @@ final class QuizController extends Controller
         }
         $request->session()->put('active_attempt', $uuid);
 
-        return redirect()->route($attempt->status === 'completed' ? 'paywall' : 'quiz.show', $attempt->status === 'completed' ? ['uuid' => $uuid] : []);
+        if ($attempt->status === 'completed') {
+            return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $uuid]);
+        }
+
+        return redirect()->route('quiz.show');
     }
 
     public function show(Request $request): View|RedirectResponse
@@ -58,7 +62,7 @@ final class QuizController extends Controller
             return $this->start($request);
         }
         if ($attempt->status === 'completed') {
-            return redirect()->route('paywall', $attempt->uuid);
+            return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $attempt->uuid]);
         }
 
         $question = DB::table('questions')->where('position', $attempt->current_position)->first();
@@ -192,6 +196,9 @@ final class QuizController extends Controller
         if ($attempt->status !== 'completed') {
             return redirect()->route('quiz.show');
         }
+        if ($this->hasReportAccess($attempt->id)) {
+            return redirect()->route('result', $uuid);
+        }
 
         return view('paywall', compact('attempt'));
     }
@@ -201,6 +208,9 @@ final class QuizController extends Controller
         $attempt = $this->attempt($request, $uuid);
         if ($attempt->status !== 'completed') {
             return redirect()->route('quiz.show');
+        }
+        if ($this->hasReportAccess($attempt->id)) {
+            return redirect()->route('result', $uuid);
         }
 
         return view('checkout', compact('attempt'));
@@ -247,11 +257,7 @@ final class QuizController extends Controller
             return redirect()->route('quiz.show');
         }
 
-        $paid = DB::table('demo_payments')
-            ->where('attempt_id', $attempt->id)
-            ->where('status', 'succeeded')->exists();
-
-        if (! $paid) {
+        if (! $this->hasReportAccess($attempt->id)) {
             return redirect()->route('paywall', $uuid);
         }
 
@@ -292,6 +298,14 @@ final class QuizController extends Controller
             'percentage' => (int) round(($attempt->correct_count / max(1, $totalQuestions)) * 100),
             'totalQuestions' => $totalQuestions,
         ]);
+    }
+
+    private function hasReportAccess(int $attemptId): bool
+    {
+        return DB::table('demo_payments')
+            ->where('attempt_id', $attemptId)
+            ->where('status', 'succeeded')
+            ->exists();
     }
 
     private function attempt(Request $request, mixed $uuid): object

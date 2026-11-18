@@ -130,6 +130,32 @@ final class QuizFlowTest extends TestCase
             ->assertSee('100%');
     }
 
+    public function test_completed_attempt_skips_repeat_payment_when_report_is_already_opened(): void
+    {
+        $uuid = $this->startAttempt();
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update([
+            'status' => 'completed',
+            'correct_count' => 0,
+            'elapsed_seconds' => 12,
+            'completed_at' => now(),
+        ]);
+
+        $this->get('/paywall/'.$uuid)->assertOk();
+        $this->get('/checkout/'.$uuid)->assertOk();
+        $this->get('/result/'.$uuid)->assertRedirect('/paywall/'.$uuid);
+
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->get('/result/'.$uuid)->assertOk();
+        $this->get('/paywall/'.$uuid)->assertRedirect('/result/'.$uuid);
+        $this->get('/checkout/'.$uuid)->assertRedirect('/result/'.$uuid);
+        $this->get('/attempts/'.$uuid.'/resume')->assertRedirect('/result/'.$uuid);
+        $this->get('/quiz')->assertRedirect('/result/'.$uuid);
+
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->assertDatabaseCount('demo_payments', 1);
+        $this->assertDatabaseCount('demo_subscriptions', 1);
+    }
+
     public function test_entire_25_question_funnel_and_idempotent_checkout(): void
     {
         $uuid = $this->startAttempt();

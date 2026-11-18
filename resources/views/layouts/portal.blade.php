@@ -14,7 +14,7 @@
  <strong class="portal-header-title">@yield('portal-heading', 'Личный кабинет')</strong>
  <span class="portal-header-spacer"></span>
  <span class="portal-user"><span class="portal-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name,0,1)) }}</span><span>{{ auth()->user()->name }}</span></span>
- <form action="{{ route('logout') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit" class="portal-logout">⇥ <span>Выйти</span></button></form>
+ <form action="{{ route('logout') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit" class="portal-logout" aria-label="Выйти из аккаунта" title="Выйти из аккаунта"><img src="{{ asset('assets/icons/client/logout.avif') }}" width="20" height="20" alt="" aria-hidden="true"><span>Выйти</span></button></form>
 </header>
 <div class="portal-grid">
  <aside class="portal-sidebar">
