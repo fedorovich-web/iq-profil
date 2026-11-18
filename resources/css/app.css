@@ -426,3 +426,206 @@ body{background:#f4f7ff}
 .review-index-chip{min-height:42px}
 .chart-legend{flex-direction:column}
 }
+
+/* Full-bleed landing instead of the incorrect rounded website frame. */
+.site-shell{width:100%;max-width:none;margin:0;border-radius:0;box-shadow:none;overflow:visible;background:linear-gradient(145deg,#f8faff,#eaf1ff)}
+.topbar{padding-left:max(24px,calc((100vw - 1350px)/2));padding-right:max(24px,calc((100vw - 1350px)/2))}
+.landing-page .hero{padding-left:max(24px,calc((100vw - 1300px)/2));padding-right:max(24px,calc((100vw - 1300px)/2));min-height:600px}
+.landing-page .section{max-width:1390px;margin-inline:auto}
+.landing-page .bottom-cta{max-width:1250px;margin-inline:auto}
+.landing-page .footer{max-width:1390px}
+.faq-list{overflow-anchor:none}
+.faq-list details{overflow-anchor:none}
+.faq-list summary{scroll-margin-top:110px}
+.answer-form.is-advancing .answer-tile{pointer-events:none}
+.quiz-navigation button[name="navigation"][value="next"],.quiz-navigation button[name="navigation"][value="finish"]{border-radius:14px}
+@media (max-width:690px){
+ .site-shell{width:100%;margin:0;border-radius:0}
+ .topbar{padding:0 18px}
+ .landing-page .hero{padding:52px 23px 40px;min-height:0}
+ .landing-page .section{max-width:100%}
+ .landing-page .bottom-cta{margin-inline:18px}
+}
+
+/* 2026-11-18 layout corrections — keep the site full width. */
+body.landing-page .site-shell{width:100%;max-width:none;margin:0;border-radius:0;box-shadow:none;overflow:visible}
+.topbar{position:relative;z-index:40}
+.header-actions{display:flex;align-items:center;gap:15px;margin-left:auto}
+.mobile-menu-toggle{display:none;align-items:center;justify-content:center;flex-direction:column;gap:5px;width:45px;height:45px;padding:9px;border:1px solid #d2e0fa;background:#f5f8ff;border-radius:12px;cursor:pointer}
+.mobile-menu-toggle span{display:block;height:2px;width:22px;background:#0b2b65;border-radius:4px;transition:transform .26s,opacity .2s}
+.mobile-menu-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.mobile-menu-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
+.mobile-menu-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-site-menu{display:none}
+.landing-page .test-card-coming{position:relative;opacity:.8}
+.landing-page .test-card-coming .card-coming-label{display:inline-flex;align-items:center;justify-content:center;margin:15px auto 0;min-height:42px;width:100%;border-radius:13px;background:#e4eaf6;color:#546984;font-weight:800}
+.footer{width:100%;max-width:1390px;grid-template-columns:1.75fr 1fr 1fr 1.85fr;gap:27px;align-items:start}
+.footer-group{min-width:0}
+.footer-group summary{list-style:none;cursor:default;font-size:14px;line-height:1.4;color:#071735;font-weight:790;margin-bottom:14px}
+.footer-group summary::-webkit-details-marker{display:none}
+.footer-group summary::marker{content:""}
+.footer-links{display:grid!important;gap:11px}
+.footer-links a,.footer-links span{font-size:13px;display:block;margin:0;color:#345077;line-height:1.4}
+.footer-links a:hover{color:#0759e4;text-decoration:underline}
+.footer-group:not([open]) .footer-links{display:grid!important}
+.footer-copyright{grid-column:1/-1;text-align:center;border-top:1px solid #dce4f2;padding-top:16px;color:#657993;margin:12px 0 0!important}
+.faq-list{overflow-anchor:none}
+.faq-list details{overflow-anchor:none}
+.faq-list details summary{scroll-margin-top:100px}
+@media(max-width:970px){
+.footer{gap:18px;padding-left:35px;padding-right:35px}
+}
+@media(max-width:690px){
+.topbar{height:69px;padding:0 16px}
+.topbar .brand{font-size:18px}
+.topbar .brand-word{font-size:18px}
+.topbar .brand-symbol{width:30px;height:30px;font-size:21px}
+.header-actions{gap:15px;flex:none}
+.header-actions .nav-login{font-size:13px;font-weight:750;padding:10px 16px;min-height:43px;display:inline-flex;align-items:center;white-space:nowrap}
+.mobile-menu-toggle{display:flex;flex:none}
+.return-home{display:none}
+.mobile-site-menu{display:grid;grid-template-columns:1fr;gap:0;position:absolute;left:0;top:69px;width:100%;padding:0 18px;z-index:35;background:#fffffff9;box-shadow:0 16px 25px #224a9426;border-bottom:1px solid #dae5f9;border-radius:0 0 18px 18px;max-height:0;opacity:0;overflow:hidden;visibility:hidden;pointer-events:none;transform:translateY(-7px);transition:max-height .3s ease,opacity .22s ease,transform .28s ease,visibility .3s}
+.mobile-site-menu.is-open{max-height:385px;padding-bottom:15px;opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+.mobile-site-menu a{display:block;padding:15px 12px;border-bottom:1px solid #e8eef9;color:#10264f;font-weight:680}
+.mobile-site-menu a:last-child{border-bottom:0}
+.footer{display:grid;grid-template-columns:1fr;gap:0;max-width:none;padding:20px 20px 28px}
+.footer-about{margin-bottom:16px}
+.footer-about p{margin:0 0 10px}
+.footer-group{border-bottom:1px solid #dce5f4}
+.footer-group summary{position:relative;display:block;cursor:pointer;padding:17px 3px;margin:0;font-size:15px;font-weight:770}
+.footer-group summary::after{content:"+";position:absolute;right:5px;top:9px;font-size:26px;font-weight:400;color:#145fe7;transition:transform .2s}
+.footer-group[open] summary::after{content:"−"}
+.footer-links{display:grid!important;gap:13px;padding:1px 3px 17px}
+.footer-group:not([open]) .footer-links{display:none!important}
+.footer-copyright{grid-column:1;padding:19px 0 0}
+}
+@media(prefers-reduced-motion:reduce){
+.mobile-menu-toggle span,.mobile-site-menu{transition:none!important}
+}
+/* Auth pages must fit the viewport without page-level scrolling. */
+html:has(body.auth-page){height:100%;overflow:hidden}
+body.auth-page{height:100vh;height:100dvh;min-height:0;overflow:hidden;padding:0 14px;display:flex;align-items:center;justify-content:center}
+.auth-page .auth-main{max-height:calc(100dvh - 16px);overflow:hidden;width:min(100%,405px);padding-top:clamp(16px,3.5vh,33px);padding-bottom:clamp(14px,3.2vh,27px)}
+.auth-page .auth-brand{margin-bottom:clamp(13px,4.4vh,48px)}
+.auth-page .auth-description{margin-bottom:clamp(10px,2.5vh,24px)}
+.auth-page .auth-form{gap:clamp(6px,1.35vh,12px)}
+.auth-page .auth-divider{margin:clamp(12px,2.5vh,23px) 0}
+.auth-page .auth-bottom{margin-top:clamp(11px,2.5vh,21px)}
+.auth-page .auth-legal-links{margin-top:clamp(9px,1.75vh,20px);padding-top:clamp(9px,1.5vh,17px)}
+@media(max-height:720px){
+.auth-page .auth-main{padding:11px 21px}
+.auth-page .auth-brand{margin-bottom:9px}
+.auth-page .auth-main h1{font-size:23px}
+.auth-page .auth-description{font-size:12px;margin-bottom:10px;line-height:1.22}
+.auth-page .auth-form{gap:5px}
+.auth-page .auth-field{gap:3px;font-size:11px}
+.auth-page .auth-field input{min-height:34px;padding:6px 11px}
+.auth-page .auth-form>.btn{min-height:37px;padding:8px;margin-top:3px;font-size:13px}
+.auth-page .auth-divider{margin:8px 0}
+.auth-page .auth-yandex{min-height:36px;padding:6px 10px}
+.auth-page .auth-bottom{margin-top:8px}
+.auth-page .auth-legal-links{margin-top:8px;padding-top:8px;font-size:10px;gap:4px 9px}
+.auth-page .auth-consent{font-size:10px;line-height:1.2}
+.auth-page .auth-consent input{width:15px;height:15px}
+}
+@media(max-height:575px){
+.auth-page .auth-main{transform:scale(.85);transform-origin:center;max-height:none}
+}
+
+.js-ready #answer-form .quiz-navigation button[name="navigation"][value="next"],
+.js-ready #answer-form .quiz-navigation button[name="navigation"][value="finish"]{display:none}
+.js-ready #answer-form .quiz-navigation{justify-content:center}
+.quiz-navigation>.btn.btn-secondary{background:#fff;color:#1555d1;border:1px solid #c0d4f6;box-shadow:0 6px 16px #11469a12}
+.quiz-navigation>.btn.btn-secondary:hover:not(:disabled){background:#eaf2ff}
+@media(max-width:690px){.quiz-navigation{margin-top:22px}}
+
+/* Registration is taller than login: compact it without hiding any legal links. */
+.auth-page .auth-main:has(input[name="password_confirmation"]){padding-top:clamp(11px,2vh,20px);padding-bottom:clamp(10px,2vh,19px)}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-brand{margin-bottom:clamp(11px,2.2vh,20px)}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-description{margin-bottom:10px}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-form{gap:7px}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-field{gap:4px}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-field input{min-height:39px;padding:9px 12px}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-divider{margin:10px 0}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-bottom{margin-top:11px}
+.auth-page .auth-main:has(input[name="password_confirmation"]) .auth-legal-links{margin-top:10px;padding-top:10px}
+@media(max-height:650px){.auth-page .auth-main:has(input[name="password_confirmation"]){transform:scale(.87);transform-origin:center;max-height:none}}
+
+@media(max-height:600px){.auth-page .auth-main:has(input[name="password_confirmation"]){transform:scale(.80)}}
+
+
+/* Final header geometry: logo / centered navigation / account actions. */
+@media (min-width:1101px) {
+  .topbar {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center;
+    column-gap:36px;
+  }
+  .topbar .brand { min-width:0; justify-self:start; }
+  .topbar .navigation { justify-self:center; white-space:nowrap; }
+  .topbar .header-actions { margin-left:0;justify-self:end; }
+  .mobile-site-menu { display:none!important; }
+}
+@media (min-width:691px) and (max-width:1100px) {
+  .topbar { display:flex; justify-content:space-between; }
+  .topbar .brand { min-width:0; flex:0 1 auto; }
+  .topbar .original-brand { width:auto; max-width:100%; height:auto; max-height:44px; }
+  .topbar .navigation { display:none; }
+  .header-actions { flex:0 0 auto; margin-left:auto;gap:15px; }
+  .mobile-menu-toggle { display:flex; flex:none; }
+  .mobile-site-menu {
+    display:grid;grid-template-columns:1fr;position:absolute;left:0;top:78px;width:100%;
+    padding:0 28px;background:#fffffff9;box-shadow:0 16px 25px #224a9426;
+    border-bottom:1px solid #dae5f9;border-radius:0 0 18px 18px;
+    max-height:0;opacity:0;overflow:hidden;visibility:hidden;pointer-events:none;
+    transform:translateY(-7px);z-index:35;
+    transition:max-height .3s ease,opacity .22s ease,transform .28s ease,visibility .3s;
+  }
+  .mobile-site-menu.is-open {
+    max-height:385px;padding-bottom:15px;opacity:1;visibility:visible;
+    pointer-events:auto;transform:translateY(0);
+  }
+  .mobile-site-menu a { display:block;padding:15px 12px;border-bottom:1px solid #e8eef9;color:#10264f;font-weight:680; }
+  .mobile-site-menu a:last-child { border-bottom:0; }
+}
+@media (max-width:690px) {
+  .topbar { display:grid;grid-template-columns:minmax(0,1fr) auto; column-gap:15px; }
+  .topbar .brand { min-width:0;max-width:100%;flex:none;display:block; }
+  .topbar .brand-content { display:block;min-width:0;max-width:100%; }
+  .topbar .original-brand {display:block; width:auto;max-width:100%;height:auto;max-height:44px;object-fit:contain;object-position:left center;}
+  .topbar .header-actions {margin:0;gap:15px;justify-self:end;}
+  .mobile-site-menu {z-index:35;}
+}
+.landing-page .bottom-cta {margin-top:76px;margin-bottom:92px;}
+@media(max-width:690px) {
+  .landing-page .bottom-cta {margin-top:60px;margin-bottom:72px;}
+}
+.landing-page #main {display:flow-root;}
+.play-symbol {border:0;box-shadow:none;width:26px;height:26px;color:#065fe6;}
+.play-symbol svg {display:block;width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+/* Prevent layout-driven scroll anchoring from fighting the FAQ positioning logic. */
+.landing-page:has(.faq-list){overflow-anchor:none;}
+.faq-list details summary {scroll-margin-top:90px;}
+
+/* Approved AVIF assets provided by the product owner (2048×768 CTA, 264×43 logo). */
+.brand-content{display:inline-flex;align-items:center;min-width:0;max-width:100%}
+.original-brand{display:block;width:264px;height:auto;aspect-ratio:264 / 43;max-width:100%;object-fit:contain;object-position:left center}
+.topbar .brand{min-width:0;max-width:100%}
+.topbar .original-brand{width:min(264px,100%);max-height:43px}
+.auth-brand .original-brand{width:min(264px,100%)}
+.portal-logo .original-brand{width:min(264px,100%);max-height:43px}
+.landing-page .bottom-cta{
+  background-image:url('/assets/bg_converted.avif');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  min-height:185px;
+  padding:34px 44px;
+  margin-bottom:92px;
+  border:1px solid #fff;
+}
+@media(max-width:690px){
+  .landing-page .bottom-cta{padding:28px 22px;min-height:0;margin-bottom:72px;background-position:center center}
+  .topbar .original-brand{max-height:43px;height:auto}
+}
