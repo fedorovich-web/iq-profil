@@ -25,7 +25,11 @@
 <a class="skip-link" href="#main">Перейти к содержимому</a>
 <div class="site-shell">
 <header class="topbar">
+  @hasSection('landing-nav')
+  <span class="brand" aria-label="IQ.Профиль — текущая страница">@include('partials.brand')</span>
+  @else
   <a href="{{ route('landing') }}" class="brand" aria-label="IQ.Профиль — главная">@include('partials.brand')</a>
+  @endif
   @hasSection('landing-nav')
   <nav class="navigation" aria-label="Разделы сайта">
     <a href="#tests">Тесты</a><a href="#benefits">Преимущества</a>

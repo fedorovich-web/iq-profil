@@ -1,0 +1,974 @@
+{
+  "checks": [
+    {
+      "what": "homepage header logo is not a link 1440",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1440,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 70,
+          "y": 199.25,
+          "width": 640,
+          "height": 375.5
+        },
+        "heroVisual": {
+          "x": 730,
+          "y": 167.5,
+          "width": 640,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1440,
+        "windowWidth": 1440
+      }
+    },
+    {
+      "what": "homepage footer logo is not a link 1440",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1440,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 70,
+          "y": 199.25,
+          "width": 640,
+          "height": 375.5
+        },
+        "heroVisual": {
+          "x": 730,
+          "y": 167.5,
+          "width": 640,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1440,
+        "windowWidth": 1440
+      }
+    },
+    {
+      "what": "logo loads 1440",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1440,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 70,
+          "y": 199.25,
+          "width": 640,
+          "height": 375.5
+        },
+        "heroVisual": {
+          "x": 730,
+          "y": 167.5,
+          "width": 640,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1440,
+        "windowWidth": 1440
+      }
+    },
+    {
+      "what": "no horizontal overflow 1440",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 45,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1440,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 70,
+          "y": 199.25,
+          "width": 640,
+          "height": 375.5
+        },
+        "heroVisual": {
+          "x": 730,
+          "y": 167.5,
+          "width": 640,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1440,
+        "windowWidth": 1440
+      }
+    },
+    {
+      "what": "logo reduced to <=225px 1440",
+      "pass": true,
+      "detail": {
+        "x": 45,
+        "y": 20.171875,
+        "width": 225,
+        "height": 36.640625
+      }
+    },
+    {
+      "what": "no JS errors 1440",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "what": "desktop illustration moved upward",
+      "pass": true,
+      "detail": "matrix(1, 0, 0, 1, 0, -42)"
+    },
+    {
+      "what": "login uses standalone auth layout 1440",
+      "pass": true
+    },
+    {
+      "what": "other pages retain logo home link 1440",
+      "pass": true
+    },
+    {
+      "what": "homepage header logo is not a link 1024",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1024,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 218.40625,
+          "width": 478,
+          "height": 337.1875
+        },
+        "heroVisual": {
+          "x": 522,
+          "y": 167.5,
+          "width": 478,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1024,
+        "windowWidth": 1024
+      }
+    },
+    {
+      "what": "homepage footer logo is not a link 1024",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1024,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 218.40625,
+          "width": 478,
+          "height": 337.1875
+        },
+        "heroVisual": {
+          "x": 522,
+          "y": 167.5,
+          "width": 478,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1024,
+        "windowWidth": 1024
+      }
+    },
+    {
+      "what": "logo loads 1024",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1024,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 218.40625,
+          "width": 478,
+          "height": 337.1875
+        },
+        "heroVisual": {
+          "x": 522,
+          "y": 167.5,
+          "width": 478,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1024,
+        "windowWidth": 1024
+      }
+    },
+    {
+      "what": "no horizontal overflow 1024",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 1024,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 218.40625,
+          "width": 478,
+          "height": 337.1875
+        },
+        "heroVisual": {
+          "x": 522,
+          "y": 167.5,
+          "width": 478,
+          "height": 355
+        },
+        "heroTransform": "matrix(1, 0, 0, 1, 0, -42)",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 1024,
+        "windowWidth": 1024
+      }
+    },
+    {
+      "what": "logo reduced to <=225px 1024",
+      "pass": true,
+      "detail": {
+        "x": 24,
+        "y": 20.171875,
+        "width": 225,
+        "height": 36.640625
+      }
+    },
+    {
+      "what": "no JS errors 1024",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "what": "login uses standalone auth layout 1024",
+      "pass": true
+    },
+    {
+      "what": "other pages retain logo home link 1024",
+      "pass": true
+    },
+    {
+      "what": "homepage header logo is not a link 768",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 768,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 154.09375,
+          "width": 350,
+          "height": 454.8125
+        },
+        "heroVisual": {
+          "x": 394,
+          "y": 204,
+          "width": 350,
+          "height": 355
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 768,
+        "windowWidth": 768
+      }
+    },
+    {
+      "what": "homepage footer logo is not a link 768",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 768,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 154.09375,
+          "width": 350,
+          "height": 454.8125
+        },
+        "heroVisual": {
+          "x": 394,
+          "y": 204,
+          "width": 350,
+          "height": 355
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 768,
+        "windowWidth": 768
+      }
+    },
+    {
+      "what": "logo loads 768",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 768,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 154.09375,
+          "width": 350,
+          "height": 454.8125
+        },
+        "heroVisual": {
+          "x": 394,
+          "y": 204,
+          "width": 350,
+          "height": 355
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 768,
+        "windowWidth": 768
+      }
+    },
+    {
+      "what": "no horizontal overflow 768",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 227.15625,
+          "height": 36.640625
+        },
+        "logo": {
+          "x": 24,
+          "y": 20.171875,
+          "width": 225,
+          "height": 36.640625
+        },
+        "hero": {
+          "x": 0,
+          "y": 78,
+          "width": 768,
+          "height": 600
+        },
+        "heroCopy": {
+          "x": 24,
+          "y": 154.09375,
+          "width": 350,
+          "height": 454.8125
+        },
+        "heroVisual": {
+          "x": 394,
+          "y": 204,
+          "width": 350,
+          "height": 355
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 768,
+        "windowWidth": 768
+      }
+    },
+    {
+      "what": "logo reduced to <=225px 768",
+      "pass": true,
+      "detail": {
+        "x": 24,
+        "y": 20.171875,
+        "width": 225,
+        "height": 36.640625
+      }
+    },
+    {
+      "what": "no JS errors 768",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "what": "login uses standalone auth layout 768",
+      "pass": true
+    },
+    {
+      "what": "other pages retain logo home link 768",
+      "pass": true
+    },
+    {
+      "what": "homepage header logo is not a link 390",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 17.875,
+          "width": 212.484375,
+          "height": 32.25
+        },
+        "logo": {
+          "x": 16,
+          "y": 17.875,
+          "width": 198,
+          "height": 32.25
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 390,
+          "height": 773.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 344,
+          "height": 369.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 502.875,
+          "width": 344,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 390,
+        "windowWidth": 390
+      }
+    },
+    {
+      "what": "homepage footer logo is not a link 390",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 17.875,
+          "width": 212.484375,
+          "height": 32.25
+        },
+        "logo": {
+          "x": 16,
+          "y": 17.875,
+          "width": 198,
+          "height": 32.25
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 390,
+          "height": 773.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 344,
+          "height": 369.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 502.875,
+          "width": 344,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 390,
+        "windowWidth": 390
+      }
+    },
+    {
+      "what": "logo loads 390",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 17.875,
+          "width": 212.484375,
+          "height": 32.25
+        },
+        "logo": {
+          "x": 16,
+          "y": 17.875,
+          "width": 198,
+          "height": 32.25
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 390,
+          "height": 773.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 344,
+          "height": 369.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 502.875,
+          "width": 344,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 390,
+        "windowWidth": 390
+      }
+    },
+    {
+      "what": "no horizontal overflow 390",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 17.875,
+          "width": 212.484375,
+          "height": 32.25
+        },
+        "logo": {
+          "x": 16,
+          "y": 17.875,
+          "width": 198,
+          "height": 32.25
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 390,
+          "height": 773.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 344,
+          "height": 369.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 502.875,
+          "width": 344,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 390,
+        "windowWidth": 390
+      }
+    },
+    {
+      "what": "logo reduced to <=225px 390",
+      "pass": true,
+      "detail": {
+        "x": 16,
+        "y": 17.875,
+        "width": 198,
+        "height": 32.25
+      }
+    },
+    {
+      "what": "no JS errors 390",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "what": "mobile illustration remains unshifted",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "what": "login uses standalone auth layout 390",
+      "pass": true
+    },
+    {
+      "what": "other pages retain logo home link 390",
+      "pass": true
+    },
+    {
+      "what": "homepage header logo is not a link 360",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "logo": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 360,
+          "height": 834.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 314,
+          "height": 430.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 563.875,
+          "width": 314,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 360,
+        "windowWidth": 360
+      }
+    },
+    {
+      "what": "homepage footer logo is not a link 360",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "logo": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 360,
+          "height": 834.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 314,
+          "height": 430.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 563.875,
+          "width": 314,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 360,
+        "windowWidth": 360
+      }
+    },
+    {
+      "what": "logo loads 360",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "logo": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 360,
+          "height": 834.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 314,
+          "height": 430.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 563.875,
+          "width": 314,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 360,
+        "windowWidth": 360
+      }
+    },
+    {
+      "what": "no horizontal overflow 360",
+      "pass": true,
+      "detail": {
+        "logoTag": "SPAN",
+        "logoLoaded": true,
+        "brand": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "logo": {
+          "x": 16,
+          "y": 19.140625,
+          "width": 182.484375,
+          "height": 29.71875
+        },
+        "hero": {
+          "x": 0,
+          "y": 69,
+          "width": 360,
+          "height": 834.875
+        },
+        "heroCopy": {
+          "x": 23,
+          "y": 121,
+          "width": 314,
+          "height": 430.875
+        },
+        "heroVisual": {
+          "x": 23,
+          "y": 563.875,
+          "width": 314,
+          "height": 300
+        },
+        "heroTransform": "none",
+        "footerLogoTag": "SPAN",
+        "scrollWidth": 360,
+        "windowWidth": 360
+      }
+    },
+    {
+      "what": "logo reduced to <=225px 360",
+      "pass": true,
+      "detail": {
+        "x": 16,
+        "y": 19.140625,
+        "width": 182.484375,
+        "height": 29.71875
+      }
+    },
+    {
+      "what": "no JS errors 360",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "what": "login uses standalone auth layout 360",
+      "pass": true
+    },
+    {
+      "what": "other pages retain logo home link 360",
+      "pass": true
+    }
+  ],
+  "screenshots": [
+    "docs/screenshots/landing-hero-polish-1440.png",
+    "docs/screenshots/landing-hero-polish-390.png"
+  ],
+  "status": "passed"
+}

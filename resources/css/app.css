@@ -629,3 +629,15 @@ body.auth-page{height:100vh;height:100dvh;min-height:0;overflow:hidden;padding:0
   .landing-page .bottom-cta{padding:28px 22px;min-height:0;margin-bottom:72px;background-position:center center}
   .topbar .original-brand{max-height:43px;height:auto}
 }
+
+/* Approved landing polish: logo not oversized; Hero artwork visually aligned with text. */
+.landing-page .topbar .original-brand{width:min(225px,100%);height:auto;max-height:37px}
+.landing-page .footer .original-brand{width:min(225px,100%);height:auto;max-height:37px}
+@media (min-width:971px){
+  .landing-page .hero-visual{transform:translateY(-42px)}
+}
+@media (max-width:690px){
+  .landing-page .topbar .original-brand{width:min(198px,100%);max-height:33px}
+  .landing-page .footer .original-brand{width:min(225px,100%);max-height:37px}
+  .landing-page .hero-visual{transform:none}
+}

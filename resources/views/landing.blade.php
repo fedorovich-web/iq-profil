@@ -118,7 +118,7 @@
 @section('footer')
 <footer class="footer" aria-label="Информация о сервисе">
   <div class="footer-about">
-    <a href="{{ route('landing') }}" class="footer-brand" aria-label="IQ.Профиль — главная">@include('partials.brand')</a>
+    <span class="footer-brand">@include('partials.brand')</span>
     <p>Онлайн-задания на логику и поиск закономерностей.</p>
   </div>
   <details class="footer-group">
