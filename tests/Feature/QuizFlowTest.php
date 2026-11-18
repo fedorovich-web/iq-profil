@@ -129,10 +129,20 @@ final class QuizFlowTest extends TestCase
             'future_monthly_kopecks' => 49900,
         ]);
 
-        $this->get('/result/'.$uuid)->assertOk()
-            ->assertSee('Ваш результат готов')
+        $report = $this->get('/result/'.$uuid)->assertOk()
+            ->assertSee('Результаты графического теста')
+            ->assertSee('Результаты по типам заданий')
             ->assertSee('Вопрос 25')
             ->assertSee((string) $correctAnswers);
+
+        $breakdown = $report->viewData('categoryBreakdown');
+        $this->assertCount(5, $breakdown);
+        $this->assertSame(25, array_sum(array_column($breakdown, 'total')));
+        $this->assertSame($correctAnswers, array_sum(array_column($breakdown, 'correct')));
+        foreach ($breakdown as $category) {
+            $this->assertSame(5, $category['total']);
+            $this->assertSame($category['correct'] * 20, $category['percentage']);
+        }
     }
 
     public function test_a_new_attempt_does_not_modify_the_previous_one(): void

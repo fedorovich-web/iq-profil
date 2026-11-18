@@ -22,6 +22,11 @@ final class AnswerSelectionController extends Controller
         DB::transaction(function () use ($uuid, $data): void {
             $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->lockForUpdate()->first();
             abort_unless($attempt !== null, 404);
+            if (auth()->check()) {
+                abort_unless((int) $attempt->user_id === (int) auth()->id(), 404);
+            } else {
+                abort_unless($attempt->user_id === null, 404);
+            }
             abort_unless($attempt->status === 'in_progress', 409, 'Тест уже завершён.');
 
             $question = DB::table('questions')->where('position', $attempt->current_position)->first();

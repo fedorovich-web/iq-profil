@@ -1,0 +1,3 @@
+<div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>ID</th><th>Пользователь</th><th>Сумма (демо)</th><th>Статус</th><th>Дата</th></tr></thead><tbody>
+@forelse($rows as $payment)<tr><td>#{{ $payment->id }}</td><td>{{ $payment->user_name ?: 'Гость' }}</td><td>{{ number_format($payment->amount_kopecks/100,0,' ',' ') }} ₽</td><td><span class="portal-tag portal-tag-green">{{ $payment->status==='succeeded'?'Успешно (демо)':$payment->status }}</span></td><td>{{ \Carbon\Carbon::parse($payment->confirmed_at)->format('d.m.Y H:i') }}</td></tr>
+@empty<tr><td colspan="5">Демо-транзакций пока нет.</td></tr>@endforelse</tbody></table></div>

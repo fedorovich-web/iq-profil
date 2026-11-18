@@ -1,0 +1,3 @@
+<div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>ID</th><th>Пользователь</th><th>Тест</th><th>Результат</th><th>Статус</th><th>Дата</th></tr></thead><tbody>
+@forelse($rows as $attempt)<tr><td>#{{ $attempt->id }}</td><td>{{ $attempt->user_name ?: 'Гость' }}</td><td>Графический тест</td><td>{{ $attempt->status==='completed'?$attempt->correct_count.' / 25':'—' }}</td><td><span @class(['portal-tag','portal-tag-green'=>$attempt->status==='completed','portal-tag-neutral'=>$attempt->status!=='completed'])>{{ $attempt->status==='completed'?'Завершён':'В процессе' }}</span></td><td>{{ \Carbon\Carbon::parse($attempt->started_at)->format('d.m.Y H:i') }}</td></tr>
+@empty<tr><td colspan="6">Попыток пока нет.</td></tr>@endforelse</tbody></table></div>

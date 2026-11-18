@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <title>@yield('title', 'IQ.Профиль — графические задания на мышление')</title>
 <meta name="description" content="@yield('description', 'Пройдите интерактивные задания и получите персональный разбор решений.')">
+@hasSection('canonical-url')
+<link rel="canonical" href="@yield('canonical-url')">
+@endif
 @hasSection('landing-nav')
 <link rel="canonical" href="{{ route('landing') }}">
 <meta property="og:type" content="website">
@@ -22,10 +25,10 @@
 <a class="skip-link" href="#main">Перейти к содержимому</a>
 <div class="site-shell">
 <header class="topbar">
-<a href="{{ route('landing') }}" class="brand" aria-label="IQ.Профиль — главная"><span class="brand-mark">IQ</span><span class="brand-name">Профиль</span></a>
+<a href="{{ route('landing') }}" class="brand" aria-label="IQ.Профиль — главная">@include('partials.brand')</a>
 @hasSection('landing-nav')
 <nav class="navigation" aria-label="Разделы сайта"><a href="#tests">Тесты</a><a href="#benefits">Преимущества</a><a href="#steps">Как это работает</a><a href="#faq">FAQ</a></nav>
-<a class="nav-login" href="#tests">Выбрать тест</a>
+@auth <a class="nav-login" href="{{ auth()->user()->is_admin ? route('admin.home') : route('account.home') }}">Личный кабинет</a> @else <a class="nav-login" href="{{ route('login') }}">Войти</a> @endauth
 @else
 <a href="{{ route('landing') }}" class="return-home"><span aria-hidden="true">←</span> На главную</a>
 @endif
@@ -33,5 +36,6 @@
 <main id="main">@yield('content')</main>
 </div>
 @yield('footer')
+@include('partials.legal-footer')
 </body>
 </html>

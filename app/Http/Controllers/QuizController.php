@@ -24,6 +24,7 @@ final class QuizController extends Controller
         $uuid = (string) Str::uuid();
         DB::table('quiz_attempts')->insert([
             'uuid' => $uuid,
+            'user_id' => $request->user()?->id,
             'status' => 'in_progress',
             'current_position' => 1,
             'started_at' => now(),
@@ -37,6 +38,14 @@ final class QuizController extends Controller
         $request->session()->put('active_attempt', $uuid);
 
         return redirect()->route('quiz.show');
+    }
+
+    public function resume(Request $request, string $uuid): RedirectResponse
+    {
+        $attempt = $this->attempt($request, $uuid);
+        $request->session()->put('active_attempt', $uuid);
+
+        return redirect()->route($attempt->status === 'completed' ? 'paywall' : 'quiz.show', $attempt->status === 'completed' ? ['uuid' => $uuid] : []);
     }
 
     public function show(Request $request): View|RedirectResponse
@@ -206,6 +215,15 @@ final class QuizController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            DB::table('demo_subscriptions')->insertOrIgnore([
+                'attempt_id' => $attempt->id,
+                'status' => 'active',
+                'monthly_amount_kopecks' => 49900,
+                'activated_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }, 3);
 
         return redirect()->route('result', $uuid);
@@ -241,21 +259,50 @@ final class QuizController extends Controller
                 'correct.graphic_value as correct_value', 'correct.code as correct_code',
             ])->get();
 
+        $types = [
+            'dots' => 'Количество элементов',
+            'polygon' => 'Геометрические фигуры',
+            'rotation' => 'Повороты и направления',
+            'stripes' => 'Линии и последовательности',
+            'position' => 'Расположение в сетке',
+        ];
+
+        $categoryBreakdown = collect($types)->map(function (string $label, string $kind) use ($answers): array {
+            $group = $answers->where('kind', $kind);
+            $total = $group->count();
+            $correct = $group->filter(fn ($item): bool => $item->selected_code === $item->correct_code)->count();
+
+            return [
+                'kind' => $kind,
+                'label' => $label,
+                'total' => $total,
+                'correct' => $correct,
+                'percentage' => $total > 0 ? (int) round($correct / $total * 100) : 0,
+            ];
+        })->values()->all();
+
         return view('result', [
             'attempt' => $attempt,
             'answers' => $answers,
+            'categoryBreakdown' => $categoryBreakdown,
             'percentage' => (int) round(($attempt->correct_count / self::QUESTION_COUNT) * 100),
         ]);
     }
 
     private function attempt(Request $request, mixed $uuid): object
     {
-        if (! is_string($uuid) || ! in_array($uuid, $request->session()->get('owned_attempts', []), true)) {
+        if (! is_string($uuid)) {
             throw new NotFoundHttpException;
         }
         $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->first();
         if ($attempt === null) {
             throw new NotFoundHttpException;
+        }
+        if ($request->user()) {
+            abort_unless((int) $attempt->user_id === (int) $request->user()->id, 404);
+        } else {
+            abort_unless($attempt->user_id === null
+                && in_array($uuid, $request->session()->get('owned_attempts', []), true), 404);
         }
 
         return $attempt;
