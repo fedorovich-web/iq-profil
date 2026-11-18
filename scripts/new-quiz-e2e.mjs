@@ -55,7 +55,7 @@ try {
   await page.locator('a[href*="/checkout/"]').click();
   await page.waitForURL('**/checkout/**');
   await page.screenshot({ path: `${screenshotDir}/checkout-${width}.png`, fullPage: true });
-  await page.locator('button:has-text("Подтвердить демо-оплату")').click();
+  await page.locator('button:has-text("Подтвердить без списания")').click();
   await page.waitForURL('**/result/**');
   const report = await page.evaluate(() => ({
     headline: document.querySelector('#result-title')?.textContent?.trim(),

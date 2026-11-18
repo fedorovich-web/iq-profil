@@ -8,7 +8,7 @@
     <a href="{{ route('landing') }}#tests">Тесты</a>
     <a href="{{ route('landing') }}#benefits">Преимущества</a>
     <a href="{{ route('landing') }}#steps">Как это работает</a>
-    <a href="{{ route('landing') }}#faq">FAQ</a>
+    <a href="{{ route('landing') }}#faq">Вопросы и ответы</a>
   </nav>
   <div class="header-actions">
     @auth
@@ -33,7 +33,7 @@
     <a href="{{ route('landing') }}#tests">Тесты</a>
     <a href="{{ route('landing') }}#benefits">Преимущества</a>
     <a href="{{ route('landing') }}#steps">Как это работает</a>
-    <a href="{{ route('landing') }}#faq">FAQ</a>
+    <a href="{{ route('landing') }}#faq">Вопросы и ответы</a>
     @auth
       <a href="{{ auth()->user()->is_admin ? route('admin.home') : route('account.home') }}">Личный кабинет</a>
     @else

@@ -23,13 +23,13 @@
    <div class="account-hero-copy">
       <span>Ваш последний результат</span>
       @if($latest)
-       <div class="account-score">{{ $latest->correct_count }} <small>/ 25 верно</small></div>
-       <span class="account-score-label">{{ round($latest->correct_count / 25 * 100) }}% правильных ответов</span>
+       <div class="account-score">{{ $latest->correct_count }} <small>верно</small></div>
+       <span class="account-score-label">{{ round($latest->correct_count / max(1, $latest->answered_count) * 100) }}% правильных ответов</span>
        <p>Дата: {{ \Carbon\Carbon::parse($latest->completed_at)->format('d.m.Y') }}</p>
        <div class="hero-account-actions"><a class="account-white-button" href="{{ route('result', $latest->uuid) }}">Открыть отчёт →</a><a class="account-ghost-button" href="{{ route('account.export', $latest->uuid) }}" title="Скачать CSV-отчёт"><img src="{{ asset('assets/icons/client/download.avif') }}" width="17" height="17" alt=""> CSV</a></div>
       @else
        <div class="account-score account-score-empty">Пока нет результата</div>
-       <p>Пройдите тест и откройте свой персональный разбор.</p>
+       <p>Начните с теста на логику и откройте персональный отчёт после прохождения.</p>
        <form action="{{ route('attempt.start') }}" method="post"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button class="account-white-button" type="submit">Пройти тест →</button></form>
       @endif
    </div>
@@ -41,7 +41,7 @@
    <h2>Подписка</h2>
    <p class="sub-price">499 ₽ <small>/ месяц</small></p>
    <span class="portal-tag portal-tag-neutral">Демо-модель</span>
-   <p>Денежные списания и подписка не активируются.</p>
+   <p>Платёжный сценарий пока демонстрационный: реальных списаний нет.</p>
    <a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-подписку →</a>
  </div>
  <nav class="mobile-shortcuts" aria-label="Быстрая навигация">
@@ -61,7 +61,7 @@
  </section>
  <section class="portal-panel">
   <h2>Рекомендуем продолжить</h2>
-  <div class="portal-recommendation"><span class="portal-rec-icon"><img src="{{ asset('assets/icons/client/layers.avif') }}" width="27" height="27" alt=""></span><div><strong>Графические задания</strong><p>Новая попытка из 25 вопросов на закономерности.</p></div><form method="post" action="{{ route('attempt.start') }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit">Пройти →</button></form></div>
+  <div class="portal-recommendation"><span class="portal-rec-icon"><img src="{{ asset('assets/icons/client/layers.avif') }}" width="27" height="27" alt=""></span><div><strong>Графические задания</strong><p>Продолжите тренировку: попробуйте ещё раз решить графические задачи на закономерности.</p></div><form method="post" action="{{ route('attempt.start') }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit">Пройти →</button></form></div>
  </section>
  <section class="portal-panel">
   <h2>Профиль и безопасность</h2>
@@ -75,7 +75,7 @@
 @elseif($section==='reports')
 <section class="portal-panel portal-full"><h1>Мои отчёты</h1><p>Открытые отчёты и экспорт персональной сводки в CSV.</p>@include('account.partials.reports',['subset'=>$attempts->filter(fn($a)=>$a->status==='completed' && $a->payment_status==='succeeded')])</section>
 @elseif($section==='subscription')
-<section class="portal-panel portal-full"><h1>Подписка</h1><p class="lead">20 ₽ за первый доступ, далее 499 ₽ в месяц — только демонстрационная модель.</p><span class="portal-tag portal-tag-neutral">Подписка не активна</span><p>Ни один пользователь не получает реальную платную подписку; банковских реквизитов и автоматических списаний нет. Доступ к результатам выдаётся только после подтверждения отдельной демо-оплаты.</p><p>Активных демонстрационных продлений: <strong>{{ $demoActive ?? 0 }}</strong>.</p><a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-подписку →</a></section>
+<section class="portal-panel portal-full"><h1>Подписка</h1><p class="lead">Тарифная модель: первый доступ — 20 ₽, далее подписка 499 ₽ в месяц. Сейчас реализован демонстрационный сценарий без реальных списаний.</p><span class="portal-tag portal-tag-neutral">Подписка не активна</span><p>Ни один пользователь не получает реальную платную подписку; банковских реквизитов и автоматических списаний нет. Доступ к результатам выдаётся только после подтверждения отдельной демо-оплаты.</p><p>Активных демонстрационных продлений: <strong>{{ $demoActive ?? 0 }}</strong>.</p><a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-подписку →</a></section>
 @elseif($section==='profile')
 <section class="portal-panel portal-full"><h1>Личные данные</h1><p>Изменения применяются к вашему аккаунту.</p>
 <form method="post" action="{{ route('account.profile') }}" class="portal-form"><input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="PATCH">
@@ -92,7 +92,7 @@
 @foreach($errors->all() as $error)<p class="form-error" role="alert">{{ $error }}</p>@endforeach
 <button type="submit" class="btn btn-primary">Изменить пароль</button></form></section>
 @elseif($section==='support')
-<section class="portal-panel portal-full"><h1>Поддержка</h1><p>Этот раздел содержит справку по прохождению теста, демо-платежам и учётной записи.</p><details><summary>Где посмотреть результат?</summary><p>Откройте «Мои отчёты» и выберите результат подтверждённой демо-оплаты.</p></details><details><summary>Почему нельзя увидеть IQ 124?</summary><p>Задания не нормированы, поэтому сервис не рассчитывает психологический IQ-балл. Отчёт показывает число правильных ответов.</p></details><details><summary>Как отменить подписку?</summary><p>Отменять нечего: в этом MVP не создаётся настоящая подписка и не списываются деньги.</p></details></section>
+<section class="portal-panel portal-full"><h1>Поддержка</h1><p>Этот раздел содержит справку по прохождению теста, демо-платежам и учётной записи.</p><details><summary>Где посмотреть результат?</summary><p>Откройте «Мои отчёты» и выберите результат подтверждённой демо-оплаты.</p></details><details><summary>Почему отчёт не показывает IQ-балл?</summary><p>Задания сервиса не проходили психометрическую стандартизацию. Отчёт показывает ваши результаты, но не переводит их в официальный IQ-балл.</p></details><details><summary>Как отменить подписку?</summary><p>В этой версии нет реальной подписки и списаний. Если у вас есть виртуальное продление, откройте страницу «Отмена демо-подписки» по ссылке внизу сайта.</p></details></section>
 @endif
 @endsection
 @section('mobile-nav')

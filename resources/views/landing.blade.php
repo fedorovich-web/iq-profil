@@ -1,19 +1,19 @@
 @extends('layouts.app')
-@section('title', 'IQ-тест онлайн — 25 вопросов на логику и закономерности | IQ.Профиль')
-@section('description', 'Пройдите IQ-тест онлайн: 25 визуальных заданий, удобное прохождение без ограничения времени и персональный отчёт после демонстрационной оплаты.')
+@section('title', 'IQ-тест онлайн на логику и мышление | IQ.Профиль')
+@section('description', 'Пройдите IQ-тест онлайн: задания на логику, визуальное мышление и поиск закономерностей. Начните без регистрации, решайте в своём темпе и откройте персональный отчёт.')
 @section('page-class','landing-page')
 @section('landing-nav','yes')
 @section('content')
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
-    <span class="eyebrow">Тесты на мышление и логику</span>
-    <h1 id="hero-title">Узнайте больше<br><span>о себе</span></h1>
-    <p>Интерактивные задания на логику, абстрактное мышление и поиск закономерностей.</p>
+    <span class="eyebrow">Задания на логику и визуальное мышление</span>
+    <h1 id="hero-title">IQ-тест онлайн:<br><span>проверьте логику</span></h1>
+    <p>Находите связи между фигурами, проверяйте свои решения и узнавайте, как справляетесь с логическими задачами. Начать можно без регистрации.</p>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="#tests">Выбрать тест <span aria-hidden="true">→</span></a>
+      <a class="btn btn-primary" href="#tests">Посмотреть тесты <span aria-hidden="true">→</span></a>
       <form action="{{ route('attempt.start') }}" method="POST">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
-        <button class="btn btn-secondary" type="submit"><span class="play-symbol" aria-hidden="true"><svg viewBox="0 0 26 26" focusable="false"><circle cx="13" cy="13" r="10.5"></circle><path d="m10.5 8.4 7.3 4.6-7.3 4.6V8.4Z"></path></svg></span> Пройти IQ-тест</button>
+        <button class="btn btn-secondary" type="submit"><span class="play-symbol" aria-hidden="true"><svg viewBox="0 0 26 26" focusable="false"><circle cx="13" cy="13" r="10.5"></circle><path d="m10.5 8.4 7.3 4.6-7.3 4.6V8.4Z"></path></svg></span> Начать IQ-тест</button>
       </form>
     </div>
   </div>
@@ -35,30 +35,30 @@
   </div>
 </section>
 <section class="section" id="benefits" aria-labelledby="benefits-title">
-  <h2 id="benefits-title">Наши <span>преимущества</span></h2>
-  <p class="section-subtitle">Удобный формат и понятные результаты.</p>
+  <h2 id="benefits-title">Почему выбирают <span>IQ.Профиль</span></h2>
+  <p class="section-subtitle">Понятные задания, удобное прохождение и персональные результаты без необоснованных обещаний.</p>
   <div class="feature-grid">
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-science.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-science.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">◇</div>@endif
-      <h3>Прозрачный подход</h3><p>Оригинальные графические задания с проверяемыми решениями.</p>
+      <h3>Логика без сложных инструкций</h3><p>Ищите закономерности в фигурах, поворотах и визуальных последовательностях.</p>
     </article>
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-format.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-format.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">▤</div>@endif
-      <h3>Удобный формат</h3><p>Отвечайте в своём темпе с компьютера или телефона.</p>
+      <h3>Удобно на любом устройстве</h3><p>Проходите тест в своём темпе на смартфоне или компьютере. Ответы можно изменить до завершения.</p>
     </article>
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-results.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-results.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">▥</div>@endif
-      <h3>Персональный результат</h3><p>Отчёт по вашей попытке с фактическими показателями.</p>
+      <h3>Отчёт о вашем прохождении</h3><p>Посмотрите долю правильных решений, время и результаты по направлениям заданий.</p>
     </article>
   </div>
 </section>
 <section class="section" id="tests" aria-labelledby="tests-title">
   <h2 id="tests-title">Доступные <span>тесты</span></h2>
-  <p class="section-subtitle">Сейчас доступен IQ-тест. Другие направления находятся в разработке.</p>
+  <p class="section-subtitle">Начните с теста на логику и закономерности. Новые направления появятся по мере готовности.</p>
   <div class="test-grid">
     <article class="test-card">
       @if(file_exists(public_path('assets/test-iq.avif')))<img class="test-asset" src="{{ asset('assets/test-iq.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="test-graphic" aria-hidden="true"><span>■</span><span>◢</span><span>●</span></div>@endif
-      <h3>IQ-тест</h3><p>25 визуальных заданий на поиск закономерностей и логическое мышление.</p>
+      <h3>IQ-тест на логику</h3><p>Графические задачи на поиск правил, сравнение фигур и визуальные закономерности. Без регистрации.</p>
       <form action="{{ route('attempt.start') }}" method="POST">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <button class="card-link" type="submit">Пройти IQ-тест <span aria-hidden="true">→</span></button>
@@ -66,48 +66,48 @@
     </article>
     <article class="test-card test-card-coming">
       @if(file_exists(public_path('assets/test-logic.avif')))<img class="test-asset" src="{{ asset('assets/test-logic.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="test-graphic" aria-hidden="true">✥</div>@endif
-      <h3>Логическое мышление</h3><p>Отдельный тест пока не доступен. Мы ещё работаем над его заданиями.</p>
+      <h3>Логическое мышление</h3><p>Отдельное направление для задач на рассуждение и логические связи. Пока в разработке.</p>
       <span class="card-coming-label">Скоро</span>
     </article>
     <article class="test-card test-card-coming">
       @if(file_exists(public_path('assets/test-memory.avif')))<img class="test-asset" src="{{ asset('assets/test-memory.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="test-graphic" aria-hidden="true">▱</div>@endif
-      <h3>Внимание к деталям</h3><p>Отдельный тест пока не доступен. Запуск будет объявлен позднее.</p>
+      <h3>Внимание к деталям</h3><p>Будущие задания на наблюдательность и точность восприятия. Пока в разработке.</p>
       <span class="card-coming-label">Скоро</span>
     </article>
   </div>
 </section>
 <section class="section" id="steps" aria-labelledby="steps-title">
   <h2 id="steps-title">Как это <span>работает</span></h2>
-  <p class="section-subtitle">От первого вопроса до персонального результата — три простых шага.</p>
+  <p class="section-subtitle">Всё просто: начните тест, решите задания и посмотрите персональную сводку.</p>
   <div class="steps-grid">
     <article class="step">
       @if(file_exists(public_path('assets/step-select.avif')))<img class="step-asset" src="{{ asset('assets/step-select.avif') }}" width="110" height="110" alt="" loading="lazy">@else<div class="step-art" aria-hidden="true">☷</div>@endif
-      <div class="step-label"><b>01</b><h3>Выберите тест</h3></div><p>Начните с доступного IQ-теста.</p>
+      <div class="step-label"><b>01</b><h3>Выберите тест</h3></div><p>Откройте доступное направление и приступайте без регистрации.</p>
     </article>
     <article class="step">
       @if(file_exists(public_path('assets/step-complete.avif')))<img class="step-asset" src="{{ asset('assets/step-complete.avif') }}" width="110" height="110" alt="" loading="lazy">@else<div class="step-art" aria-hidden="true">☑</div>@endif
-      <div class="step-label"><b>02</b><h3>Ответьте на вопросы</h3></div><p>Проходите задания без ограничения времени.</p>
+      <div class="step-label"><b>02</b><h3>Решайте задачи</h3></div><p>Выбирайте подходящие варианты и при необходимости возвращайтесь к предыдущим ответам.</p>
     </article>
     <article class="step">
       @if(file_exists(public_path('assets/step-results.avif')))<img class="step-asset" src="{{ asset('assets/step-results.avif') }}" width="110" height="110" alt="" loading="lazy">@else<div class="step-art" aria-hidden="true">▥</div>@endif
-      <div class="step-label"><b>03</b><h3>Получите результат</h3></div><p>Откройте персональный отчёт после демо-оплаты.</p>
+      <div class="step-label"><b>03</b><h3>Посмотрите результат</h3></div><p>Получите персональный отчёт после подтверждения демонстрационного доступа.</p>
     </article>
   </div>
 </section>
 <section class="section faq-section" id="faq" aria-labelledby="faq-title">
-  <h2 id="faq-title"><span>FAQ</span> — частые вопросы</h2>
-  <p class="section-subtitle">Предварительные ответы: вопросы будут окончательно утверждены перед разметкой FAQPage.</p>
+  <h2 id="faq-title">Ответы на <span>частые вопросы</span></h2>
+  <p class="section-subtitle">Прохождение, результаты, стоимость доступа и подписка — всё, что важно знать перед стартом.</p>
   <div class="faq-list">
-    <details><summary>Какие тесты сейчас доступны?</summary><p>Пока доступен один IQ-тест из 25 визуальных заданий. Тесты по логике и вниманию находятся в разработке.</p></details>
-    <details><summary>Есть ли ограничение по времени?</summary><p>Нет. Отвечайте в удобном темпе — секундомер показывает продолжительность прохождения.</p></details>
-    <details><summary>Нужна ли регистрация для теста?</summary><p>Нет. Прохождение доступно без создания аккаунта. Для сохранения истории в кабинете можно зарегистрироваться.</p></details>
-    <details><summary>Как получить персональный результат?</summary><p>После завершения вы увидите предложение доступа. В демоверсии подтверждение оплаты не списывает средства и открывает отчёт.</p></details>
-    <details><summary>Можно ли пройти тест с телефона?</summary><p>Да. Матрица вопроса и варианты ответов адаптированы к мобильным экранам.</p></details>
-    <details><summary>Показывает ли этот тест официальный IQ?</summary><p>Нет. Это оригинальные тренировочные задачи без статистической нормировки. Отчёт отражает результат выполнения, а не стандартизированный IQ-балл.</p></details>
+    @foreach(config('iq_faq') as $item)
+    <details>
+      <summary>{{ $item['question'] }}</summary>
+      <p>{{ $item['answer'] }}</p>
+    </details>
+    @endforeach
   </div>
 </section>
 <section class="bottom-cta">
-  <div><h2>Пройдите <span>IQ-тест</span></h2><p>25 визуальных заданий в удобном формате.</p></div>
+  <div><h2>Проверьте <span>свою логику</span></h2><p>Попробуйте графические задания и узнайте свой результат. Начать можно без регистрации.</p></div>
   <form action="{{ route('attempt.start') }}" method="POST">
     <input type="hidden" name="_token" value="{{ csrf_token() }}">
     <button class="btn btn-primary" type="submit">Пройти IQ-тест</button>

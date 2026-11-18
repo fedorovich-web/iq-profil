@@ -43,26 +43,29 @@ final class LegalSeoSubscriptionTest extends TestCase
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8');
         $xml = simplexml_load_string($response->getContent());
         $this->assertNotFalse($xml);
-        $locations = array_map('strval', iterator_to_array($xml->url));
         $content = $response->getContent();
-        foreach (['landing', 'legal.privacy', 'legal.offer', 'legal.consent'] as $name) {
-            $this->assertStringContainsString(route($name), $content);
+        $this->assertStringContainsString('<loc>'.route('landing').'</loc>', $content);
+        foreach (['legal.privacy', 'legal.offer', 'legal.consent'] as $name) {
+            $this->assertStringNotContainsString(route($name), $content);
         }
         foreach (['/account', '/admin', '/result/', '/checkout/', '/login'] as $hidden) {
             $this->assertStringNotContainsString($hidden, $content);
         }
-        $this->assertCount(4, $xml->url);
+        $this->assertCount(1, $xml->url);
     }
 
     public function test_legal_pages_are_public_and_in_footer(): void
     {
-        $this->get('/')->assertOk()->assertSee('Отменить подписку')
+        $this->get('/')->assertOk()->assertSee('Отмена подписки')
             ->assertSee(route('legal.privacy'))
             ->assertSee(route('legal.consent'))
             ->assertSee(route('legal.offer'));
-        $this->get('/privacy')->assertOk()->assertSee('Политика обработки персональных данных');
-        $this->get('/offer')->assertOk()->assertSee('Условия использования');
-        $this->get('/personal-data-consent')->assertOk()->assertSee('Согласие на обработку персональных данных');
+        $this->get('/privacy')->assertOk()->assertSee('Политика обработки персональных данных')
+            ->assertSee('name="robots" content="noindex,nofollow,noarchive"', false);
+        $this->get('/offer')->assertOk()->assertSee('Условия использования')
+            ->assertSee('name="robots" content="noindex,nofollow,noarchive"', false);
+        $this->get('/personal-data-consent')->assertOk()->assertSee('Согласие на обработку персональных данных')
+            ->assertSee('name="robots" content="noindex,nofollow,noarchive"', false);
         $this->get('/subscription/cancel')->assertOk()->assertSee('Отмена демонстрационной подписки');
     }
 

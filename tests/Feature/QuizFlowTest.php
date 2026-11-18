@@ -94,6 +94,42 @@ final class QuizFlowTest extends TestCase
         $this->assertDatabaseHas('quiz_attempts', ['current_position' => 1]);
     }
 
+    public function test_question_count_is_derived_from_database_when_bank_grows(): void
+    {
+        $source = (array) DB::table('questions')->where('position', 25)->first();
+        $sourceId = $source['id'];
+        unset($source['id']);
+        $source['position'] = 26;
+        $newQuestionId = DB::table('questions')->insertGetId($source);
+
+        foreach (DB::table('answer_options')->where('question_id', $sourceId)->get() as $option) {
+            $fields = (array) $option;
+            unset($fields['id']);
+            $fields['question_id'] = $newQuestionId;
+            DB::table('answer_options')->insert($fields);
+        }
+
+        $uuid = $this->startAttempt();
+        $this->get('/quiz')->assertOk()->assertSee('из 26');
+
+        for ($position = 1; $position <= 26; $position++) {
+            $qid = DB::table('questions')->where('position', $position)->value('id');
+            $optionId = DB::table('answer_options')
+                ->where('question_id', $qid)->where('is_correct', true)->value('id');
+
+            $this->post('/quiz/answer', [
+                'navigation' => $position === 26 ? 'finish' : 'next',
+                'answer_option_id' => $optionId,
+            ])->assertRedirect($position === 26 ? '/paywall/'.$uuid : '/quiz');
+        }
+
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'correct_count' => 26]);
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->get('/result/'.$uuid)->assertOk()
+            ->assertSee('из 26')
+            ->assertSee('100%');
+    }
+
     public function test_entire_25_question_funnel_and_idempotent_checkout(): void
     {
         $uuid = $this->startAttempt();

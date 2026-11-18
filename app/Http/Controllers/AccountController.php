@@ -22,6 +22,11 @@ final class AccountController extends Controller
             ->where('q.user_id', $user->id)
             ->orderByDesc('q.started_at')
             ->select('q.*', 'p.status as payment_status')
+            ->selectSub(function ($query): void {
+                $query->from('attempt_answers')
+                    ->selectRaw('COUNT(*)')
+                    ->whereColumn('attempt_answers.attempt_id', 'q.id');
+            }, 'answered_count')
             ->get();
         $latest = $attempts->first(fn ($a) => $a->status === 'completed' && $a->payment_status === 'succeeded');
         $finished = $attempts->where('status', 'completed');
@@ -60,7 +65,7 @@ final class AccountController extends Controller
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, ['IQ.Профиль — сводка прохождения', $attempt->uuid], ';');
-            fputcsv($output, ['Правильных решений', $attempt->correct_count, 'из 25'], ';');
+            fputcsv($output, ['Правильных решений', $attempt->correct_count], ';');
             fputcsv($output, ['Время, секунд', $attempt->elapsed_seconds], ';');
             if ($isCurrent) {
                 fputcsv($output, ['Категория', 'Правильно', 'Всего'], ';');

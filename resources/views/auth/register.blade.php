@@ -2,7 +2,7 @@
 @section('title','Регистрация — IQ.Профиль')
 @section('content')
 <h1>Регистрация</h1>
-<p class="auth-description">Создайте аккаунт, чтобы сохранять результаты, отслеживать прогресс и получать отчёты.</p>
+<p class="auth-description">Сохраняйте историю прохождений, открывайте доступные отчёты и управляйте профилем. Сам тест можно начать без регистрации.</p>
 <form method="POST" action="{{ route('register.perform') }}" class="auth-form">
 <input type="hidden" name="_token" value="{{ csrf_token() }}">
 <label class="auth-field"><span>E-mail</span><input type="email" name="email" value="{{ old('email') }}" placeholder="E-mail" autocomplete="email" required autofocus></label>

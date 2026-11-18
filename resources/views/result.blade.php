@@ -19,14 +19,14 @@
   <header class="result-head">
     <span class="pill">Персональный отчёт</span>
     <h1 id="result-title">Ваш результат</h1>
-    <p class="lead">25 визуальных задач на поиск закономерностей. Данные основаны на сохранённой попытке.</p>
+    <p class="lead">Ваш персональный отчёт о прохождении теста на логику и закономерности. Результат относится к этим заданиям и не является официальной оценкой IQ.</p>
     <p class="result-report-date">Пройдено {{ \Carbon\Carbon::parse($attempt->completed_at)->format('d.m.Y в H:i') }}</p>
   </header>
 
   <section class="result-graph-card result-score-hero" aria-labelledby="result-chart-title">
     <div class="result-score-copy">
       <span class="result-score-caption">Решено правильно</span>
-      <h2 id="result-chart-title"><strong>{{ $score }}</strong> <span>из 25</span></h2>
+      <h2 id="result-chart-title"><strong>{{ $score }}</strong> <span>из {{ $totalQuestions }}</span></h2>
       <p>{{ $summary }}</p>
       <p class="result-score-note">Это результат упражнений, а не стандартизированная оценка IQ.</p>
     </div>
@@ -42,7 +42,7 @@
   <div class="stat-grid result-stat-grid" role="group" aria-label="Сводка прохождения">
     <article class="stat-card">
       <span>Всего заданий</span>
-      <strong>25</strong>
+      <strong>{{ $totalQuestions }}</strong>
     </article>
     <article class="stat-card">
       <span>Правильных решений</span>
@@ -58,7 +58,7 @@
     <section class="result-category-section" aria-labelledby="category-title">
       <div class="result-section-intro">
         <h2 id="category-title">По направлениям заданий</h2>
-        <p>В каждой категории — пять упражнений. Диаграммы показывают выполнение конкретных заданий, а не уровень способностей.</p>
+        <p>Сравните результаты по направлениям заданий. Это статистика прохождения, а не оценка способностей по психометрической шкале.</p>
       </div>
       <div class="result-category-grid">
         @foreach ($categoryBreakdown as $category)
@@ -87,11 +87,11 @@
       </div>
       <div>
         <h3>Что означает процент</h3>
-        <p>Это доля правильно решённых заданий из 25. Она не является процентилем среди людей.</p>
+        <p>Это доля верных решений в вашей попытке, а не процентиль относительно других людей.</p>
       </div>
       <div>
         <h3>Что можно сделать дальше</h3>
-        <p>Пройти новый набор упражнений, потренироваться на преобразованиях фигур и наблюдать собственный прогресс.</p>
+        <p>Пройти тест повторно и потренировать поиск закономерностей. Задания могут повторяться, что способно повлиять на следующий результат.</p>
       </div>
     </div>
     <p class="result-interpretation-note">IQ.Профиль пока не проходил психометрическую стандартизацию. Этот отчёт нельзя интерпретировать как официальный IQ-балл, диагноз или научно подтверждённый профиль когнитивных способностей.</p>
@@ -100,7 +100,7 @@
   <div class="result-actions">
     <form action="{{ route('attempt.start') }}" method="POST">
       @csrf
-      <button type="submit" class="btn btn-primary">Пройти ещё раз</button>
+      <button type="submit" class="btn btn-primary">Пройти тест ещё раз</button>
     </form>
     @auth
       <a href="{{ route('account.home') }}" class="btn btn-secondary">Личный кабинет</a>

@@ -2,7 +2,7 @@
 @section('title','Вход в аккаунт — IQ.Профиль')
 @section('content')
 <h1>Вход в аккаунт</h1>
-<p class="auth-description">Продолжайте прохождение, смотрите результаты и управляйте аккаунтом.</p>
+<p class="auth-description">Войдите в IQ.Профиль, чтобы вернуться к своим результатам и управлять учётной записью.</p>
 <form method="POST" action="{{ route('login.perform') }}" class="auth-form">
 <input type="hidden" name="_token" value="{{ csrf_token() }}">
 <label class="auth-field"><span>E-mail</span><input type="email" name="email" value="{{ old('email') }}" placeholder="E-mail" autocomplete="email" required autofocus></label>

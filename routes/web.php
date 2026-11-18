@@ -39,7 +39,8 @@ Route::get('/robots.txt', function () {
 })->name('robots');
 
 Route::get('/sitemap.xml', function () {
-    $routes = ['landing', 'legal.privacy', 'legal.offer', 'legal.consent'];
+    // Legal templates still contain draft operator details; only the landing page is indexable.
+    $routes = ['landing'];
     $urls = implode('', array_map(function (string $name): string {
         return '<url><loc>'.htmlspecialchars(route($name), ENT_XML1 | ENT_COMPAT, 'UTF-8').'</loc></url>';
     }, $routes));

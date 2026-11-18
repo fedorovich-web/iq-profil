@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('private', 'yes')
 @section('page-class','legal-page')
 @section('content')
 <article class="legal-content">

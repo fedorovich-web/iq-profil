@@ -16,11 +16,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class QuizController extends Controller
 {
-    private const QUESTION_COUNT = 25;
-
     public function start(Request $request): RedirectResponse
     {
-        abort_unless(DB::table('questions')->count() === self::QUESTION_COUNT, 503, 'Банк вопросов пока не подготовлен.');
+        abort_unless(DB::table('questions')->exists(), 503, 'Банк вопросов пока не подготовлен.');
 
         $uuid = (string) Str::uuid();
         DB::table('quiz_attempts')->insert([
@@ -78,6 +76,7 @@ final class QuizController extends Controller
             'cells' => json_decode($question->cells, true, 512, JSON_THROW_ON_ERROR),
             'options' => $options,
             'selected' => $selected,
+            'totalQuestions' => DB::table('questions')->count(),
             'startedTimestamp' => CarbonImmutable::parse($attempt->started_at, 'UTC')->getTimestamp(),
             'serverTimestamp' => now()->getTimestamp(),
         ]);
@@ -96,6 +95,7 @@ final class QuizController extends Controller
         }
 
         $completed = DB::transaction(function () use ($attempt, $validated): bool {
+            $questionCount = DB::table('questions')->count();
             $locked = DB::table('quiz_attempts')->where('id', $attempt->id)->lockForUpdate()->first();
             if ($locked->status === 'completed') {
                 return true;
@@ -145,21 +145,21 @@ final class QuizController extends Controller
 
             if ($validated['navigation'] === 'next') {
                 DB::table('quiz_attempts')->where('id', $locked->id)->update([
-                    'current_position' => min(self::QUESTION_COUNT, (int) $locked->current_position + 1),
+                    'current_position' => min($questionCount, (int) $locked->current_position + 1),
                     'updated_at' => now(),
                 ]);
 
                 return false;
             }
 
-            if ((int) $locked->current_position !== self::QUESTION_COUNT) {
+            if ((int) $locked->current_position !== $questionCount) {
                 abort(409, 'Нельзя закончить тест до последнего вопроса.');
             }
 
             $count = DB::table('attempt_answers')->where('attempt_id', $locked->id)->count();
-            if ($count !== self::QUESTION_COUNT) {
+            if ($count !== $questionCount) {
                 throw ValidationException::withMessages([
-                    'answer_option_id' => 'Для завершения ответьте на все 25 вопросов.',
+                    'answer_option_id' => 'Для завершения ответьте на все вопросы.',
                 ]);
             }
 
@@ -270,6 +270,8 @@ final class QuizController extends Controller
                 'correct.graphic_value as correct_value', 'correct.code as correct_code',
             ])->get();
 
+        $totalQuestions = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
+
         $categoryBreakdown = ((int) $attempt->question_revision === PuzzleCatalog::VERSION ? $answers : collect())
             ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
             ->map(function ($group, string $label): array {
@@ -287,7 +289,8 @@ final class QuizController extends Controller
         return view('result', [
             'attempt' => $attempt,
             'categoryBreakdown' => $categoryBreakdown,
-            'percentage' => (int) round(($attempt->correct_count / self::QUESTION_COUNT) * 100),
+            'percentage' => (int) round(($attempt->correct_count / max(1, $totalQuestions)) * 100),
+            'totalQuestions' => $totalQuestions,
         ]);
     }
 
