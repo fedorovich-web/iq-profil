@@ -6,7 +6,7 @@
 <section class="quiz-container" aria-labelledby="question-heading">
   <div class="quiz-toolbar">
     <span class="quiz-counter">Вопрос <strong>{{ $question->position }}</strong> из 25</span>
-    <div class="quiz-timer" role="timer" aria-label="Продолжительность теста"><span aria-hidden="true">◷</span><time id="quiz-timer" data-start="{{ $startedTimestamp }}" data-server="{{ $serverTimestamp }}">00:00</time></div>
+    <div class="quiz-timer" role="timer" aria-label="Продолжительность теста"><span class="quiz-timer-icon" aria-hidden="true"><img src="{{ asset('assets/icons/client/history.avif') }}" width="20" height="20" alt=""></span><time id="quiz-timer" data-start="{{ $startedTimestamp }}" data-server="{{ $serverTimestamp }}">00:00</time></div>
   </div>
   <div class="progress" role="progressbar" aria-label="Прогресс тестирования" aria-valuemin="0" aria-valuemax="25" aria-valuenow="{{ $question->position - 1 }}"><span style="width: {{ ($question->position - 1) * 4 }}%"></span></div>
   <div class="quiz-headline">

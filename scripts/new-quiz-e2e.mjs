@@ -36,11 +36,13 @@ try {
     else await page.waitForURL('**/paywall/**');
   }
 
+  await page.screenshot({ path: 'docs/paywall-icons-mobile-qa.png', fullPage: true });
   const paymentUrl = new URL(page.url());
   const uuid = paymentUrl.pathname.split('/').pop();
   if (!uuid || uuid.length < 30) throw new Error('Attempt UUID not found');
   await page.locator('a[href*="/checkout/"]').click();
   await page.waitForURL('**/checkout/**');
+  await page.screenshot({ path: 'docs/checkout-icons-mobile-qa.png', fullPage: true });
   await page.locator('button:has-text("Подтвердить демо-оплату")').click();
   await page.waitForURL('**/result/**');
   const report = await page.evaluate(() => ({

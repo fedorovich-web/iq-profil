@@ -10,9 +10,7 @@
  ['support','support','Поддержка']
 ] as [$key,$icon,$label])
 <a href="{{ route('account.home', ['section'=>$key]) }}" @class(['active'=>$section===$key]) @if($section===$key) aria-current="page" @endif>
- @if(file_exists(public_path('assets/icons/client/'.$icon.'.avif')))
  <img src="{{ asset('assets/icons/client/'.$icon.'.avif') }}" alt="" width="28" height="28">
- @else <span class="nav-fallback" aria-hidden="true">{{ ['overview'=>'⌂','history'=>'▥','reports'=>'▤','subscription'=>'◇','profile'=>'♙','security'=>'♧','support'=>'◉'][$key] }}</span>@endif
  <span>{{ $label }}</span>
 </a>
 @endforeach
@@ -28,7 +26,7 @@
        <div class="account-score">{{ $latest->correct_count }} <small>/ 25 верно</small></div>
        <span class="account-score-label">{{ round($latest->correct_count / 25 * 100) }}% правильных ответов</span>
        <p>Дата: {{ \Carbon\Carbon::parse($latest->completed_at)->format('d.m.Y') }}</p>
-       <div class="hero-account-actions"><a class="account-white-button" href="{{ route('result', $latest->uuid) }}">Открыть отчёт →</a><a class="account-ghost-button" href="{{ route('account.export', $latest->uuid) }}" title="Скачать CSV-отчёт">↓ CSV</a></div>
+       <div class="hero-account-actions"><a class="account-white-button" href="{{ route('result', $latest->uuid) }}">Открыть отчёт →</a><a class="account-ghost-button" href="{{ route('account.export', $latest->uuid) }}" title="Скачать CSV-отчёт"><img src="{{ asset('assets/icons/client/download.avif') }}" width="17" height="17" alt=""> CSV</a></div>
       @else
        <div class="account-score account-score-empty">Пока нет результата</div>
        <p>Пройдите тест и откройте свой персональный разбор.</p>
@@ -49,7 +47,7 @@
  <nav class="mobile-shortcuts" aria-label="Быстрая навигация">
  @foreach([['history','history','История прохождений'],['reports','reports','Мои отчёты'],['subscription','layers','Подписка'],['profile','profile','Профиль']] as [$key,$icon,$label])
  <a href="{{ route('account.home',['section'=>$key]) }}">
- @if(file_exists(public_path('assets/icons/client/'.$icon.'.avif')))<img src="{{ asset('assets/icons/client/'.$icon.'.avif') }}" alt="" width="36" height="36">@else<span>◇</span>@endif
+ <img src="{{ asset('assets/icons/client/'.$icon.'.avif') }}" alt="" width="36" height="36">
  <strong>{{ $label }}</strong><span aria-hidden="true">›</span></a>
  @endforeach
  </nav>
@@ -63,7 +61,7 @@
  </section>
  <section class="portal-panel">
   <h2>Рекомендуем продолжить</h2>
-  <div class="portal-recommendation"><span class="portal-rec-icon">◇</span><div><strong>Графические задания</strong><p>Новая попытка из 25 вопросов на закономерности.</p></div><form method="post" action="{{ route('attempt.start') }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit">Пройти →</button></form></div>
+  <div class="portal-recommendation"><span class="portal-rec-icon"><img src="{{ asset('assets/icons/client/layers.avif') }}" width="27" height="27" alt=""></span><div><strong>Графические задания</strong><p>Новая попытка из 25 вопросов на закономерности.</p></div><form method="post" action="{{ route('attempt.start') }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit">Пройти →</button></form></div>
  </section>
  <section class="portal-panel">
   <h2>Профиль и безопасность</h2>
@@ -75,7 +73,7 @@
 @elseif($section==='history')
 <section class="portal-panel portal-full"><h1>История прохождений</h1><p>Ваши попытки сохраняются в базе данных и доступны после входа.</p>@include('account.partials.history',['subset'=>$attempts])</section>
 @elseif($section==='reports')
-<section class="portal-panel portal-full"><h1>Мои отчёты</h1><p>Открытые отчёты и экспорт фактических ответов в CSV.</p>@include('account.partials.reports',['subset'=>$attempts->filter(fn($a)=>$a->status==='completed' && $a->payment_status==='succeeded')])</section>
+<section class="portal-panel portal-full"><h1>Мои отчёты</h1><p>Открытые отчёты и экспорт персональной сводки в CSV.</p>@include('account.partials.reports',['subset'=>$attempts->filter(fn($a)=>$a->status==='completed' && $a->payment_status==='succeeded')])</section>
 @elseif($section==='subscription')
 <section class="portal-panel portal-full"><h1>Подписка</h1><p class="lead">20 ₽ за первый доступ, далее 499 ₽ в месяц — только демонстрационная модель.</p><span class="portal-tag portal-tag-neutral">Подписка не активна</span><p>Ни один пользователь не получает реальную платную подписку; банковских реквизитов и автоматических списаний нет. Доступ к результатам выдаётся только после подтверждения отдельной демо-оплаты.</p><p>Активных демонстрационных продлений: <strong>{{ $demoActive ?? 0 }}</strong>.</p><a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-подписку →</a></section>
 @elseif($section==='profile')
@@ -99,11 +97,9 @@
 @endsection
 @section('mobile-nav')
 <nav class="portal-mobile-nav" aria-label="Мобильная навигация">
-@foreach([['overview','⌂','Главная'],['history','▣','История'],['reports','▤','Отчёты'],['subscription','◇','Подписка'],['profile','♙','Профиль']] as [$key,$fallback,$label])
+@foreach([['overview','home','Главная'],['history','history','История'],['reports','reports','Отчёты'],['subscription','layers','Подписка'],['profile','profile','Профиль']] as [$key,$icon,$label])
 <a href="{{ route('account.home',['section'=>$key]) }}" @class(['active'=>$section===$key]) @if($section===$key) aria-current="page" @endif>
-@if(file_exists(public_path('assets/icons/client/'.(['overview'=>'home','history'=>'history','reports'=>'reports','subscription'=>'layers','profile'=>'profile'][$key]).'.avif')))
-<img src="{{ asset('assets/icons/client/'.(['overview'=>'home','history'=>'history','reports'=>'reports','subscription'=>'layers','profile'=>'profile'][$key]).'.avif') }}" alt="" width="26" height="26">
-@else <span aria-hidden="true">{{ $fallback }}</span> @endif
+<img src="{{ asset('assets/icons/client/'.$icon.'.avif') }}" alt="" width="26" height="26">
 <small>{{ $label }}</small></a>
 @endforeach
 </nav>

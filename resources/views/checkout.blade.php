@@ -25,7 +25,7 @@
       </div>
       <p class="disclaimer">Автопродление показано только как условие будущего предложения. Настоящие платежи и подписки в этой версии отсутствуют.</p>
       <form action="{{ route('checkout.confirm', $attempt->uuid) }}" method="POST"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-primary btn-block">Подтвердить демо-оплату</button></form>
-      <div class="payment-safe"><span aria-hidden="true">⬡</span><span><strong>Безопасная демонстрация</strong><br>Без платёжного провайдера и банковских данных</span></div>
+      <div class="payment-safe"><span class="payment-safe-icon" aria-hidden="true"><img src="{{ asset('assets/icons/client/security.avif') }}" width="32" height="32" alt=""></span><span><strong>Безопасная демонстрация</strong><br>Без платёжного провайдера и банковских данных</span></div>
     </div>
   </div>
 </section>

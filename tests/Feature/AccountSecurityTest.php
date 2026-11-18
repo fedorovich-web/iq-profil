@@ -142,6 +142,65 @@ final class AccountSecurityTest extends TestCase
         ]);
     }
 
+    public function test_prepared_avif_icon_assets_are_rendered_in_public_and_private_views(): void
+    {
+        $assets = [
+            'client/history.avif',
+            'client/download.avif',
+            'client/layers.avif',
+            'client/reports.avif',
+            'client/security.avif',
+            'admin/analytics.avif',
+            'admin/lock.avif',
+            'admin/subscription.avif',
+            'admin/users.avif',
+            'admin/test-attempts.avif',
+            'admin/demo-transactions.avif',
+        ];
+
+        foreach ($assets as $asset) {
+            $this->assertFileExists(public_path('assets/icons/'.$asset));
+        }
+
+        $account = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($account);
+
+        $this->get('/account')->assertOk()
+            ->assertSee('/assets/icons/client/layers.avif')
+            ->assertSee('/assets/icons/client/reports.avif');
+
+        $this->get('/admin')->assertOk()
+            ->assertSee('/assets/icons/admin/users.avif')
+            ->assertSee('/assets/icons/admin/test-attempts.avif')
+            ->assertSee('/assets/icons/admin/analytics.avif')
+            ->assertSee('/assets/icons/admin/demo-transactions.avif');
+
+        $this->seed(QuestionSeeder::class);
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $uuid = (string) session('active_attempt');
+        $this->get('/quiz')->assertOk()->assertSee('/assets/icons/client/history.avif');
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update([
+            'status' => 'completed',
+            'correct_count' => 0,
+            'elapsed_seconds' => 12,
+            'completed_at' => now(),
+        ]);
+
+        $this->get('/paywall/'.$uuid)->assertOk()
+            ->assertSee('/assets/icons/admin/analytics.avif')
+            ->assertSee('/assets/icons/client/layers.avif')
+            ->assertSee('/assets/icons/client/history.avif')
+            ->assertSee('/assets/icons/client/reports.avif')
+            ->assertSee('/assets/icons/admin/lock.avif')
+            ->assertSee('/assets/icons/admin/subscription.avif');
+
+        $this->get('/checkout/'.$uuid)->assertOk()
+            ->assertSee('/assets/icons/client/security.avif');
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->get('/account')->assertOk()->assertSee('/assets/icons/client/download.avif');
+        $this->get('/account?section=reports')->assertOk()->assertSee('/assets/icons/client/download.avif');
+    }
+
     public function test_attempts_and_exports_are_isolated_by_authenticated_owner(): void
     {
         $this->seed(QuestionSeeder::class);

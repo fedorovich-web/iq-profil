@@ -5,9 +5,7 @@
 <nav class="portal-sidebar-nav" aria-label="Администрирование">
 @foreach([['overview','overview','Обзор'],['users','users','Пользователи'],['attempts','test-attempts','Попытки тестов'],['transactions','demo-transactions','Демо-транзакции'],['reports','analytics','Отчёты'],['audit','audit-log','Журнал действий']] as [$key,$icon,$label])
 <a href="{{ route('admin.home',['section'=>$key]) }}" @class(['active'=>$section===$key]) @if($section===$key) aria-current="page" @endif>
-@if(file_exists(public_path('assets/icons/admin/'.$icon.'.avif')))
 <img src="{{ asset('assets/icons/admin/'.$icon.'.avif') }}" alt="" width="28" height="28">
-@else<span class="nav-fallback" aria-hidden="true">{{ ['overview'=>'⌂','users'=>'♙','attempts'=>'▥','transactions'=>'▣','reports'=>'▤','audit'=>'◷'][$key] }}</span>@endif
 <span>{{ $label }}</span></a>
 @endforeach
 </nav>
@@ -16,10 +14,10 @@
 <header class="admin-head"><div><h1>{{ ['overview'=>'Обзор системы','users'=>'Пользователи','attempts'=>'Попытки тестов','transactions'=>'Демо-транзакции','reports'=>'Отчёты','audit'=>'Журнал действий'][$section] }}</h1><p>Актуальные данные из базы данных. Реальные платежи отсутствуют.</p></div></header>
 @if($section==='overview' || $section==='reports')
 <div class="admin-stats">
- <article class="admin-stat"><span class="admin-stat-icon">♙</span><div><span>Пользователи</span><strong>{{ number_format($stats['users'],0,' ',' ') }}</strong></div></article>
- <article class="admin-stat"><span class="admin-stat-icon">▥</span><div><span>Попытки тестов</span><strong>{{ number_format($stats['attempts'],0,' ',' ') }}</strong></div></article>
- <article class="admin-stat"><span class="admin-stat-icon">✓</span><div><span>Завершены</span><strong>{{ number_format($stats['completed'],0,' ',' ') }}</strong></div></article>
- <article class="admin-stat"><span class="admin-stat-icon">▣</span><div><span>Демо-платежи</span><strong>{{ number_format($stats['payments'],0,' ',' ') }}</strong></div></article>
+ <article class="admin-stat"><span class="admin-stat-icon"><img src="{{ asset('assets/icons/admin/users.avif') }}" width="31" height="31" alt=""></span><div><span>Пользователи</span><strong>{{ number_format($stats['users'],0,' ',' ') }}</strong></div></article>
+ <article class="admin-stat"><span class="admin-stat-icon"><img src="{{ asset('assets/icons/admin/test-attempts.avif') }}" width="31" height="31" alt=""></span><div><span>Попытки тестов</span><strong>{{ number_format($stats['attempts'],0,' ',' ') }}</strong></div></article>
+ <article class="admin-stat"><span class="admin-stat-icon"><img src="{{ asset('assets/icons/admin/analytics.avif') }}" width="31" height="31" alt=""></span><div><span>Завершены</span><strong>{{ number_format($stats['completed'],0,' ',' ') }}</strong></div></article>
+ <article class="admin-stat"><span class="admin-stat-icon"><img src="{{ asset('assets/icons/admin/demo-transactions.avif') }}" width="31" height="31" alt=""></span><div><span>Демо-платежи</span><strong>{{ number_format($stats['payments'],0,' ',' ') }}</strong></div></article>
 </div>
 @endif
 @if($section==='overview')
@@ -47,8 +45,8 @@
 @endsection
 @section('mobile-nav')
 <nav class="portal-mobile-nav" aria-label="Разделы администрирования">
-@foreach([['overview','⌂','Обзор'],['users','♙','Люди'],['attempts','▥','Попытки'],['transactions','▣','Демо'],['reports','▤','Отчёты']] as [$key,$icon,$label])
-<a href="{{ route('admin.home',['section'=>$key]) }}" @class(['active'=>$section===$key])><span aria-hidden="true">{{ $icon }}</span><small>{{ $label }}</small></a>
+@foreach([['overview','overview','Обзор'],['users','users','Люди'],['attempts','test-attempts','Попытки'],['transactions','demo-transactions','Демо'],['reports','analytics','Отчёты']] as [$key,$icon,$label])
+<a href="{{ route('admin.home',['section'=>$key]) }}" @class(['active'=>$section===$key]) @if($section===$key) aria-current="page" @endif><img src="{{ asset('assets/icons/admin/'.$icon.'.avif') }}" alt="" width="27" height="27"><small>{{ $label }}</small></a>
 @endforeach
 </nav>
 @endsection

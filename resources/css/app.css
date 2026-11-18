@@ -815,3 +815,20 @@ html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
 /* Each matrix has an explicit rule; the instruction must remain visible. */
 .quiz-headline p{max-width:670px;margin:14px auto 0;text-align:center;line-height:1.5;color:#465d7e;font-size:15px}
 @media(max-width:690px){.quiz-headline p{font-size:14px;margin-top:11px;padding-inline:8px}}
+
+/* Use the supplied AVIF icon library, not Unicode placeholders. */
+.benefit-icon img{display:block;width:34px;height:34px;object-fit:contain}
+.report-lock{background:linear-gradient(145deg,#fff,#e7f0ff);border-color:#bad2ff;box-shadow:0 8px 21px #125bd226}
+.report-lock img{display:block;width:48px;height:48px;object-fit:contain}
+.subscription-note .subscription-icon{display:grid;place-items:start center;flex:0 0 30px;padding-top:2px}
+.subscription-icon img{display:block;width:27px;height:27px;object-fit:contain}
+.payment-safe .payment-safe-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;background:#e9f1ff;border-radius:12px}
+.payment-safe-icon img{width:27px;height:27px;object-fit:contain;display:block}
+.quiz-timer .quiz-timer-icon{display:grid;place-items:center;flex:none}
+.quiz-timer-icon img{width:20px;height:20px;object-fit:contain;display:block}
+.admin-stat-icon img,.portal-rec-icon img,.report-file-icon img{display:block;object-fit:contain;max-width:72%;max-height:72%}
+
+.account-ghost-button{gap:7px}
+.account-ghost-button img{width:17px;height:17px;display:block;object-fit:contain;filter:brightness(0) invert(1)}
+.portal-report-row>a[download]{display:inline-flex;align-items:center;gap:5px}
+.portal-report-row>a[download] img{width:16px;height:16px;display:block;object-fit:contain}
