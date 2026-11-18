@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\PuzzleCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ final class QuizController extends Controller
             'uuid' => $uuid,
             'user_id' => $request->user()?->id,
             'status' => 'in_progress',
+            'question_revision' => PuzzleCatalog::VERSION,
             'current_position' => 1,
             'started_at' => now(),
             'created_at' => now(),
@@ -43,6 +45,9 @@ final class QuizController extends Controller
     public function resume(Request $request, string $uuid): RedirectResponse
     {
         $attempt = $this->attempt($request, $uuid);
+        if ($attempt->status !== 'completed' && (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+            return $this->start($request);
+        }
         $request->session()->put('active_attempt', $uuid);
 
         return redirect()->route($attempt->status === 'completed' ? 'paywall' : 'quiz.show', $attempt->status === 'completed' ? ['uuid' => $uuid] : []);
@@ -51,6 +56,9 @@ final class QuizController extends Controller
     public function show(Request $request): View|RedirectResponse
     {
         $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
+        if ($attempt->status !== 'completed' && (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+            return $this->start($request);
+        }
         if ($attempt->status === 'completed') {
             return redirect()->route('paywall', $attempt->uuid);
         }
@@ -83,6 +91,9 @@ final class QuizController extends Controller
         ]);
 
         $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
+        if ($attempt->status !== 'completed' && (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+            return $this->start($request);
+        }
 
         $completed = DB::transaction(function () use ($attempt, $validated): bool {
             $locked = DB::table('quiz_attempts')->where('id', $attempt->id)->lockForUpdate()->first();
@@ -259,31 +270,22 @@ final class QuizController extends Controller
                 'correct.graphic_value as correct_value', 'correct.code as correct_code',
             ])->get();
 
-        $types = [
-            'dots' => 'Количество элементов',
-            'polygon' => 'Геометрические фигуры',
-            'rotation' => 'Повороты и направления',
-            'stripes' => 'Линии и последовательности',
-            'position' => 'Расположение в сетке',
-        ];
+        $categoryBreakdown = ((int) $attempt->question_revision === PuzzleCatalog::VERSION ? $answers : collect())
+            ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
+            ->map(function ($group, string $label): array {
+                $total = $group->count();
+                $correct = $group->filter(fn ($item): bool => $item->selected_code === $item->correct_code)->count();
 
-        $categoryBreakdown = collect($types)->map(function (string $label, string $kind) use ($answers): array {
-            $group = $answers->where('kind', $kind);
-            $total = $group->count();
-            $correct = $group->filter(fn ($item): bool => $item->selected_code === $item->correct_code)->count();
-
-            return [
-                'kind' => $kind,
-                'label' => $label,
-                'total' => $total,
-                'correct' => $correct,
-                'percentage' => $total > 0 ? (int) round($correct / $total * 100) : 0,
-            ];
-        })->values()->all();
+                return [
+                    'label' => $label,
+                    'total' => $total,
+                    'correct' => $correct,
+                    'percentage' => $total > 0 ? (int) round($correct / $total * 100) : 0,
+                ];
+            })->values()->all();
 
         return view('result', [
             'attempt' => $attempt,
-            'answers' => $answers,
             'categoryBreakdown' => $categoryBreakdown,
             'percentage' => (int) round(($attempt->correct_count / self::QUESTION_COUNT) * 100),
         ]);

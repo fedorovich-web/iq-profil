@@ -24,44 +24,9 @@
 <body class="@yield('page-class','page-default')">
 <a class="skip-link" href="#main">Перейти к содержимому</a>
 <div class="site-shell">
-<header class="topbar">
-  @hasSection('landing-nav')
-  <span class="brand" aria-label="IQ.Профиль — текущая страница">@include('partials.brand')</span>
-  @else
-  <a href="{{ route('landing') }}" class="brand" aria-label="IQ.Профиль — главная">@include('partials.brand')</a>
-  @endif
-  @hasSection('landing-nav')
-  <nav class="navigation" aria-label="Разделы сайта">
-    <a href="#tests">Тесты</a><a href="#benefits">Преимущества</a>
-    <a href="#steps">Как это работает</a><a href="#faq">FAQ</a>
-  </nav>
-  @else
-  <a href="{{ route('landing') }}" class="return-home">← На главную</a>
-  @endif
-  <div class="header-actions">
-    @auth
-    <a class="nav-login" href="{{ auth()->user()->is_admin ? route('admin.home') : route('account.home') }}">Кабинет</a>
-    @else
-    <a class="nav-login" href="{{ route('login') }}">Войти</a>
-    @endauth
-    <button type="button" class="mobile-menu-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-site-menu">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</header>
-<nav id="mobile-site-menu" class="mobile-site-menu" aria-label="Мобильное меню" inert>
-  <a href="{{ route('landing') }}#tests">Тесты</a>
-  <a href="{{ route('landing') }}#benefits">Преимущества</a>
-  <a href="{{ route('landing') }}#steps">Как это работает</a>
-  <a href="{{ route('landing') }}#faq">FAQ</a>
-  @auth
-  <a href="{{ auth()->user()->is_admin ? route('admin.home') : route('account.home') }}">Личный кабинет</a>
-  @else
-  <a href="{{ route('register') }}">Регистрация</a>
-  @endauth
-</nav>
+@include('partials.site-header')
 <main id="main">@yield('content')</main>
 </div>
-@yield('footer')
+@include('partials.site-footer')
 </body>
 </html>

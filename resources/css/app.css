@@ -327,7 +327,7 @@ body{background:#f4f7ff}
 .quiz-counter{font-size:17px;color:#0d1e44}
 .progress{position:relative;width:calc(100% - 420px);margin:-39px 142px 88px 238px;z-index:1;height:9px}
 .quiz-headline h1{font-size:clamp(29px,3.1vw,38px);font-weight:810;line-height:1.14;margin:0 auto}
-.quiz-kicker,.quiz-headline p,.answer-block h2,.answer-block>p{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.quiz-kicker,.answer-block h2,.answer-block>p{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .question-board{grid-template-columns:repeat(3,102px);gap:6px;padding:16px;background:#fff;border-radius:23px;box-shadow:0 9px 27px #1f64be12;margin:44px auto 56px}
 .matrix-cell{width:102px;height:94px;box-shadow:none;border-radius:10px}
 .matrix-cell svg{width:71px;height:71px}
@@ -641,3 +641,177 @@ body.auth-page{height:100vh;height:100dvh;min-height:0;overflow:hidden;padding:0
   .landing-page .footer .original-brand{width:min(225px,100%);max-height:37px}
   .landing-page .hero-visual{transform:none}
 }
+
+/* Shared public site navigation and footer — identical across landing and legal pages. */
+.topbar .brand{width:170px;min-width:0;flex:0 0 auto}
+.topbar .brand-content{display:flex;width:100%;max-width:100%;align-items:center}
+.topbar .original-brand{display:block;width:170px;max-width:100%;height:auto;max-height:none;object-fit:contain;object-position:left center}
+.footer .original-brand,.landing-page .footer .original-brand{width:170px;max-width:100%;height:auto;max-height:none}
+.portal-logo .original-brand{width:170px;max-height:none}
+
+/* Off-canvas navigation: enters from the RIGHT, not the top. */
+.mobile-menu-overlay{
+  position:fixed;inset:0;z-index:190;
+  background:rgba(5,21,56,.49);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .34s ease,visibility .34s;
+}
+.mobile-menu-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.mobile-site-menu{
+  position:fixed;z-index:200;top:0;right:0;bottom:0;left:auto;
+  display:flex;flex-direction:column;gap:0;
+  width:min(360px,86vw);height:100dvh;max-height:none;
+  margin:0;padding:0 0 env(safe-area-inset-bottom);overflow-y:auto;overflow-x:hidden;
+  border:0;border-radius:24px 0 0 24px;
+  background:#fafdff;box-shadow:-18px 0 45px #0b215133;
+  opacity:1;visibility:hidden;pointer-events:none;
+  transform:translate3d(105%,0,0);
+  transition:transform .39s cubic-bezier(.22,.75,.2,1),visibility .39s;
+  overscroll-behavior:contain;
+}
+.mobile-site-menu.is-open{
+  max-height:none;padding:0 0 env(safe-area-inset-bottom);
+  opacity:1;visibility:visible;pointer-events:auto;
+  transform:translate3d(0,0,0)
+}
+.mobile-menu-head{
+  display:flex;align-items:center;justify-content:space-between;
+  flex:0 0 auto;min-height:84px;gap:16px;
+  padding:18px 23px;border-bottom:1px solid #dce7f8
+}
+.mobile-menu-head strong{font-size:23px;letter-spacing:-.03em;font-weight:800;color:#071a3e}
+.mobile-menu-close{
+  display:grid;place-items:center;flex:none;width:43px;height:43px;
+  border:1px solid #c9d9f1;border-radius:12px;
+  background:#e9f0fc;color:#0c4ccc;cursor:pointer;
+}
+.mobile-menu-close svg{height:21px;width:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.mobile-menu-links{display:flex;flex-direction:column;gap:7px;padding:24px 19px}
+.mobile-menu-links a,
+.mobile-site-menu.is-open .mobile-menu-links a{
+  display:block;border:0;border-radius:13px;
+  padding:15px 17px;line-height:1.4;
+  font-weight:720;font-size:17px;color:#0b2453;
+  background:transparent;text-decoration:none;
+}
+.mobile-menu-links a:hover,.mobile-menu-links a:focus-visible{background:#e8f0ff;color:#0d54d8}
+.mobile-menu-links a{
+  opacity:0;transform:translateX(28px);
+  transition:opacity .27s ease,transform .37s cubic-bezier(.2,.8,.2,1),background .14s;
+  transition-delay:0ms
+}
+.mobile-site-menu.is-open .mobile-menu-links a{opacity:1;transform:translateX(0)}
+.mobile-site-menu.is-open .mobile-menu-links a:nth-child(1){transition-delay:85ms}
+.mobile-site-menu.is-open .mobile-menu-links a:nth-child(2){transition-delay:130ms}
+.mobile-site-menu.is-open .mobile-menu-links a:nth-child(3){transition-delay:175ms}
+.mobile-site-menu.is-open .mobile-menu-links a:nth-child(4){transition-delay:220ms}
+.mobile-site-menu.is-open .mobile-menu-links a:nth-child(5){transition-delay:265ms}
+.mobile-site-menu.is-open .mobile-menu-links a:nth-child(6){transition-delay:310ms}
+@media(max-width:1100px){
+ .mobile-site-menu{display:flex!important;grid-template-columns:none}
+ .topbar .brand{width:170px;min-width:0}
+ .topbar .original-brand{width:170px;max-height:none}
+ .topbar .header-actions{margin-left:auto;gap:15px;flex:none}
+}
+@media(max-width:690px){
+ .topbar{grid-template-columns:minmax(0,1fr) auto;gap:15px;padding-inline:16px}
+ .topbar .brand{width:min(170px,calc(100vw - 181px));min-width:0;max-width:100%;flex:none}
+ .topbar .original-brand,.landing-page .topbar .original-brand{
+   width:170px;height:auto;max-width:100%;max-height:none
+ }
+ .topbar .header-actions{margin-left:0;gap:15px;min-width:max-content}
+ .mobile-site-menu{width:min(355px,88vw)}
+}
+@media(min-width:1101px){
+ .mobile-site-menu{display:none!important}
+ .mobile-menu-overlay{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .mobile-site-menu,.mobile-menu-overlay,.mobile-menu-links a,.mobile-site-menu.is-open .mobile-menu-links a{
+   transition:none!important
+ }
+}
+
+/* Single approved logo scale across all page layouts.
+   On narrow mobile viewports it may shrink only to prevent header overflow. */
+.original-brand,
+.topbar .original-brand,
+.footer .original-brand,
+.landing-page .topbar .original-brand,
+.landing-page .footer .original-brand,
+.auth-brand .original-brand,
+.portal-logo .original-brand{
+  display:block;
+  width:170px;
+  height:auto;
+  max-width:100%;
+  max-height:none;
+  object-fit:contain;
+  object-position:left center;
+}
+.auth-brand .brand-content,.portal-logo .brand-content{max-width:100%;min-width:0;}
+.portal-logo{min-width:0;max-width:100%;}
+@media(max-width:690px){
+ .topbar .brand{width:min(170px,calc(100vw - 181px));}
+ .topbar .original-brand,.landing-page .topbar .original-brand{width:170px;max-width:100%;}
+ .portal-logo .original-brand{width:170px;max-width:100%;}
+}
+
+/* Prevent portal header items from growing wider than the mobile viewport. */
+.portal-header .portal-logo{min-width:0!important;max-width:170px;flex:0 1 170px;}
+.portal-header .brand-content{min-width:0;max-width:100%;}
+.portal-header .original-brand{width:170px!important;max-width:100%!important;height:auto!important;}
+.portal-header .portal-user{min-width:0;flex:0 0 auto;margin-left:auto}
+.portal-header .portal-logout{flex:none}
+@media(max-width:690px){
+  .portal-header{gap:10px;padding-inline:12px}
+  .portal-header .portal-logo{flex:0 1 170px;min-width:0!important}
+  .portal-header .portal-avatar{flex:none}
+}
+
+/* FAQ: one scroll anchor strategy, coordinated with the animation in app.js. */
+html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
+.faq-list,.faq-list details{overflow-anchor:none}
+.faq-list{interpolate-size:allow-keywords}
+.faq-list details::details-content{
+  block-size:0;overflow:hidden;
+  transition:block-size .3s ease,content-visibility .3s allow-discrete;
+}
+.faq-list details[open]::details-content{block-size:auto}
+@media(prefers-reduced-motion:reduce){
+ .faq-list details::details-content{transition:none}
+}
+/* Make lower call-to-action heading visually prominent. */
+.landing-page .bottom-cta h2{font-weight:850;letter-spacing:-.035em;line-height:1.15}
+
+
+/* Result: compact personalized report, no answer-key disclosure. */
+.result-score-hero{
+  margin-top:0;
+  padding:34px 38px;
+  grid-template-columns:minmax(0,1.4fr) minmax(230px,.8fr);
+  background:linear-gradient(125deg,#fff 0%,#f1f6ff 100%);
+}
+.result-score-copy{min-width:0}
+.result-score-caption{display:block;font-size:14px;font-weight:780;color:#2358a9;margin-bottom:12px}
+.result-score-hero h2{margin:0 0 14px;font-size:clamp(32px,4vw,48px);line-height:1.15}
+.result-score-hero h2 strong{font-size:1.3em;color:#0d55d6}
+.result-score-hero h2 span{font-size:.55em;color:#52698d;font-weight:650}
+.result-score-hero p{max-width:590px;line-height:1.6;margin-bottom:12px;color:#2e486d}
+.result-score-hero .result-score-note{font-size:12px;color:#657b99;margin:0}
+.result-score-percentage{font-weight:820;font-size:clamp(45px,6vw,65px);color:#1157d6;text-align:center;margin-bottom:15px;line-height:1}
+.result-score-percentage span{font-size:.5em}
+.result-score-legend{font-size:12px;text-align:center;margin-top:11px!important}
+.result-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:18px}
+.result-legacy-note{margin:24px 0;padding:20px 24px;background:#eef5ff;border:1px solid #d4e5fc;border-radius:16px;color:#284979;line-height:1.6}
+@media(max-width:690px){
+  .result-score-hero{grid-template-columns:1fr;padding:24px 20px;gap:26px}
+  .result-score-percentage{text-align:left;font-size:48px}
+  .result-score-legend{text-align:left}
+  .result-stat-grid{grid-template-columns:1fr 1fr}
+  .result-stat-grid .stat-card:last-child{grid-column:1 / -1}
+}
+
+/* Each matrix has an explicit rule; the instruction must remain visible. */
+.quiz-headline p{max-width:670px;margin:14px auto 0;text-align:center;line-height:1.5;color:#465d7e;font-size:15px}
+@media(max-width:690px){.quiz-headline p{font-size:14px;margin-top:11px;padding-inline:8px}}

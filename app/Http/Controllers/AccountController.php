@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\PuzzleCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -38,26 +39,36 @@ final class AccountController extends Controller
         abort_unless($attempt !== null && $attempt->status === 'completed', 404);
         abort_unless(DB::table('demo_payments')->where('attempt_id', $attempt->id)->where('status', 'succeeded')->exists(), 403);
 
-        $answers = DB::table('attempt_answers as a')
-            ->join('questions as q', 'q.id', '=', 'a.question_id')
-            ->join('answer_options as selected', 'selected.id', '=', 'a.answer_option_id')
-            ->join('answer_options as correct', function ($join): void {
-                $join->on('correct.question_id', '=', 'q.id')->where('correct.is_correct', true);
-            })
-            ->where('a.attempt_id', $attempt->id)
-            ->orderBy('q.position')
-            ->select('q.position', 'q.explanation', 'selected.code as answer', 'correct.code as expected')
-            ->get();
+        $isCurrent = (int) $attempt->question_revision === PuzzleCatalog::VERSION;
+        $categoryBreakdown = collect();
 
-        return response()->streamDownload(function () use ($attempt, $answers): void {
+        if ($isCurrent) {
+            $categoryBreakdown = DB::table('attempt_answers as a')
+                ->join('questions as q', 'q.id', '=', 'a.question_id')
+                ->join('answer_options as selected', 'selected.id', '=', 'a.answer_option_id')
+                ->where('a.attempt_id', $attempt->id)
+                ->select('q.kind', 'selected.is_correct')
+                ->get()
+                ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
+                ->map(fn ($group): array => [
+                    'correct' => $group->where('is_correct', 1)->count(),
+                    'total' => $group->count(),
+                ]);
+        }
+
+        return response()->streamDownload(function () use ($attempt, $categoryBreakdown, $isCurrent): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            fputcsv($output, ['IQ.Профиль — отчёт по заданию', $attempt->uuid], ';');
-            fputcsv($output, ['Правильно', $attempt->correct_count, 'из 25'], ';');
+            fputcsv($output, ['IQ.Профиль — сводка прохождения', $attempt->uuid], ';');
+            fputcsv($output, ['Правильных решений', $attempt->correct_count, 'из 25'], ';');
             fputcsv($output, ['Время, секунд', $attempt->elapsed_seconds], ';');
-            fputcsv($output, ['Вопрос', 'Ответ', 'Правильно', 'Объяснение'], ';');
-            foreach ($answers as $answer) {
-                fputcsv($output, [$answer->position, $answer->answer, $answer->expected, $answer->explanation], ';');
+            if ($isCurrent) {
+                fputcsv($output, ['Категория', 'Правильно', 'Всего'], ';');
+                foreach ($categoryBreakdown as $label => $group) {
+                    fputcsv($output, [$label, $group['correct'], $group['total']], ';');
+                }
+            } else {
+                fputcsv($output, ['Примечание', 'Попытка относится к прежнему набору заданий; подробная разбивка недоступна.'], ';');
             }
             fclose($output);
         }, 'iq-profil-'.$attempt->uuid.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

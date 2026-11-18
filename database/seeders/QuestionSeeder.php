@@ -4,71 +4,79 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Support\PuzzleCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 final class QuestionSeeder extends Seeder
 {
     public function run(): void
     {
-        $families = ['dots', 'polygon', 'rotation', 'stripes', 'position'];
-        $labels = [
-            'dots' => 'Определите количество точек в пропущенной фигуре.',
-            'polygon' => 'Найдите многоугольник, который завершает закономерность.',
-            'rotation' => 'Определите направление стрелки в пустой клетке.',
-            'stripes' => 'Выберите правильное количество вертикальных линий.',
-            'position' => 'В какой точке сетки должен стоять синий маркер?',
-        ];
-
-        for ($index = 0; $index < 25; $index++) {
-            $kind = $families[intdiv($index, 5)];
-            $variant = $index % 5;
-            $modulo = $kind === 'position' ? 9 : 6;
-            $rowStep = 1 + $variant % 2;
-            $columnStep = 1 + intdiv($variant, 2) % 2;
-            $offset = ($variant * 2 + intdiv($index, 5)) % $modulo;
-            $cells = [];
-
-            for ($row = 0; $row < 3; $row++) {
-                for ($column = 0; $column < 3; $column++) {
-                    $cells[] = ($offset + $row * $rowStep + $column * $columnStep) % $modulo;
-                }
-            }
-
-            $answer = $cells[8];
-            $questionId = DB::table('questions')->insertGetId([
-                'position' => $index + 1,
-                'kind' => $kind,
-                'prompt' => $labels[$kind],
-                'explanation' => 'При движении вправо индекс состояния увеличивается на '.$columnStep.', вниз — на '.$rowStep.'. После последнего состояния последовательность повторяется. Пропущенный элемент имеет индекс '.($answer + 1).' из '.$modulo.'. Это учебное задание, не стандартизированная психометрическая методика.',
-                'cells' => json_encode($cells, JSON_THROW_ON_ERROR),
-                'source' => 'Original procedural matrix, independently generated for IQ.Profil',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            $candidates = [$answer];
-            for ($n = 1; count($candidates) < 6; $n++) {
-                $v = ($answer + $n) % $modulo;
-                if (! in_array($v, $candidates, true)) {
-                    $candidates[] = $v;
-                }
-            }
-            $correctSlot = ($index * 5 + 2) % 6;
-            $choices = array_values(array_filter($candidates, fn (int $v): bool => $v !== $answer));
-            array_splice($choices, $correctSlot, 0, [$answer]);
-
-            foreach ($choices as $slot => $value) {
-                DB::table('answer_options')->insert([
-                    'question_id' => $questionId,
-                    'code' => chr(65 + $slot),
-                    'position' => $slot + 1,
-                    'graphic_value' => $value,
-                    'is_correct' => $value === $answer,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+        $definitions = PuzzleCatalog::definitions();
+        if (count($definitions) !== PuzzleCatalog::COUNT) {
+            throw new LogicException('The catalog must contain exactly 25 questions.');
         }
+
+        DB::transaction(function () use ($definitions): void {
+            foreach ($definitions as $index => [$slug, $motif, $prompt, $cells, $candidates, $explanation]) {
+                if (count($cells) !== 9 || count($candidates) !== 6
+                    || count(array_unique($candidates)) !== 6
+                    || ! in_array($cells[8], $candidates, true)) {
+                    throw new LogicException('Invalid puzzle specification at position '.($index + 1));
+                }
+
+                $position = $index + 1;
+                $now = now();
+                $row = DB::table('questions')->where('position', $position)->first();
+                $fields = [
+                    'kind' => $slug,
+                    'prompt' => $prompt,
+                    'cells' => json_encode($cells, JSON_THROW_ON_ERROR),
+                    'explanation' => $explanation.' Это авторское тренировочное упражнение, не стандартизированная психометрическая методика.',
+                    'source' => 'IQ.Profil original vector puzzle v'.PuzzleCatalog::VERSION,
+                    'updated_at' => $now,
+                ];
+
+                if ($row === null) {
+                    $questionId = DB::table('questions')->insertGetId([
+                        ...$fields,
+                        'position' => $position,
+                        'created_at' => $now,
+                    ]);
+                    $existingOptions = collect();
+                } else {
+                    $questionId = $row->id;
+                    DB::table('questions')->where('id', $questionId)->update($fields);
+                    $existingOptions = DB::table('answer_options')
+                        ->where('question_id', $questionId)->orderBy('position')->get();
+                    if ($existingOptions->count() !== 6) {
+                        throw new LogicException("Expected six existing options for question {$position}");
+                    }
+                }
+
+                $answer = $cells[8];
+                $choices = array_values(array_filter($candidates, static fn (int $value): bool => $value !== $answer));
+                array_splice($choices, ($index * 5 + 2) % 6, 0, [$answer]);
+                foreach ($choices as $slot => $value) {
+                    $fields = [
+                        'code' => chr(65 + $slot),
+                        'position' => $slot + 1,
+                        'graphic_value' => $value,
+                        'is_correct' => $value === $answer,
+                        'updated_at' => $now,
+                    ];
+                    if ($existingOptions->isNotEmpty()) {
+                        DB::table('answer_options')->where('id', $existingOptions[$slot]->id)->update($fields);
+                    } else {
+                        DB::table('answer_options')->insert([
+                            'question_id' => $questionId,
+                            ...$fields,
+                            'created_at' => $now,
+                        ]);
+                    }
+                }
+            }
+        });
     }
 }

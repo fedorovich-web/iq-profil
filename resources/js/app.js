@@ -37,48 +37,98 @@ if (answerForm) {
 
 const toggle = document.querySelector('.mobile-menu-toggle');
 const menu = document.querySelector('#mobile-site-menu');
-if (toggle && menu) {
-    const setOpen = open => {
+const backdrop = document.querySelector('[data-menu-overlay]');
+if (toggle && menu && backdrop) {
+    const closeButton = menu.querySelector('.mobile-menu-close');
+    let isOpen = false;
+    let savedScrollY = 0;
+
+    const setOpen = (open, restoreFocus = false) => {
+        if (isOpen === open) return;
+        isOpen = open;
         toggle.setAttribute('aria-expanded', String(open));
         toggle.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
-        menu.classList.toggle('is-open', open);
         menu.inert = !open;
+        menu.classList.toggle('is-open', open);
+        backdrop.classList.toggle('is-open', open);
+
+        if (open) {
+            savedScrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${savedScrollY}px`;
+            document.body.style.width = '100%';
+            closeButton.focus({ preventScroll: true });
+        } else {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+            if (restoreFocus) toggle.focus({ preventScroll: true });
+        }
     };
-    setOpen(false);
-    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
-    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
+
+    toggle.addEventListener('click', () => setOpen(!isOpen, isOpen));
+    closeButton.addEventListener('click', () => setOpen(false, true));
+    backdrop.addEventListener('click', () => setOpen(false, true));
+    menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setOpen(false)));
+
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
-            setOpen(false);
-            toggle.focus();
+        if (!isOpen) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            setOpen(false, true);
+        } else if (event.key === 'Tab') {
+            const focusable = [closeButton, ...menu.querySelectorAll('a[href]')];
+            const current = focusable.indexOf(document.activeElement);
+            if (event.shiftKey && (current === 0 || current === -1)) {
+                event.preventDefault();
+                focusable[focusable.length - 1].focus();
+            } else if (!event.shiftKey && current === focusable.length - 1) {
+                event.preventDefault();
+                focusable[0].focus();
+            }
         }
     });
-    document.addEventListener('click', event => {
-        if (!toggle.contains(event.target) && !menu.contains(event.target)) setOpen(false);
-    });
+
     window.matchMedia('(min-width: 1101px)').addEventListener('change', event => {
         if (event.matches) setOpen(false);
     });
 }
 
-// FAQ: single-open accordion, keep the clicked heading at the same viewport offset.
+// Keep the activated FAQ heading stationary while another answer collapses above it.
+// Disable native scroll anchoring for this page: the two mechanisms must not compete.
 const faq = document.querySelector('.faq-list');
 if (faq) {
     const entries = [...faq.querySelectorAll('details')];
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let animationToken = 0;
+
     for (const entry of entries) {
         const summary = entry.querySelector('summary');
         if (!summary) continue;
         summary.addEventListener('click', event => {
             event.preventDefault();
-            const beforeTop = summary.getBoundingClientRect().top;
-            const openNew = !entry.open;
+            const targetTop = summary.getBoundingClientRect().top;
+            const shouldOpen = !entry.open;
+            const token = ++animationToken;
+
             for (const other of entries) {
-                if (other !== entry) other.open = false;
+                if (other !== entry && other.open) other.open = false;
             }
-            entry.open = openNew;
-            const afterTop = summary.getBoundingClientRect().top;
-            const shift = afterTop - beforeTop;
-            if (Math.abs(shift) > 1) window.scrollBy({ top: shift, left: 0, behavior: 'instant' });
+            entry.open = shouldOpen;
+
+            const startedAt = performance.now();
+            const stabilize = () => {
+                if (token !== animationToken) return;
+                const shift = summary.getBoundingClientRect().top - targetTop;
+                if (Math.abs(shift) > 0.5) {
+                    window.scrollBy({ top: shift, left: 0, behavior: 'instant' });
+                }
+                if (!reducedMotion.matches && performance.now() - startedAt < 400) {
+                    requestAnimationFrame(stabilize);
+                }
+            };
+            stabilize();
         });
     }
 }

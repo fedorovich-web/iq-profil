@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\PuzzleCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,7 @@ final class AnswerSelectionController extends Controller
                 abort_unless($attempt->user_id === null, 404);
             }
             abort_unless($attempt->status === 'in_progress', 409, 'Тест уже завершён.');
+            abort_unless((int) $attempt->question_revision === PuzzleCatalog::VERSION, 409, 'Задания обновились. Начните новое прохождение.');
 
             $question = DB::table('questions')->where('position', $attempt->current_position)->first();
             abort_unless($question !== null, 500);

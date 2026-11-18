@@ -1,0 +1,98 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit;
+
+use App\Support\GraphicPuzzle;
+use App\Support\PuzzleCatalog;
+use PHPUnit\Framework\TestCase;
+
+final class PuzzleCatalogTest extends TestCase
+{
+    public function test_every_question_has_six_visually_distinct_answers_and_one_key(): void
+    {
+        $definitions = PuzzleCatalog::definitions();
+        self::assertCount(25, $definitions);
+        self::assertCount(25, array_unique(array_column($definitions, 0)));
+
+        foreach ($definitions as $index => [$slug, $motif, $prompt, $cells, $choices, $explanation]) {
+            self::assertCount(9, $cells, $slug);
+            self::assertCount(6, $choices, $slug);
+            self::assertCount(6, array_unique($choices), $slug);
+            self::assertContains($cells[8], $choices, $slug);
+            self::assertNotEmpty($prompt, $slug);
+            self::assertNotEmpty($explanation, $slug);
+            $svgs = array_map(static fn (int $value): string => (string) GraphicPuzzle::image($slug, $value), $choices);
+            self::assertCount(6, array_unique($svgs), 'Two answer illustrations are identical for '.$slug);
+            foreach ($svgs as $svg) {
+                self::assertStringContainsString('<svg ', $svg, $slug);
+                self::assertStringContainsString('</svg>', $svg, $slug);
+                self::assertGreaterThan(90, strlen($svg), $slug);
+            }
+            self::assertSame($cells[8], $choices[array_search($cells[8], $choices, true)], $slug.' '.($index + 1));
+        }
+    }
+
+    public function test_all_twenty_five_intended_rules_are_satisfied(): void
+    {
+        foreach (PuzzleCatalog::definitions() as [$slug, $motif, $prompt, $c]) {
+            $rows = [array_slice($c, 0, 3), array_slice($c, 3, 3), array_slice($c, 6, 3)];
+            $cols = [[$c[0], $c[3], $c[6]], [$c[1], $c[4], $c[7]], [$c[2], $c[5], $c[8]]];
+
+            $valid = match ($slug) {
+                'dots-add' => self::every($rows, static fn (array $r): bool => $r[2] === $r[0] + $r[1]),
+                'compass-step' => self::step($rows, 1, 6) && self::step($cols, 2, 6),
+                'mosaic-repeat' => self::every($rows, static fn (array $r): bool => $r[0] === $r[2]),
+                'polygon-steps' => self::step($rows, 1) && self::step($cols, 1),
+                'orbit-skip' => self::step($rows, 2, 6) && self::step($cols, 1, 6),
+                'shape-union', 'four-band-union' => self::every($rows, static fn (array $r): bool => ($r[0] | $r[1]) === $r[2]),
+                'bars-xor' => self::every($rows, static fn (array $r): bool => ($r[0] ^ $r[1]) === $r[2]),
+                'shape-common' => self::every($rows, static fn (array $r): bool => ($r[0] & $r[1]) === $r[2]),
+                'count-subtract' => self::every($rows, static fn (array $r): bool => $r[2] === $r[0] - $r[1]),
+                'direction-mirror' => self::every($rows, static fn (array $r): bool => (6 - $r[0]) % 6 === $r[2]),
+                'rotation-composition' => self::every($rows, static fn (array $r): bool => ($r[0] + $r[1]) % 6 === $r[2]),
+                'color-latin', 'nested-cycle' => self::latin($rows) && self::latin($cols),
+                'bar-complement' => self::every($rows, static fn (array $r): bool => ($r[0] & $r[1]) === 0 && ($r[0] | $r[1]) === 7 && $r[2] === 7),
+                'corners-dual' => self::step($rows, 1) && self::step($cols, 4),
+                'bar-wrap' => self::step($rows, 1, 6) && self::step($cols, 1, 6),
+                'xor-two-axes', 'xor-four' => self::every([...$rows, ...$cols], static fn (array $r): bool => ($r[0] ^ $r[1]) === $r[2]),
+                'absolute-distance' => self::every($rows, static fn (array $r): bool => abs($r[0] - $r[1]) === $r[2]),
+                'growing-strides' => self::every(array_keys($rows), static fn (int $i): bool => $rows[$i][1] - $rows[$i][0] === $i + 1 && $rows[$i][2] - $rows[$i][1] === $i + 1) && self::every(array_keys($cols), static fn (int $i): bool => $cols[$i][1] - $cols[$i][0] === $i + 1 && $cols[$i][2] - $cols[$i][1] === $i + 1),
+                'grid-traversal' => self::step($rows, 3, 9) && self::step($cols, 4, 9),
+                'color-count', 'arrow-colors' => self::every($rows, static fn (array $r): bool => intdiv($r[0], 3) === intdiv($r[1], 3) && intdiv($r[1], 3) === intdiv($r[2], 3)) && self::every($cols, static fn (array $r): bool => $r[0] % 3 === $r[1] % 3 && $r[1] % 3 === $r[2] % 3),
+                'master-four-layer' => self::every([...$rows, ...$cols], static fn (array $r): bool => ($r[0] | $r[1]) === $r[2]),
+                default => false,
+            };
+            self::assertTrue($valid, "The visual rule is false: {$slug}");
+        }
+    }
+
+    private static function every(array $list, callable $predicate): bool
+    {
+        foreach ($list as $item) {
+            if (! $predicate($item)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function step(array $groups, int $step, ?int $mod = null): bool
+    {
+        return self::every($groups, static function (array $group) use ($step, $mod): bool {
+            return $group[1] === ($mod === null ? $group[0] + $step : ($group[0] + $step) % $mod)
+                && $group[2] === ($mod === null ? $group[1] + $step : ($group[1] + $step) % $mod);
+        });
+    }
+
+    private static function latin(array $groups): bool
+    {
+        return self::every($groups, static function (array $r): bool {
+            sort($r);
+
+            return $r === [0, 1, 2];
+        });
+    }
+}

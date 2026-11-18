@@ -130,9 +130,9 @@ final class QuizFlowTest extends TestCase
         ]);
 
         $report = $this->get('/result/'.$uuid)->assertOk()
-            ->assertSee('Результаты графического теста')
-            ->assertSee('Результаты по типам заданий')
-            ->assertSee('Вопрос 25')
+            ->assertSee('Ваш результат')
+            ->assertSee('По направлениям заданий')
+            ->assertDontSee('Подробный разбор 25 вопросов')
             ->assertSee((string) $correctAnswers);
 
         $breakdown = $report->viewData('categoryBreakdown');
@@ -143,6 +143,43 @@ final class QuizFlowTest extends TestCase
             $this->assertSame(5, $category['total']);
             $this->assertSame($category['correct'] * 20, $category['percentage']);
         }
+    }
+
+    public function test_report_uses_persisted_score_for_all_correct_and_all_incorrect_answers(): void
+    {
+        foreach ([true => 25, false => 0] as $correct => $expected) {
+            $uuid = $this->startAttempt();
+            for ($position = 1; $position <= 25; $position++) {
+                $questionId = (int) DB::table('questions')->where('position', $position)->value('id');
+                $optionId = (int) DB::table('answer_options')
+                    ->where('question_id', $questionId)
+                    ->where('is_correct', (bool) $correct)
+                    ->orderBy('id')->value('id');
+                $this->post('/quiz/answer', [
+                    'navigation' => $position === 25 ? 'finish' : 'next',
+                    'answer_option_id' => $optionId,
+                ])->assertRedirect($position === 25 ? '/paywall/'.$uuid : '/quiz');
+            }
+            $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'correct_count' => $expected]);
+            $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+            $report = $this->get('/result/'.$uuid)->assertOk()
+                ->assertSee($expected === 25 ? '100%' : '0%')
+                ->assertDontSee('Подробный разбор')
+                ->assertDontSee('Правильно:');
+            $categories = $report->viewData('categoryBreakdown');
+            $this->assertSame($expected, array_sum(array_column($categories, 'correct')));
+        }
+    }
+
+    public function test_legacy_in_progress_attempt_starts_new_questions_without_erasing_old_attempt(): void
+    {
+        $old = $this->startAttempt();
+        DB::table('quiz_attempts')->where('uuid', $old)->update(['question_revision' => 1]);
+        $this->get('/quiz')->assertRedirect('/quiz');
+        $new = (string) session()->get('active_attempt');
+        $this->assertNotSame($old, $new);
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'question_revision' => 1]);
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $new, 'question_revision' => 2]);
     }
 
     public function test_a_new_attempt_does_not_modify_the_previous_one(): void
