@@ -13,14 +13,24 @@ final class GraphicPuzzle
         $definition = PuzzleCatalog::find($kind);
         if ($definition !== null) {
             return match ($definition[1]) {
-                'dots', 'constellation' => 'Количество элементов: '.$value,
+                'dots', 'constellation' => 'Количество синих точек: '.$value,
                 'polygon' => 'Многоугольник с '.$value.' сторонами',
-                'direction', 'direction-tone' => 'Направление и цвет стрелки, состояние '.($value + 1),
-                'orbit', 'grid' => 'Положение маркера '.($value + 1),
-                'bands' => 'Количество полос: '.($value + 1),
+                'gem' => (['Синий', 'Бирюзовый', 'Золотистый', 'Фиолетовый', 'Коралловый', 'Графитовый'][$value] ?? 'Неизвестный').' шестиугольник',
+                'nested' => 'Внутренняя фигура: '.(['круг', 'квадрат', 'треугольник', 'ромб', 'звезда', 'шестиугольник'][$value] ?? 'неизвестная'),
+                'direction' => 'Стрелка направлена '.(['вверх', 'вверх вправо', 'вниз вправо', 'вниз', 'вниз влево', 'вверх влево'][$value] ?? 'неизвестно куда'),
+                'direction-tone' => (['Синяя', 'Красная', 'Бирюзовая'][intdiv($value, 3)] ?? 'Неизвестная').' стрелка: '.(['вверх', 'вверх вправо', 'вниз вправо'][$value % 3]),
+                'orbit' => 'Маркер на окружности: '.(['сверху', 'сверху справа', 'снизу справа', 'снизу', 'снизу слева', 'сверху слева'][$value] ?? 'неизвестно'),
+                'grid' => 'Маркер в сетке: '.(['верхняя левая', 'верхняя центральная', 'верхняя правая', 'средняя левая', 'центр', 'средняя правая', 'нижняя левая', 'нижняя центральная', 'нижняя правая'][$value] ?? 'неизвестно'),
+                'mosaic' => self::mosaicDescription($value),
+                'shapes3' => self::maskDescription($value, ['круг', 'треугольник', 'квадрат']),
+                'bars3' => self::maskDescription($value, ['левая полоса', 'средняя полоса', 'правая полоса']),
+                'corner' => 'Г-образный угол '.(['сверху слева', 'сверху справа', 'снизу справа', 'снизу слева'][$value % 4]).', точка '.(['синяя', 'жёлтая', 'бирюзовая'][intdiv($value, 4)] ?? 'неизвестна'),
+                'bands' => 'Вертикальных линий: '.($value + 1),
                 'radial' => 'Количество лучей: '.($value + 1),
-                'color-dots' => 'Цвет и количество точек, состояние '.($value + 1),
-                default => 'Композиция номер '.($value + 1),
+                'color-dots' => 'Точки '.(['синие', 'бирюзовые', 'жёлтые'][intdiv($value, 3)] ?? 'неизвестного цвета').', количество: '.($value % 3 + 1),
+                'quads4' => self::maskDescription($value, ['верхняя левая позиция', 'верхняя правая позиция', 'нижняя левая позиция', 'нижняя правая позиция']),
+                'bands4' => self::maskDescription($value, ['первая полоса', 'вторая полоса', 'третья полоса', 'четвёртая полоса']),
+                default => 'Неизвестная фигура',
             };
         }
 
@@ -53,6 +63,33 @@ final class GraphicPuzzle
         };
 
         return new HtmlString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="'.$size.'" height="'.$size.'" aria-hidden="true" focusable="false">'.$content.'</svg>');
+    }
+
+    /**
+     * Describe the occupied visual positions, so a screen reader can access the puzzle.
+     *
+     * @param  array<int, string>  $labels
+     */
+    private static function maskDescription(int $mask, array $labels): string
+    {
+        $active = [];
+        foreach ($labels as $index => $label) {
+            if (($mask & (1 << $index)) !== 0) {
+                $active[] = $label;
+            }
+        }
+
+        return $active === [] ? 'Нет закрашенных элементов' : 'Закрашены: '.implode(', ', $active);
+    }
+
+    private static function mosaicDescription(int $value): string
+    {
+        $pairs = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
+        $labels = ['верхний левый', 'верхний правый', 'нижний левый', 'нижний правый'];
+
+        return isset($pairs[$value])
+            ? 'Закрашены квадраты: '.$labels[$pairs[$value][0]].' и '.$labels[$pairs[$value][1]]
+            : 'Неизвестная мозаика';
     }
 
     /**
@@ -155,7 +192,7 @@ final class GraphicPuzzle
         $spots = [[26, 33], [53, 24], [76, 38], [31, 66], [58, 57], [75, 76]];
         $out = '<path d="M26 33 L53 24 L76 38 L75 76 L58 57 L31 66 Z" stroke="#d6e3fc" stroke-width="2" stroke-dasharray="3 5" fill="none"/>';
         foreach (array_slice($spots, 0, $count) as [$x, $y]) {
-            $out .= '<circle cx="'.$x.'" cy="'.$y.'" r="7.5" fill="#1d62e7" stroke="#f8fbff" stroke-width="2"/>';
+            $out .= '<circle cx="'.$x.'" cy="'.$y.'" r="10" fill="#1d62e7" stroke="#f8fbff" stroke-width="1.5"/>';
         }
 
         return $out;
@@ -163,24 +200,26 @@ final class GraphicPuzzle
 
     private static function gem(int $value): string
     {
-        $colors = ['#195edc', '#0a9e9a', '#e7a43d'];
-        $color = $colors[$value % 3];
-        $fill = $value < 3 ? $color : '#eff5ff';
+        $colors = ['#195edc', '#0a9e9a', '#e7a43d', '#7847b6', '#d45d68', '#4f627f'];
+        $color = $colors[$value] ?? '#4f627f';
 
-        return '<path d="M50 15 L79 33 L79 67 L50 85 L21 67 L21 33 Z" fill="'.$fill.'" stroke="'.$color.'" stroke-width="5" stroke-linejoin="round"/>'
-            .'<path d="M50 15 L50 85 M21 33 L79 67" stroke="'.$color.'" stroke-width="1.5" opacity=".4"/>';
+        return '<path d="M50 15 L79 33 L79 67 L50 85 L21 67 L21 33 Z" fill="'.$color.'" stroke="'.$color.'" stroke-width="5" stroke-linejoin="round"/>'
+            .'<path d="M50 15 L50 85 M21 33 L79 67" stroke="#fff" stroke-width="1.6" opacity=".26"/>';
     }
 
     private static function nested(int $value): string
     {
-        $style = $value % 3;
-        $inner = match ($style) {
+        $inner = match ($value) {
             0 => '<circle cx="50" cy="50" r="19" fill="#1f66e7"/>',
             1 => '<rect x="32" y="32" width="36" height="36" rx="6" fill="#17969e"/>',
-            default => '<path d="M50 29 L74 69 H26 Z" fill="#e4a749"/>',
+            2 => '<path d="M50 29 L74 69 H26 Z" fill="#e4a749"/>',
+            3 => '<path d="M50 25 L77 50 L50 75 L23 50 Z" fill="#845bb6"/>',
+            4 => '<path d="M50 24 L57 42 L76 42 L61 54 L67 73 L50 62 L33 73 L39 54 L24 42 L43 42 Z" fill="#d65c6c"/>',
+            5 => '<path d="M36 28 L64 28 L78 50 L64 72 L36 72 L22 50 Z" fill="#526987"/>',
+            default => '',
         };
 
-        return '<rect x="12" y="12" width="76" height="76" rx="20" fill="'.($value < 3 ? '#eff5ff' : '#dce9ff').'" stroke="#c5daf8" stroke-width="3"'.($value >= 3 ? ' stroke-dasharray="5 4"' : '').'/>'.$inner;
+        return '<rect x="12" y="12" width="76" height="76" rx="20" fill="#eff5ff" stroke="#c5daf8" stroke-width="3"/>'.$inner;
     }
 
     private static function corner(int $value): string

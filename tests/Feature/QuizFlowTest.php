@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Support\PuzzleCatalog;
 use Database\Seeders\QuestionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +46,12 @@ final class QuizFlowTest extends TestCase
     {
         $uuid = $this->startAttempt();
         $this->assertNotSame('', $uuid);
-        $this->get('/quiz')->assertOk()->assertSee('Вопрос')->assertSee('Какой фигуры', false);
+        $this->get('/quiz')->assertOk()
+            ->assertSee('Вопрос')
+            ->assertSee('Какой фигуры', false)
+            ->assertSee('Матрица три на три', false)
+            ->assertSee('Строка 1, столбец 1: Количество синих точек: 1', false)
+            ->assertSee('Строка 3, столбец 3: пропущенная фигура', false);
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'current_position' => 1, 'status' => 'in_progress']);
     }
 
@@ -179,7 +185,34 @@ final class QuizFlowTest extends TestCase
         $new = (string) session()->get('active_attempt');
         $this->assertNotSame($old, $new);
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'question_revision' => 1]);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $new, 'question_revision' => 2]);
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $new, 'question_revision' => PuzzleCatalog::VERSION]);
+    }
+
+    public function test_completed_previous_revision_keeps_its_saved_score_without_new_category_breakdown(): void
+    {
+        $uuid = $this->startAttempt();
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update([
+            'status' => 'completed',
+            'question_revision' => PuzzleCatalog::VERSION - 1,
+            'correct_count' => 7,
+            'elapsed_seconds' => 58,
+            'completed_at' => now(),
+        ]);
+
+        $this->get('/attempts/'.$uuid.'/resume')->assertRedirect('/paywall/'.$uuid);
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+
+        $report = $this->get('/result/'.$uuid)->assertOk()
+            ->assertSee('Ваш результат')
+            ->assertSee('до обновления графических заданий')
+            ->assertDontSee('По направлениям заданий');
+
+        $this->assertSame([], $report->viewData('categoryBreakdown'));
+        $this->assertDatabaseHas('quiz_attempts', [
+            'uuid' => $uuid,
+            'question_revision' => PuzzleCatalog::VERSION - 1,
+            'correct_count' => 7,
+        ]);
     }
 
     public function test_a_new_attempt_does_not_modify_the_previous_one(): void

@@ -14,9 +14,9 @@
     <h1 id="question-heading">Какой фигуры не хватает?</h1>
     <p>{{ $question->prompt }}</p>
   </div>
-  <div class="question-board" role="img" aria-label="Матрица три на три. Девятая клетка пуста; изучите последовательность.">
+  <div class="question-board" role="group" aria-label="Матрица три на три. Девятая клетка пуста; сравните восемь показанных фигур.">
   @foreach ($cells as $i => $value)
-    <div class="matrix-cell {{ $i === 8 ? 'matrix-missing' : '' }}">
+    <div class="matrix-cell {{ $i === 8 ? 'matrix-missing' : '' }}" role="img" aria-label="Строка {{ intdiv($i, 3) + 1 }}, столбец {{ $i % 3 + 1 }}: {{ $i === 8 ? 'пропущенная фигура' : App\Support\GraphicPuzzle::name($question->kind, $value) }}">
       @if ($i === 8) <span aria-hidden="true">?</span>
       @else {{ App\Support\GraphicPuzzle::image($question->kind, $value, 78) }} @endif
     </div>
