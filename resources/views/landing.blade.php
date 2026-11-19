@@ -6,7 +6,7 @@
 @section('content')
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
-    <h1 id="hero-title">Тест на IQ онлайн:<br><span>графические матрицы</span><br><span>без регистрации</span></h1>
+    <h1 id="hero-title">Тест на IQ онлайн:<br><span>графические матрицы</span><br><span>и логические задачи</span></h1>
     <p>Найдите закономерность в графических матрицах и выберите недостающий элемент. Ответы сохраняются автоматически: к любому вопросу можно вернуться до завершения теста.</p>
     <div class="hero-actions">
       <form action="{{ route('attempt.start') }}" method="POST">
@@ -100,7 +100,9 @@
     @foreach(config('iq_faq') as $item)
     <details>
       <summary>{{ $item['question'] }}</summary>
-      <p>{{ $item['answer'] }}</p>
+      <div class="faq-answer"><div class="faq-answer-inner">
+        <p>{{ $item['answer'] }}</p>
+      </div></div>
     </details>
     @endforeach
   </div>

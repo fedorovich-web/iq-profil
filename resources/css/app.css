@@ -789,11 +789,24 @@ body.auth-page{min-height:100vh;min-height:100dvh;height:auto;overflow:visible;p
   .portal-header .portal-avatar{flex:none}
 }
 
-/* FAQ: prevent native scroll anchoring from competing with the synchronous position correction. */
+/* FAQ: smooth height changes without losing the native details/summary fallback. */
 html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
 .faq-list,.faq-list details{overflow-anchor:none}
 .faq-list details::details-content{block-size:0;overflow:hidden}
 .faq-list details[open]::details-content{block-size:auto}
+.faq-list.is-animated .faq-answer{
+  display:grid;
+  grid-template-rows:0fr;
+  opacity:0;
+  transition:grid-template-rows .32s cubic-bezier(.2,.7,.2,1),opacity .24s ease;
+}
+.faq-list.is-animated details.is-expanded .faq-answer{grid-template-rows:1fr;opacity:1}
+.faq-list.is-animated .faq-answer-inner{min-height:0;overflow:hidden}
+.faq-list summary::after{transition:transform .25s ease;transform-origin:center}
+.faq-list details[open] summary::after{transform:rotate(90deg)}
+@media(prefers-reduced-motion:reduce){
+  .faq-list.is-animated .faq-answer,.faq-list summary::after{transition:none}
+}
 /* Make lower call-to-action heading visually prominent. */
 .landing-page .bottom-cta h2{font-weight:850;letter-spacing:-.035em;line-height:1.15}
 

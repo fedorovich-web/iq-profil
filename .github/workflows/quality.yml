@@ -81,6 +81,11 @@ jobs:
           IQ_TEST_REPORT_FILE: .incoming/browser-report.json
         run: node scripts/browser-e2e.mjs
 
+      - name: FAQ animation, keyboard, and layout stability
+        env:
+          IQ_TEST_BASE_URL: http://127.0.0.1:8123
+        run: node scripts/faq-stability-qa.mjs
+
       - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4

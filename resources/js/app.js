@@ -229,26 +229,74 @@ if (toggle && menu && backdrop) {
     });
 }
 
-// Opening one FAQ item must not move the activated heading when another item closes.
-// Update the layout synchronously and compensate only for the actual displacement.
+// Animate FAQ content rather than replacing the full height in one frame.
+// Keep the clicked heading stationary while another answer above collapses.
 const faq = document.querySelector('.faq-list');
 if (faq) {
     const entries = [...faq.querySelectorAll('details')];
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const closeTimers = new WeakMap();
+    let scrollFrame = 0;
+
+    function finishClose(entry) {
+        if (!entry.classList.contains('is-expanded')) {
+            entry.open = false;
+        }
+    }
+
+    function closeEntry(entry) {
+        if (!entry.open) return;
+        window.clearTimeout(closeTimers.get(entry));
+        entry.classList.remove('is-expanded');
+        if (reducedMotion.matches) {
+            finishClose(entry);
+        } else {
+            closeTimers.set(entry, window.setTimeout(() => finishClose(entry), 340));
+        }
+    }
+
+    function openEntry(entry) {
+        window.clearTimeout(closeTimers.get(entry));
+        entry.open = true;
+        // Force the initial collapsed grid track to be calculated before
+        // expanding it, including when reopening during the close transition.
+        entry.querySelector('.faq-answer').getBoundingClientRect();
+        entry.classList.add('is-expanded');
+    }
+
+    function keepHeadingInPlace(summary, originalTop) {
+        window.cancelAnimationFrame(scrollFrame);
+        const start = performance.now();
+        function stabilize(now) {
+            if (!summary.isConnected) return;
+            const shift = summary.getBoundingClientRect().top - originalTop;
+            if (Math.abs(shift) > 0.5) {
+                window.scrollBy({ top: shift, left: 0, behavior: 'instant' });
+            }
+            if (now - start < (reducedMotion.matches ? 40 : 390)) {
+                scrollFrame = window.requestAnimationFrame(stabilize);
+            }
+        }
+        scrollFrame = window.requestAnimationFrame(stabilize);
+    }
+
+    faq.classList.add('is-animated');
     for (const entry of entries) {
+        if (entry.open) entry.classList.add('is-expanded');
         const summary = entry.querySelector('summary');
         if (!summary) continue;
         summary.addEventListener('click', event => {
             event.preventDefault();
             const initialTop = summary.getBoundingClientRect().top;
-            const shouldOpen = !entry.open;
-            for (const other of entries) {
-                if (other !== entry && other.open) other.open = false;
+            if (entry.classList.contains('is-expanded')) {
+                closeEntry(entry);
+            } else {
+                for (const other of entries) {
+                    if (other !== entry) closeEntry(other);
+                }
+                openEntry(entry);
             }
-            entry.open = shouldOpen;
-            const displacement = summary.getBoundingClientRect().top - initialTop;
-            if (Math.abs(displacement) > 0.5) {
-                window.scrollBy({ top: displacement, left: 0, behavior: 'instant' });
-            }
+            keepHeadingInPlace(summary, initialTop);
         });
     }
 }
