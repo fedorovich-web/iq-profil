@@ -11,27 +11,27 @@ final class SeoCopyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_landing_has_independent_of_bank_size_seo_metadata_and_valid_json_ld(): void
+    public function test_landing_has_consistent_seo_metadata_and_valid_json_ld(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertSame(1, preg_match_all('/<title>/', $html));
         $this->assertSame(1, preg_match_all('/<h1\\b/', $html));
         $this->assertSame(1, preg_match_all('/<link rel="canonical"/', $html));
-        $this->assertStringContainsString('Тест на IQ онлайн — логические задачи | IQ.Профиль', $html);
-        $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн:<br><span>проверьте логику</span><br><span>на матрицах</span>', $html);
+        $this->assertStringContainsString('Тест на IQ онлайн без регистрации — логические задания | IQ.Профиль', $html);
+        $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн:<br><span>задачи на логику</span><br><span>без регистрации</span>', $html);
         $this->assertStringNotContainsString('IQ-тест с графическими заданиями', $html);
         $this->assertStringNotContainsString('class="eyebrow"', $html);
-        $this->assertStringContainsString('Графические матрицы', $html);
-        $this->assertStringContainsString('и разбор решений', $html);
-        $this->assertStringContainsString('Персональный отчёт с результатами', $html);
-        $this->assertStringContainsString('Найдите закономерность — <span>начните тест</span>', $html);
+        $this->assertStringContainsString('Что входит <span>в тест на логику</span>', $html);
+        $this->assertStringNotContainsString('и разбор решений', $html);
+        $this->assertStringContainsString('Персональный отчёт', $html);
+        $this->assertStringContainsString('Тест на <span>логическое мышление</span>', $html);
         $this->assertStringNotContainsString('bottom-cta-description-line', $html);
-        $this->assertStringContainsString('Без регистрации. Результаты — в персональном отчёте.', $html);
-        $this->assertStringContainsString('Отчёт в демоверсии открывается без карты и реальных списаний.', $html);
+        $this->assertStringContainsString('Графические матрицы без регистрации и ограничения по времени.', $html);
+        $this->assertStringContainsString('Отчёт в демоверсии доступен без карты и реальных списаний.', $html);
         $this->assertStringNotContainsString('Какие задания <span>в IQ-тесте</span>', $html);
-        $this->assertStringContainsString('Как проходит', $html);
-        $this->assertStringContainsString('Ответы на вопросы', $html);
+        $this->assertStringContainsString('Как пройти тест', $html);
+        $this->assertStringContainsString('Вопросы о тесте', $html);
         $this->assertStringNotContainsString('Почему выбирают', $html);
         $this->assertStringContainsString('<meta name="description"', $html);
         $this->assertStringContainsString('<meta property="og:title"', $html);
@@ -63,25 +63,26 @@ final class SeoCopyTest extends TestCase
             $this->assertStringContainsString('<p>'.e($item['answer']).'</p>', $html);
         }
 
-        $this->assertDoesNotMatchRegularExpression('/\\b25\\b/u', $html);
+        $this->assertStringNotContainsString('25 задач', $html);
     }
 
-    public function test_faq_is_unique_grounded_and_not_tied_to_number_of_questions(): void
+    public function test_faq_is_unique_grounded_and_kept_in_sync_with_schema(): void
     {
         $faq = config('iq_faq');
-        $this->assertCount(12, $faq);
-        $this->assertCount(12, array_unique(array_column($faq, 'question')));
-        $this->assertCount(12, array_unique(array_column($faq, 'answer')));
+        $this->assertCount(11, $faq);
+        $this->assertCount(11, array_unique(array_column($faq, 'question')));
+        $this->assertCount(11, array_unique(array_column($faq, 'answer')));
 
         $html = $this->get('/')->assertOk()->getContent();
-        $this->assertSame(12, preg_match_all('/<details>\\s*<summary>/s', $html));
+        $this->assertSame(11, preg_match_all('/<details>\\s*<summary>/s', $html));
 
         foreach ($faq as $item) {
             $this->assertGreaterThan(90, mb_strlen($item['answer']));
             $this->assertStringContainsString(e($item['question']), $html);
             $this->assertStringContainsString(e($item['answer']), $html);
-            $this->assertDoesNotMatchRegularExpression('/\\b25\\b/u', $item['question'].' '.$item['answer']);
         }
+        $this->assertStringNotContainsString('25 заданий', implode(' ', array_column($faq, 'answer')));
+
         foreach (['20 ₽', '499 ₽', 'без регистрации', 'психометрическую стандартизацию', 'отменить подписку'] as $phrase) {
             $this->assertStringContainsString($phrase, mb_strtolower($html));
         }

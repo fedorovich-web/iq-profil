@@ -72,10 +72,10 @@ h1,h2,h3{letter-spacing:-.038em}
 .step>p{max-width:250px;margin:0 auto;color:#334668;text-align:left;line-height:1.5}
 .faq-list{max-width:1100px;margin:auto;display:grid;gap:12px}
 .faq-list details{background:#fffffff0;border:1px solid #dce7ff;border-radius:16px;box-shadow:0 6px 13px #285ca312;padding:0 22px}
-.faq-list summary{cursor:pointer;display:list-item;list-style:none;font-weight:750;padding:17px 0}
+.faq-list summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:20px;list-style:none;font-weight:750;padding:17px 0}
 .faq-list summary::-webkit-details-marker{display:none}
-.faq-list summary::after{content:"+";float:right;font-size:23px;font-weight:400;color:#145fe7}
-.faq-list details[open] summary::after{content:"−"}
+.faq-list summary::after{content:"";display:block;flex:0 0 24px;width:24px;height:24px;background:linear-gradient(#145fe7,#145fe7) center/17px 2px no-repeat,linear-gradient(#145fe7,#145fe7) center/2px 17px no-repeat}
+.faq-list details[open] summary::after{background:linear-gradient(#145fe7,#145fe7) center/17px 2px no-repeat}
 .faq-list details p{margin:0 0 19px;color:#3e4f72;line-height:1.5}
 .bottom-cta{margin:76px 55px 20px;background:linear-gradient(120deg,#e0edff,#f0f6ff);border:1px solid #fff;box-shadow:0 8px 19px #2856a51a;padding:28px 43px;border-radius:27px;display:flex;justify-content:space-between;gap:25px;align-items:center}
 .bottom-cta h2{font-size:33px;margin-bottom:8px}
