@@ -17,8 +17,10 @@ final class AnswerSelectionController extends Controller
         $data = $request->validate(['answer_option_id' => ['required', 'integer', 'min:1']]);
         $uuid = $request->session()->get('active_attempt');
 
-        abort_unless(is_string($uuid)
-            && in_array($uuid, $request->session()->get('owned_attempts', []), true), 404);
+        abort_unless(is_string($uuid), 404);
+        if (! $request->user()) {
+            abort_unless(in_array($uuid, $request->session()->get('owned_attempts', []), true), 404);
+        }
 
         DB::transaction(function () use ($uuid, $data): void {
             $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->lockForUpdate()->first();

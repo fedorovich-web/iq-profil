@@ -316,6 +316,26 @@ final class QuizFlowTest extends TestCase
         $this->assertDatabaseCount('quiz_attempts', 2);
     }
 
+    public function test_authenticated_user_can_save_selection_after_resuming_from_new_session(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $uuid = $this->startAttempt();
+        $this->withSession(['active_attempt' => null, 'owned_attempts' => []]);
+        $this->get('/attempts/'.$uuid.'/resume')->assertRedirect('/quiz');
+
+        $questionId = DB::table('questions')->where('position', 1)->value('id');
+        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+        $this->postJson('/quiz/selection', ['answer_option_id' => $optionId])
+            ->assertOk()->assertJson(['saved' => true]);
+
+        $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
+        $this->assertDatabaseHas('attempt_answers', [
+            'attempt_id' => $attemptId,
+            'answer_option_id' => $optionId,
+        ]);
+    }
+
     public function test_logged_in_user_resumes_in_progress_attempt_after_session_is_recreated(): void
     {
         $user = User::factory()->create();
