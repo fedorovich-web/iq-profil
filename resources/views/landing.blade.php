@@ -7,8 +7,8 @@
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
     <span class="eyebrow">IQ-тест с графическими заданиями</span>
-    <h1 id="hero-title">Тест на IQ онлайн<br><span>без регистрации</span></h1>
-    <p>Пройдите задания на логическое и абстрактное мышление: найдите закономерности в матрицах и выберите недостающие фигуры. После теста доступен персональный отчёт.</p>
+    <h1 id="hero-title">Тест на IQ онлайн:<br><span>задачи на логику</span></h1>
+    <p>Пройдите IQ-тест без регистрации: находите закономерности в графических матрицах и выбирайте недостающие фигуры. После прохождения доступен персональный отчёт.</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#tests">Посмотреть тесты <span aria-hidden="true">→</span></a>
       <form action="{{ route('attempt.start') }}" method="POST">
