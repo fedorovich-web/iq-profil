@@ -107,7 +107,7 @@
   </div>
 </section>
 <section class="bottom-cta">
-  <div class="bottom-cta-copy"><h2>Проверьте логику — <span>пройдите тест на IQ</span></h2><p><span class="bottom-cta-description-line">Решайте задачи на логику и поиск закономерностей прямо в браузере.</span> <span class="bottom-cta-description-line">Начните без регистрации и откройте персональный отчёт после прохождения.</span></p></div>
+  <div class="bottom-cta-copy"><h2>Проверьте логику — <span>пройдите тест на IQ</span></h2><p>Без регистрации. Результаты — в персональном отчёте.</p></div>
   <form action="{{ route('attempt.start') }}" method="POST">
     <input type="hidden" name="_token" value="{{ csrf_token() }}">
     <button class="btn btn-primary" type="submit">Пройти IQ-тест</button>

@@ -630,7 +630,6 @@ body.auth-page{min-height:100vh;min-height:100dvh;height:auto;overflow:visible;p
 .landing-page .bottom-cta-copy{min-width:0;max-width:min(100%,460px)}
 .landing-page .bottom-cta-copy h2{font-size:clamp(27px,2.7vw,34px);line-height:1.18}
 .landing-page .bottom-cta-copy p{font-size:16px;line-height:1.5;max-width:100%}
-.landing-page .bottom-cta-description-line{display:block}
 .landing-page .bottom-cta form{min-width:0;max-width:100%}
 @media(max-width:1050px){
   .landing-page .bottom-cta{
@@ -642,7 +641,6 @@ body.auth-page{min-height:100vh;min-height:100dvh;height:auto;overflow:visible;p
     padding-bottom:165px;
   }
   .landing-page .bottom-cta-copy{max-width:min(100%,520px)}
-  .landing-page .bottom-cta-description-line{display:inline}
   .landing-page .bottom-cta form{justify-self:start}
 }
 @media(max-width:690px){
