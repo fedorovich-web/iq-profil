@@ -39,16 +39,29 @@ final class SeoCopyTest extends TestCase
         $this->assertStringContainsString('<link rel="canonical" href="'.route('landing').'">', $html);
         $this->assertStringNotContainsString('<meta name="robots" content="noindex', $html);
         $this->assertStringNotContainsString('Предварительные ответы', $html);
-        $this->assertStringNotContainsString('FAQPage', $html);
+        $this->assertStringContainsString('FAQPage', $html);
         $this->assertStringNotContainsString('Почему выбирают IQ.Профиль', $html);
         $this->assertSame(0, preg_match_all('/<h[1-3][^>]*>[^<]*IQ\\.Профиль/u', $html));
 
         $this->assertSame(1, preg_match_all('/<script type="application\\/ld\\+json">(.*?)<\\/script>/s', $html, $found));
         $schema = json_decode($found[1][0], true, 512, JSON_THROW_ON_ERROR);
         $this->assertSame('https://schema.org', $schema['@context']);
-        $this->assertSame(['WebSite', 'WebPage'], array_column($schema['@graph'], '@type'));
+        $this->assertSame(['WebSite', 'WebPage', 'FAQPage'], array_column($schema['@graph'], '@type'));
         $this->assertSame(route('landing'), $schema['@graph'][1]['url']);
         $this->assertSame('ru-RU', $schema['@graph'][1]['inLanguage']);
+        $this->assertSame(route('landing').'#faq', $schema['@graph'][2]['url']);
+        $this->assertSame(['@id' => route('landing').'#webpage'], $schema['@graph'][2]['isPartOf']);
+        $faqEntities = $schema['@graph'][2]['mainEntity'];
+        $faq = config('iq_faq');
+        $this->assertCount(count($faq), $faqEntities);
+        foreach ($faq as $index => $item) {
+            $this->assertSame('Question', $faqEntities[$index]['@type']);
+            $this->assertSame($item['question'], $faqEntities[$index]['name']);
+            $this->assertSame('Answer', $faqEntities[$index]['acceptedAnswer']['@type']);
+            $this->assertSame($item['answer'], $faqEntities[$index]['acceptedAnswer']['text']);
+            $this->assertStringContainsString('<summary>'.e($item['question']).'</summary>', $html);
+            $this->assertStringContainsString('<p>'.e($item['answer']).'</p>', $html);
+        }
 
         $this->assertDoesNotMatchRegularExpression('/\\b25\\b/u', $html);
     }

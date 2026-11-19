@@ -35,20 +35,28 @@ node scripts/browser-e2e.mjs
 
 ## Docker Compose / Dokploy
 
-В `compose.yaml` определены два сервиса: PHP-FPM (`app`) и Nginx (`web`). В контейнерном приложении SQLite сохраняется в volume `iq_database`.
+В `compose.yaml` определены PHP-FPM (`app`) и Nginx (`web`). SQLite хранится в **именованном Docker volume** `iq_database` по пути `/var/www/html/database/database.sqlite`. Режим развёртывания — **Docker Compose, не Docker Stack** (Stack не собирает образы через `build:`).
 
-Минимальные внешние переменные:
+### Порядок первого развёртывания
 
-- `APP_KEY`: постоянный Laravel-ключ, сохраняемый между развёртываниями.
-- `APP_URL`: канонический публичный HTTPS-адрес соответствующего проекта.
+1. Проверьте DNS A-запись `flatero.ru`: она должна указывать на публичный IP нужного сервера Dokploy. Убедитесь, что порты 80 и 443 доступны Traefik.
+2. В уже созданном проекте `iq-profil`, окружение `production`, нажмите **Create Service → Docker Compose**. Источник GitHub: `fedorovich-web/iq-profil`, ветка `main`, путь файла Compose — `compose.yaml` (корень репозитория).
+3. В разделе **Environment** добавьте `APP_KEY=<случайный_ключ_Laravel>` и `APP_URL=https://flatero.ru`. Сгенерировать ключ **на доверенной машине**: `php artisan key:generate --show`. Он должен остаться неизменным при дальнейших деплоях и никогда не попадать в Git. Переменные передаются через `${APP_KEY}` и `${APP_URL}` в Compose. **Не копируйте весь локальный .env в Dokploy**.
+4. В **Domains → Add Domain** укажите `flatero.ru`, сервис `web`, **Container Port 80**, HTTPS через Let's Encrypt и перенаправление HTTP → HTTPS (если опция доступна). Домен **не привязывается к `app:9000`**. Не публикуйте внешний `ports: 8080:80`.
+5. В настройках Compose по возможности включите **Isolated Deployments**. Иначе необходимо убедиться через **Preview Compose**, что `web` и `app` находятся в общей Docker-сети, а `web` также доступен Traefik. Иначе возникнет 502 или ошибка `app:9000`.
+6. Нажмите **Deploy**. Проверьте логи контейнера `app`: миграции завершаются успешно и seed добавляет 25 вопросов, контейнер `web` получает статус `healthy`. Создание таблиц допустимо только для **новой пустой** SQLite; не указывайте на существующий volume без резервной копии.
 
-Пример генерации ключа на доверенной машине: `php artisan key:generate --show`. Не помещайте его в Git и не меняйте на работающем проекте без плана миграции сессий/шифрования.
+В production заданы `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_LIFETIME=10080` (семь дней), `SESSION_SECURE_COOKIE=true`. SSL завершается на Traefik. Laravel доверяет forwarded-заголовкам только от адресов приватных сетей.
 
-Для Dokploy используйте Docker Compose service, подключите Git-репозиторий и назначьте домен на HTTP-порт 80 сервиса `web` через reverse proxy. В текущем Compose `web` использует `expose: 80`, **не опубликованный порт хоста**. Публичный HTTPS завершается на reverse proxy. Сервер приложения настроен доверять forwarded-заголовкам только от приватных сетей.
+**Важно:** при удалении Compose-сервиса никогда не включайте «Delete volumes» без проверенной резервной копии. Не запускайте `docker compose down -v`, `migrate:fresh`, `db:wipe` и не меняйте имя Compose-проекта: это может скрыть старый volume под новым именем.
 
-В production действуют `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_LIFETIME=10080` (7 дней), `SESSION_SECURE_COOKIE=true`.
+### Проверка публичного сайта
 
-Контейнерный `entrypoint` выполняет миграции и начальное заполнение банка вопросов. При изменениях набора вопросов обязательно проверяйте версии попыток и сохранность старых результатов.
+Проверить `https://flatero.ru/`, `https://flatero.ru/robots.txt`, `https://flatero.ru/sitemap.xml` и `https://flatero.ru/up`. Sitemap и директива `Sitemap:` в robots должны содержать **https://flatero.ru**, а не `localhost` или `http://`. JSON-LD главной должен содержать один `FAQPage` и все 12 видимых пар `Question` / `Answer`.
+
+Далее в реальном браузере проверить гостевой тест, продолжение, оплату **только в деморежиме**, отчёт, регистрацию, авторизацию, личный кабинет и отмену подписки. После первой проверки — сделать бэкап и выполнить **обычный redeploy без смены Compose-проекта**, проверить сохранение записей SQLite.
+
+Контейнерный `entrypoint` выполняет миграции и идемпотентный seed при запуске. При изменениях банка вопросов обязательно проверяйте версии попыток и сохранность старых результатов. Для восстановления пароля по email требуется настроить реальный SMTP; без него `MAIL_MAILER=log` не отправляет письма пользователям.
 
 ## SQLite и резервные копии
 

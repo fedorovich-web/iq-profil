@@ -6,8 +6,8 @@ COPY public ./public
 RUN npm ci --no-audit --no-fund && npm run build
 
 FROM php:8.5-fpm-alpine AS app
-RUN apk add --no-cache icu-dev libzip-dev oniguruma-dev \
-    && docker-php-ext-install -j$(nproc) pdo_sqlite intl mbstring zip opcache
+RUN apk add --no-cache icu-dev libzip-dev \
+    && docker-php-ext-install -j2 intl zip
 WORKDIR /var/www/html
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 COPY composer.json composer.lock ./

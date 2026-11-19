@@ -29,6 +29,21 @@
             'description' => 'Тест на IQ онлайн с графическими матрицами, поиском закономерностей и персональным отчётом о прохождении.',
             'inLanguage' => 'ru-RU',
             'isPartOf' => ['@id' => route('landing').'#website']],
+        [
+            '@type' => 'FAQPage',
+            '@id' => route('landing').'#faq',
+            'url' => route('landing').'#faq',
+            'inLanguage' => 'ru-RU',
+            'isPartOf' => ['@id' => route('landing').'#webpage'],
+            'mainEntity' => array_map(static fn (array $item): array => [
+                '@type' => 'Question',
+                'name' => $item['question'],
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => $item['answer'],
+                ],
+            ], config('iq_faq')),
+        ],
     ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endif
