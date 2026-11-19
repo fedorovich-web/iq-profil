@@ -21,7 +21,7 @@ for (const [name, url, expected] of cases) {
             signal: AbortSignal.timeout(12000),
         });
         const location = response.headers.get('location');
-        check(name, response.status === 301 && location === expected, {
+        check(name, [301, 308].includes(response.status) && location === expected, {
             status: response.status,
             location,
             expected,

@@ -52,7 +52,7 @@ DNS-записи flatero.ru и www.flatero.ru указывают на один �
 Docker Compose маршруты www.flatero.ru на HTTP (web) и HTTPS (websecure)
 с сертификатом Let's Encrypt объявлены в compose.yaml отдельными
 Traefik labels. Middleware iqprofil-www-redirect выполняет постоянный
-редирект (301) на https://flatero.ru с сохранением пути и query string.
+редирект (301 или 308) на https://flatero.ru с сохранением пути и query string.
 Основной домен продолжает обслуживаться через Dokploy Domains -> web:80.
 Существующую запись flatero.ru удалять не следует.
 
