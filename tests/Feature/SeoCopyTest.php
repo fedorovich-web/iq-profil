@@ -18,9 +18,12 @@ final class SeoCopyTest extends TestCase
         $this->assertSame(1, preg_match_all('/<title>/', $html));
         $this->assertSame(1, preg_match_all('/<h1\\b/', $html));
         $this->assertSame(1, preg_match_all('/<link rel="canonical"/', $html));
-        $this->assertStringContainsString('IQ-тест онлайн на логику и мышление', $html);
-        $this->assertStringContainsString('<h1 id="hero-title">IQ-тест онлайн:', $html);
-        $this->assertStringContainsString('проверьте логику', $html);
+        $this->assertStringContainsString('Тест на IQ онлайн без регистрации — задачи на логику', $html);
+        $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн<br><span>без регистрации</span>', $html);
+        $this->assertStringContainsString('Какие задания', $html);
+        $this->assertStringContainsString('Как пройти', $html);
+        $this->assertStringContainsString('Частые вопросы', $html);
+        $this->assertStringNotContainsString('Почему выбирают', $html);
         $this->assertStringContainsString('<meta name="description"', $html);
         $this->assertStringContainsString('<meta property="og:title"', $html);
         $this->assertStringContainsString('<meta property="og:url" content="'.route('landing').'">', $html);
@@ -28,6 +31,8 @@ final class SeoCopyTest extends TestCase
         $this->assertStringNotContainsString('<meta name="robots" content="noindex', $html);
         $this->assertStringNotContainsString('Предварительные ответы', $html);
         $this->assertStringNotContainsString('FAQPage', $html);
+        $this->assertStringNotContainsString('Почему выбирают IQ.Профиль', $html);
+        $this->assertSame(0, preg_match_all('/<h[1-3][^>]*>[^<]*IQ\\.Профиль/u', $html));
 
         $this->assertSame(1, preg_match_all('/<script type="application\\/ld\\+json">(.*?)<\\/script>/s', $html, $found));
         $schema = json_decode($found[1][0], true, 512, JSON_THROW_ON_ERROR);

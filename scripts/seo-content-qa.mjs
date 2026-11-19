@@ -23,6 +23,7 @@ for (const width of [320,390,768,1440]) {
       title:document.title,
       description:document.querySelector('meta[name="description"]')?.content,
       h1:h1?.innerText,
+      headings:[...document.querySelectorAll('h1,h2,h3')].map(h=>h.textContent.trim()),
       faqCount:document.querySelectorAll('.faq-list details').length,
       canonical:document.querySelector('link[rel="canonical"]')?.href,
       graphTypes:graph['@graph'].map(i=>i['@type']),
@@ -36,7 +37,9 @@ for (const width of [320,390,768,1440]) {
     };
   });
   if(details.faqCount!==12||details.titleCount!==1||details.overflow>2||details.brokenImages.length||
-     details.graphContext!=='https://schema.org'||details.graphTypes.join(',')!=='WebSite,WebPage') {
+     details.graphContext!=='https://schema.org'||details.graphTypes.join(',')!=='WebSite,WebPage'||
+     !details.h1.includes('Тест на IQ онлайн')||
+     details.headings.some(h=>/IQ\.Профиль|\b25\b/.test(h))) {
     throw new Error('SEO/UX issue at '+width+': '+JSON.stringify(details));
   }
   await page.locator('.hero').screenshot({path:output+'/seo-hero-'+width+'.png'});
