@@ -35,6 +35,29 @@ if (answerForm) {
     });
 }
 
+// This notification appears only after newly saved answers cross one third or two
+// thirds of the current test. It never blocks the quiz or takes keyboard focus.
+const milestoneNotice = document.querySelector('[data-quiz-milestone]');
+if (milestoneNotice) {
+    milestoneNotice.hidden = false;
+    let hideTimeout;
+
+    const hideNotice = () => {
+        if (milestoneNotice.classList.contains('is-hiding')) return;
+        window.clearTimeout(hideTimeout);
+        milestoneNotice.classList.add('is-hiding');
+        window.setTimeout(() => milestoneNotice.remove(), 220);
+    };
+    const scheduleHide = () => {
+        hideTimeout = window.setTimeout(hideNotice, 5000);
+    };
+
+    milestoneNotice.querySelector('[data-milestone-close]').addEventListener('click', hideNotice);
+    milestoneNotice.addEventListener('focusin', () => window.clearTimeout(hideTimeout));
+    milestoneNotice.addEventListener('focusout', scheduleHide);
+    scheduleHide();
+}
+
 const toggle = document.querySelector('.mobile-menu-toggle');
 const menu = document.querySelector('#mobile-site-menu');
 const backdrop = document.querySelector('[data-menu-overlay]');

@@ -8,7 +8,7 @@
     <span class="quiz-counter">Вопрос <strong>{{ $question->position }}</strong> из {{ $totalQuestions }}</span>
     <div class="quiz-timer" role="timer" aria-label="Продолжительность теста"><span class="quiz-timer-icon" aria-hidden="true"><img src="{{ asset('assets/icons/client/history.avif') }}" width="20" height="20" alt=""></span><time id="quiz-timer" data-start="{{ $startedTimestamp }}" data-server="{{ $serverTimestamp }}">00:00</time></div>
   </div>
-  <div class="progress" role="progressbar" aria-label="Прогресс тестирования" aria-valuemin="0" aria-valuemax="{{ $totalQuestions }}" aria-valuenow="{{ $question->position - 1 }}"><span style="width: {{ $totalQuestions > 0 ? ($question->position - 1) / $totalQuestions * 100 : 0 }}%"></span></div>
+  <div class="progress" role="progressbar" aria-label="Прогресс тестирования" aria-valuemin="0" aria-valuemax="{{ $totalQuestions }}" aria-valuenow="{{ $answeredQuestions }}"><span style="width: {{ $totalQuestions > 0 ? $answeredQuestions / $totalQuestions * 100 : 0 }}%"></span></div>
   <div class="quiz-headline">
     <span class="quiz-kicker">Найдите закономерность</span>
     <h1 id="question-heading">Какой фигуры не хватает?</h1>
@@ -44,4 +44,17 @@
     </form>
   </div>
 </section>
+@php($milestone = session('quiz_progress_milestone'))
+@if(is_array($milestone) && ($milestone['attempt_uuid'] ?? null) === $attempt->uuid)
+<aside class="quiz-milestone" data-quiz-milestone hidden role="status" aria-label="Прогресс тестирования">
+  <div class="quiz-milestone-ring" style="--progress-angle: {{ (int) $milestone['percent'] * 3.6 }}deg" aria-hidden="true">
+    <strong>{{ (int) $milestone['percent'] }}%</strong>
+  </div>
+  <div class="quiz-milestone-copy">
+    <strong>{{ $milestone['stage'] === 1 ? 'Треть теста позади' : 'Большая часть теста пройдена' }}</strong>
+    <p>{{ $milestone['stage'] === 1 ? 'Ответы сохранены. Продолжайте в своём темпе.' : 'До персонального отчёта осталось немного.' }}</p>
+  </div>
+  <button class="quiz-milestone-close" data-milestone-close type="button" aria-label="Закрыть уведомление">×</button>
+</aside>
+@endif
 @endsection

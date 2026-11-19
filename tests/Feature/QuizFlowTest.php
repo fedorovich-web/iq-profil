@@ -56,6 +56,61 @@ final class QuizFlowTest extends TestCase
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'current_position' => 1, 'status' => 'in_progress']);
     }
 
+    public function test_progress_uses_saved_answers_and_milestones_are_shown_once(): void
+    {
+        $this->startAttempt();
+        $total = DB::table('questions')->count();
+        $firstMilestone = (int) ceil($total / 3);
+        $secondMilestone = (int) ceil($total * 2 / 3);
+
+        $this->get('/quiz')->assertOk()
+            ->assertSee('aria-valuenow="0"', false)
+            ->assertDontSee('data-quiz-milestone', false);
+
+        for ($position = 1; $position <= $firstMilestone; $position++) {
+            $questionId = DB::table('questions')->where('position', $position)->value('id');
+            $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+
+            $this->post('/quiz/answer', [
+                'navigation' => 'next',
+                'answer_option_id' => $optionId,
+            ])->assertRedirect('/quiz');
+        }
+
+        $firstPercent = (int) round($firstMilestone * 100 / $total);
+        $this->get('/quiz')->assertOk()
+            ->assertSee('aria-valuenow="'.$firstMilestone.'"', false)
+            ->assertSee('data-quiz-milestone', false)
+            ->assertSee('Треть теста позади')
+            ->assertSee($firstPercent.'%');
+        $this->get('/quiz')->assertOk()->assertDontSee('data-quiz-milestone', false);
+
+        // Revisiting a saved question cannot repeat a notification or rewind progress.
+        $this->post('/quiz/answer', ['navigation' => 'back'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk()
+            ->assertSee('aria-valuenow="'.$firstMilestone.'"', false)
+            ->assertDontSee('data-quiz-milestone', false);
+        $this->post('/quiz/answer', ['navigation' => 'next'])->assertRedirect('/quiz');
+
+        for ($position = $firstMilestone + 1; $position <= $secondMilestone; $position++) {
+            $questionId = DB::table('questions')->where('position', $position)->value('id');
+            $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+
+            $this->post('/quiz/answer', [
+                'navigation' => 'next',
+                'answer_option_id' => $optionId,
+            ])->assertRedirect('/quiz');
+        }
+
+        $secondPercent = (int) round($secondMilestone * 100 / $total);
+        $this->get('/quiz')->assertOk()
+            ->assertSee('aria-valuenow="'.$secondMilestone.'"', false)
+            ->assertSee('data-quiz-milestone', false)
+            ->assertSee('Большая часть теста пройдена')
+            ->assertSee($secondPercent.'%');
+        $this->get('/quiz')->assertOk()->assertDontSee('data-quiz-milestone', false);
+    }
+
     public function test_selection_is_saved_immediately_and_restored_on_reload(): void
     {
         $uuid = $this->startAttempt();
@@ -122,6 +177,13 @@ final class QuizFlowTest extends TestCase
                 'navigation' => $position === 26 ? 'finish' : 'next',
                 'answer_option_id' => $optionId,
             ])->assertRedirect($position === 26 ? '/paywall/'.$uuid : '/quiz');
+
+            if (in_array($position, [9, 18], true)) {
+                $this->get('/quiz')->assertOk()
+                    ->assertSee('aria-valuenow="'.$position.'"', false)
+                    ->assertSee((int) round($position * 100 / 26).'%', false)
+                    ->assertSee('data-quiz-milestone', false);
+            }
         }
 
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'correct_count' => 26]);

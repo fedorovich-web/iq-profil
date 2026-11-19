@@ -34,30 +34,30 @@
   </div>
 </section>
 <section class="section" id="benefits" aria-labelledby="benefits-title">
-  <h2 id="benefits-title">Преимущества IQ-теста: <span>формат и результаты</span></h2>
-  <p class="section-subtitle">Невербальные задачи на поиск закономерностей, свободный темп прохождения и сохранение ответов. После завершения можно открыть персональный отчёт с подробными результатами.</p>
+  <h2 id="benefits-title">Преимущества <span>IQ-теста онлайн</span></h2>
+  <p class="section-subtitle">Графические задачи на поиск закономерностей, прохождение без спешки и сохранение ответов. Следите за прогрессом и получите персональный отчёт по итогам теста.</p>
   <div class="feature-grid">
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-science.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-science.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">◇</div>@endif
-      <h3>Невербальные задачи на закономерности</h3><p>Вместо вопросов на эрудицию — графические матрицы. Сравнивайте форму, расположение и количество элементов, чтобы определить правило и выбрать недостающий вариант.</p>
+      <h3>Невербальные задания на логику</h3><p>В графических матрицах нужно определить, как меняются форма, положение и количество элементов, а затем выбрать недостающую фигуру. Специальные знания не требуются.</p>
     </article>
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-format.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-format.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">▤</div>@endif
-      <h3>Свой темп и сохранение ответов</h3><p>Таймер показывает продолжительность, но не прерывает тест. Можно вернуться к предыдущим заданиям, изменить ответ и продолжить незавершённую попытку в том же браузере.</p>
+      <h3>Без ограничения времени</h3><p>Таймер показывает затраченное время, но не прерывает тест. Ответы сохраняются автоматически: к ним можно вернуться и продолжить попытку позже в том же браузере.</p>
     </article>
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-results.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-results.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">▥</div>@endif
-      <h3>Подробный персональный отчёт</h3><p>После прохождения откройте отчёт с числом верных ответов, процентом выполнения, временем и результатами по категориям. В личном кабинете можно возвращаться к ранее открытым отчётам.</p>
+      <h3>Результаты по категориям заданий</h3><p>Персональный отчёт покажет число правильных ответов, процент выполнения и время прохождения. Вы также увидите, какие типы задач удалось решить лучше.</p>
     </article>
   </div>
 </section>
 <section class="section" id="tests" aria-labelledby="tests-title">
-  <h2 id="tests-title">Тесты на <span>интеллект и логику</span></h2>
-  <p class="section-subtitle">Сейчас доступны графические матрицы. Новые форматы заданий появятся по мере разработки.</p>
+  <h2 id="tests-title">Тесты на IQ <span>и логическое мышление</span></h2>
+  <p class="section-subtitle">Сейчас можно пройти IQ-тест с графическими матрицами и поиском закономерностей. Отдельные тесты на логические связи и внимание пока в разработке.</p>
   <div class="test-grid">
     <article class="test-card">
       @if(file_exists(public_path('assets/test-iq.avif')))<img class="test-asset" src="{{ asset('assets/test-iq.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="test-graphic" aria-hidden="true"><span>■</span><span>◢</span><span>●</span></div>@endif
-      <h3>Графические матрицы</h3><p>Невербальный тест: сопоставляйте фигуры, повороты и сочетания признаков, чтобы найти пропущенный элемент.</p>
+      <h3>IQ-тест: графические матрицы</h3><p>Найдите закономерность в расположении и изменении фигур и выберите недостающий элемент. Начать можно без регистрации.</p>
       <form action="{{ route('attempt.start') }}" method="POST">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <button class="card-link" type="submit">Начать тест <span aria-hidden="true">→</span></button>
@@ -65,19 +65,19 @@
     </article>
     <article class="test-card test-card-coming">
       @if(file_exists(public_path('assets/test-logic.avif')))<img class="test-asset" src="{{ asset('assets/test-logic.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="test-graphic" aria-hidden="true">✥</div>@endif
-      <h3>Логические связи</h3><p>Отдельные задания на рассуждение и установление связей. Формат в разработке.</p>
+      <h3>Логические связи</h3><p>Задания на рассуждение и установление взаимосвязей между элементами. Направление в разработке.</p>
       <span class="card-coming-label">Скоро</span>
     </article>
     <article class="test-card test-card-coming">
       @if(file_exists(public_path('assets/test-memory.avif')))<img class="test-asset" src="{{ asset('assets/test-memory.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="test-graphic" aria-hidden="true">▱</div>@endif
-      <h3>Внимание к деталям</h3><p>Задания на наблюдательность и точность восприятия. Формат в разработке.</p>
+      <h3>Тест на внимание</h3><p>Задания на наблюдательность, сравнение и различение деталей. Направление в разработке.</p>
       <span class="card-coming-label">Скоро</span>
     </article>
   </div>
 </section>
 <section class="section" id="steps" aria-labelledby="steps-title">
   <h2 id="steps-title">Как пройти тест <span>и открыть отчёт</span></h2>
-  <p class="section-subtitle">Начните в браузере, решайте задания без ограничения времени, затем откройте результаты.</p>
+  <p class="section-subtitle">Начните без регистрации, следите за прогрессом и отвечайте в своём темпе. После завершения откройте персональный отчёт.</p>
   <div class="steps-grid">
     <article class="step">
       @if(file_exists(public_path('assets/step-select.avif')))<img class="step-asset" src="{{ asset('assets/step-select.avif') }}" width="110" height="110" alt="" loading="lazy">@else<div class="step-art" aria-hidden="true">☷</div>@endif

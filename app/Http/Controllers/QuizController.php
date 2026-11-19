@@ -118,6 +118,7 @@ final class QuizController extends Controller
             'options' => $options,
             'selected' => $selected,
             'totalQuestions' => DB::table('questions')->count(),
+            'answeredQuestions' => DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count(),
             'startedTimestamp' => CarbonImmutable::parse($attempt->started_at, 'UTC')->getTimestamp(),
             'serverTimestamp' => now()->getTimestamp(),
         ]);
@@ -134,6 +135,8 @@ final class QuizController extends Controller
         if ($attempt->status !== 'completed' && (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
             return $this->start($request);
         }
+
+        $answeredBefore = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
 
         $completed = DB::transaction(function () use ($attempt, $validated): bool {
             $questionCount = DB::table('questions')->count();
@@ -221,6 +224,10 @@ final class QuizController extends Controller
 
             return true;
         }, 3);
+
+        if (! $completed) {
+            $this->flashProgressMilestone($request, $attempt, $answeredBefore);
+        }
 
         return $completed
             ? redirect()->route('paywall', $attempt->uuid)
@@ -313,6 +320,40 @@ final class QuizController extends Controller
             'percentage' => (int) round(($attempt->correct_count / max(1, $totalQuestions)) * 100),
             'totalQuestions' => $totalQuestions,
         ]);
+    }
+
+    /**
+     * Only notify when a newly saved answer crosses a milestone. Revisions and
+     * backward navigation must not replay notifications.
+     */
+    private function flashProgressMilestone(Request $request, object $attempt, int $answeredBefore): void
+    {
+        $total = DB::table('questions')->count();
+        if ($total < 3) {
+            return;
+        }
+
+        $answeredNow = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
+        if ($answeredNow <= $answeredBefore || $answeredNow >= $total) {
+            return;
+        }
+
+        $thresholds = [
+            1 => (int) ceil($total / 3),
+            2 => (int) ceil($total * 2 / 3),
+        ];
+
+        foreach ($thresholds as $stage => $threshold) {
+            if ($answeredBefore < $threshold && $answeredNow >= $threshold) {
+                $request->session()->flash('quiz_progress_milestone', [
+                    'attempt_uuid' => $attempt->uuid,
+                    'stage' => $stage,
+                    'percent' => (int) round($answeredNow * 100 / $total),
+                ]);
+
+                break;
+            }
+        }
     }
 
     private function hasReportAccess(int $attemptId): bool
