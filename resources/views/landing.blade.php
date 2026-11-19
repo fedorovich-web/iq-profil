@@ -6,7 +6,6 @@
 @section('content')
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
-    <span class="eyebrow">IQ-тест с графическими заданиями</span>
     <h1 id="hero-title">Тест на IQ онлайн:<br><span>задачи на логику</span></h1>
     <p>Пройдите IQ-тест без регистрации: находите закономерности в графических матрицах и выбирайте недостающие фигуры. После прохождения доступен персональный отчёт.</p>
     <div class="hero-actions">
