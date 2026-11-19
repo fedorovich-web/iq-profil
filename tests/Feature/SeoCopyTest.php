@@ -22,7 +22,10 @@ final class SeoCopyTest extends TestCase
         $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн:<br><span>графические матрицы</span><br><span>без регистрации</span>', $html);
         $this->assertStringNotContainsString('IQ-тест с графическими заданиями', $html);
         $this->assertStringNotContainsString('class="eyebrow"', $html);
-        $this->assertStringContainsString('Преимущества <span>IQ-теста</span>', $html);
+        $this->assertStringContainsString('Преимущества IQ-теста: <span>формат и результаты</span>', $html);
+        $this->assertStringContainsString('Невербальные задачи на закономерности', $html);
+        $this->assertStringContainsString('Свой темп и сохранение ответов', $html);
+        $this->assertStringContainsString('Подробный персональный отчёт', $html);
         $this->assertStringNotContainsString('и разбор решений', $html);
         $this->assertStringContainsString('Персональный отчёт', $html);
         $this->assertStringContainsString('Проверьте <span>логическое мышление</span>', $html);

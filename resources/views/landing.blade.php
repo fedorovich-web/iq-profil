@@ -34,20 +34,20 @@
   </div>
 </section>
 <section class="section" id="benefits" aria-labelledby="benefits-title">
-  <h2 id="benefits-title">Преимущества <span>IQ-теста</span></h2>
-  <p class="section-subtitle">Начните без регистрации, решайте задания в своём темпе и получите персональный отчёт.</p>
+  <h2 id="benefits-title">Преимущества IQ-теста: <span>формат и результаты</span></h2>
+  <p class="section-subtitle">Невербальные задачи на поиск закономерностей, свободный темп прохождения и сохранение ответов. После завершения можно открыть персональный отчёт с подробными результатами.</p>
   <div class="feature-grid">
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-science.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-science.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">◇</div>@endif
-      <h3>Невербальные задания</h3><p>Ищите закономерности в графических матрицах. Для решения не нужны специальные знания или словарный запас.</p>
+      <h3>Невербальные задачи на закономерности</h3><p>Вместо вопросов на эрудицию — графические матрицы. Сравнивайте форму, расположение и количество элементов, чтобы определить правило и выбрать недостающий вариант.</p>
     </article>
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-format.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-format.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">▤</div>@endif
-      <h3>Без ограничения времени</h3><p>Выбирайте удобный темп, возвращайтесь к предыдущим вопросам и меняйте ответы до завершения теста.</p>
+      <h3>Свой темп и сохранение ответов</h3><p>Таймер показывает продолжительность, но не прерывает тест. Можно вернуться к предыдущим заданиям, изменить ответ и продолжить незавершённую попытку в том же браузере.</p>
     </article>
     <article class="feature-card">
       @if(file_exists(public_path('assets/benefit-results.avif')))<img class="feature-asset" src="{{ asset('assets/benefit-results.avif') }}" width="120" height="120" alt="" loading="lazy">@else<div class="feature-icon" aria-hidden="true">▥</div>@endif
-      <h3>Персональный отчёт</h3><p>Посмотрите число верных ответов, процент выполнения, время прохождения и результаты по категориям заданий.</p>
+      <h3>Подробный персональный отчёт</h3><p>После прохождения откройте отчёт с числом верных ответов, процентом выполнения, временем и результатами по категориям. В личном кабинете можно возвращаться к ранее открытым отчётам.</p>
     </article>
   </div>
 </section>
