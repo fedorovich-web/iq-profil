@@ -470,7 +470,7 @@ body.landing-page .site-shell{width:100%;max-width:none;margin:0;border-radius:0
 .footer-links a,.footer-links span{font-size:13px;display:block;margin:0;color:#345077;line-height:1.4}
 .footer-links a:hover{color:#0759e4;text-decoration:underline}
 .footer-group:not([open]) .footer-links{display:grid!important}
-.footer-copyright{grid-column:1/-1;text-align:center;border-top:1px solid #dce4f2;padding-top:16px;color:#657993;margin:12px 0 0!important}
+.footer-copyright{grid-column:1/-1;text-align:center;border-top:1px solid #dce4f2;padding-top:16px;color:#3b506f;margin:12px 0 0!important}
 .faq-list{overflow-anchor:none}
 .faq-list details{overflow-anchor:none}
 .faq-list details summary{scroll-margin-top:100px}

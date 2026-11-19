@@ -39,11 +39,6 @@ jobs:
       - name: PHP dependency audit
         run: composer audit --locked
 
-      - name: PHP style and tests
-        run: |
-          vendor/bin/pint --test
-          php artisan test --compact
-
       - name: Frontend dependencies and checks
         run: |
           npm ci
@@ -51,6 +46,11 @@ jobs:
           node --check resources/js/app.js
           node --check scripts/browser-e2e.mjs
           npm run build
+
+      - name: PHP style and tests
+        run: |
+          vendor/bin/pint --test
+          php artisan test --compact
 
       - name: Install browser for end-to-end tests
         run: npx playwright install --with-deps chromium
