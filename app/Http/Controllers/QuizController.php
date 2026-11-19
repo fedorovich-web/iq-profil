@@ -129,6 +129,7 @@ final class QuizController extends Controller
         $validated = $request->validate([
             'navigation' => 'required|in:back,next,finish',
             'answer_option_id' => 'nullable|integer|min:1',
+            'question_id' => 'sometimes|required|integer|min:1',
         ]);
 
         $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
@@ -147,6 +148,10 @@ final class QuizController extends Controller
 
             $question = DB::table('questions')->where('position', $locked->current_position)->first();
             abort_unless($question !== null, 500);
+            // Reject stale submissions from another tab or a slow network response.
+            if (isset($validated['question_id']) && (int) $validated['question_id'] !== (int) $question->id) {
+                abort(409, 'Вопрос уже изменился. Обновите тест.');
+            }
 
             if (isset($validated['answer_option_id'])) {
                 $option = DB::table('answer_options')

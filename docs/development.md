@@ -29,7 +29,7 @@ npm run build
 node scripts/browser-e2e.mjs
 ```
 
-Перед Playwright-запуском нужен локальный сервер и установленный Google Chrome. Скрипт использует `IQ_TEST_BASE_URL` (по умолчанию `http://127.0.0.1:8123`), `IQ_TEST_REPORT_FILE` и `IQ_TEST_SCREENSHOT_DIR`, чтобы сохранять отчёты вне Git. Для E2E рекомендуется **отдельная временная SQLite**, а не рабочая база.
+Перед Playwright-запуском нужен локальный сервер и установленный Google Chrome (Windows). На Linux/macOS установите Chromium командой npx playwright install chromium. При необходимости укажите IQ_TEST_BROWSER_EXECUTABLE для собственного бинарного файла браузера. Скрипт использует `IQ_TEST_BASE_URL` (по умолчанию `http://127.0.0.1:8123`), `IQ_TEST_REPORT_FILE` и `IQ_TEST_SCREENSHOT_DIR`, чтобы сохранять отчёты вне Git. Для E2E рекомендуется **отдельная временная SQLite**, а не рабочая база.
 
 Дополнительные регрессионные сценарии проверяют гостевые сессии, демонстрационные подписки и SEO. Не путайте успешные локальные тесты с завершённой проверкой публичного production.
 
@@ -52,7 +52,7 @@ node scripts/browser-e2e.mjs
 
 ### Проверка публичного сайта
 
-Проверить `https://flatero.ru/`, `https://flatero.ru/robots.txt`, `https://flatero.ru/sitemap.xml` и `https://flatero.ru/up`. Sitemap и директива `Sitemap:` в robots должны содержать **https://flatero.ru**, а не `localhost` или `http://`. JSON-LD главной должен содержать один `FAQPage` и все 12 видимых пар `Question` / `Answer`.
+Проверить `https://flatero.ru/`, `https://flatero.ru/robots.txt`, `https://flatero.ru/sitemap.xml` и `https://flatero.ru/up`. Sitemap и директива `Sitemap:` в robots должны содержать **https://flatero.ru**, а не `localhost` или `http://`. JSON-LD главной должен содержать один `FAQPage` и все видимые пары `Question` / `Answer`.
 
 Далее в реальном браузере проверить гостевой тест, продолжение, оплату **только в деморежиме**, отчёт, регистрацию, авторизацию, личный кабинет и отмену подписки. После первой проверки — сделать бэкап и выполнить **обычный redeploy без смены Compose-проекта**, проверить сохранение записей SQLite.
 

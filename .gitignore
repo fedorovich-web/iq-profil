@@ -57,15 +57,15 @@ Thumbs.db
 !/docs/legal-prelaunch-checklist.md
 !/docs/images/
 /docs/images/*
-!/docs/images/iq-profil-home.png
+!/docs/images/iq-profil-home-2026-11-19.png
 
 # Keep only maintainable automated QA and recovery tools; preserve other scripts locally
 /scripts/*
 !/scripts/backup-database.php
 !/scripts/browser-e2e.mjs
+!/scripts/browser-options.mjs
 !/scripts/faq-stability-qa.mjs
 !/scripts/guest-session-gate-e2e.mjs
 !/scripts/session-cookie-e2e.mjs
 !/scripts/seo-content-qa.mjs
-!/scripts/validate-html.mjs
 

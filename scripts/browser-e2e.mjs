@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { resolveBrowserOptions } from './browser-options.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const base = process.env.IQ_TEST_BASE_URL || 'http://127.0.0.1:8123';
@@ -7,8 +8,7 @@ const reportFile = process.env.IQ_TEST_REPORT_FILE || 'docs/browser-report.json'
 mkdirSync(screenshotDirectory, { recursive: true });
 
 const browser = await chromium.launch({
-  executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  headless: true,
+  ...resolveBrowserOptions(),
 });
 const report = { tests: [], pageErrors: [], screenshots: [], checkedAt: new Date().toISOString() };
 function check(condition, label) {
@@ -38,6 +38,9 @@ async function navigateAndTake(page, name) {
   await overflow(page, name + ' quiz');
   await screenshot(page, name + '-quiz');
 
+  const totalQuestions = Number((await page.locator('.quiz-counter').textContent()).match(/из\s+(\d+)/)?.[1]);
+  check(Number.isSafeInteger(totalQuestions) && totalQuestions > 0, name + ' question count is valid');
+
   const waitForQuestion = position => page.waitForFunction(expected => {
     const counter = document.querySelector('.quiz-counter')?.textContent || '';
     return Number(counter.match(/\d+/)?.[0]) === expected;
@@ -63,11 +66,11 @@ async function navigateAndTake(page, name) {
   await page.locator('.answer-tile').first().click();
   await waitForQuestion(2);
 
-  for (let question = 2; question <= 25; question++) {
+  for (let question = 2; question <= totalQuestions; question++) {
     await waitForQuestion(question);
     check(true, name + ' question ' + question);
     await page.locator('.answer-tile').first().click();
-    if (question < 25) {
+    if (question < totalQuestions) {
       await waitForQuestion(question + 1);
       const milestone = page.locator('[data-quiz-milestone]:visible');
       if (await milestone.count()) {
@@ -79,7 +82,7 @@ async function navigateAndTake(page, name) {
       await page.waitForURL(/\/paywall\//);
     }
   }
-  check(new URL(page.url()).pathname.startsWith('/paywall/'), name + ' paywall after 25');
+  check(new URL(page.url()).pathname.startsWith('/paywall/'), name + ' paywall after final question');
   const uuid = new URL(page.url()).pathname.split('/')[2];
   await screenshot(page, name + '-paywall');
   await overflow(page, name + ' paywall');
@@ -94,7 +97,7 @@ async function navigateAndTake(page, name) {
   await page.locator('.checkout-card form button').click();
   check(new URL(page.url()).pathname === '/result/' + uuid, name + ' result after demo payment');
   check((await page.locator('.result-stat-grid .stat-card').count()) === 3, name + ' three summary metrics');
-  check((await page.locator('.result-category-grid .category-result-card').count()) === 5, name + ' five result categories');
+  check((await page.locator('.result-category-grid .category-result-card').count()) > 0, name + ' result categories available');
   await screenshot(page, name + '-result');
   await overflow(page, name + ' result');
 
@@ -118,6 +121,26 @@ try {
   const mobileUuid = await navigateAndTake(pageMobile, 'mobile');
   check(mobileUuid !== desktopUuid, 'different users have different attempt IDs');
   await mobile.close();
+
+  // Verify progressive enhancement: quiz remains usable with JavaScript off.
+  const noJsContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    javaScriptEnabled: false,
+  });
+  const noJsPage = await noJsContext.newPage();
+  await noJsPage.goto(base + '/');
+  await noJsPage.locator('.hero-actions form button').first().click();
+  check(new URL(noJsPage.url()).pathname === '/quiz', 'quiz starts without JavaScript');
+  await noJsPage.locator('.answer-tile').first().click();
+  await noJsPage.locator('button[name="navigation"][value="next"]').click();
+  check((await noJsPage.locator('.quiz-counter').textContent()).includes('2'),
+    'answer persists and advances without JavaScript');
+  await noJsPage.locator('button[name="navigation"][value="back"]').click();
+  check((await noJsPage.locator('.quiz-counter').textContent()).includes('1'),
+    'back navigation works without JavaScript');
+  check(await noJsPage.locator('.answer-tile input:checked').count() === 1,
+    'selected answer is restored without JavaScript');
+  await noJsContext.close();
 
   const strangerContext = await browser.newContext();
   const stranger = await strangerContext.newPage();

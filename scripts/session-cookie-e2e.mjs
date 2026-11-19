@@ -1,15 +1,17 @@
 import { chromium } from 'playwright';
-import { mkdirSync, existsSync } from 'node:fs';
+import { resolveBrowserOptions } from './browser-options.mjs';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { randomUUID } from 'node:crypto';
 import { resolve, join } from 'node:path';
 
-const base = 'http://127.0.0.1:8124';
+const base = process.env.IQ_TEST_BASE_URL || 'http://127.0.0.1:8123';
 const qaDir = resolve('storage/app/qa');
-const profile = resolve('storage/app/qa/session-cookie-browser-20261119');
-if (existsSync(profile)) throw new Error('Refusing to reuse an old QA browser profile');
+const profile = mkdtempSync(join(tmpdir(), 'iq-session-qa-'));
+const qaEmail = 'session-qa-'+randomUUID()+'@example.com';
 mkdirSync(qaDir, {recursive: true});
 const browserOptions = {
-  executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  headless: true,
+  ...resolveBrowserOptions(),
   viewport: {width:390, height:844},
   acceptDownloads: true,
 };
@@ -60,7 +62,7 @@ async function cookieCheck() {
 try {
   await openBrowser();
   await navigate('/register');
-  await page.locator('input[name="email"]').fill('session-qa-20261119@example.test');
+  await page.locator('input[name="email"]').fill(qaEmail);
   await page.locator('input[name="password"]').fill('StrongPassword7788');
   await page.locator('input[name="password_confirmation"]').fill('StrongPassword7788');
   await page.locator('input[name="personal_data_consent"]').check();
@@ -84,10 +86,16 @@ try {
   assert((await page.locator('.quiz-counter strong').textContent()).trim()==='2','Attempt progress was reset');
   await measure('resume-existing-unfinished-attempt');
 
-  for(let position=2;position<=25;position++){
+  const totalQuestions = Number((await page.locator('.quiz-counter').textContent()).match(/из\s+(\d+)/)?.[1]);
+  assert(totalQuestions >= 3,'Question count not found');
+  for(let position=2;position<=totalQuestions;position++){
     await page.locator('.answer-grid input').nth((position*2)%6).check({force:true});
-    if(position===25){await page.waitForURL('**/paywall/**');}
-    else await page.waitForFunction(p=>document.querySelector('.quiz-counter strong')?.textContent.trim()===String(p+1),position);
+    if(position===totalQuestions){await page.waitForURL('**/paywall/**');}
+    else {
+      await page.waitForFunction(p=>document.querySelector('.quiz-counter strong')?.textContent.trim()===String(p+1),position);
+      const dialog=page.locator('[data-quiz-milestone]:visible');
+      if(await dialog.count())await dialog.locator('.quiz-milestone-continue').click();
+    }
   }
   const unpaidPath=new URL(page.url()).pathname;
   const attemptId=unpaidPath.split('/').pop();
@@ -128,7 +136,7 @@ try {
   const checkbox=page.locator('input[type="checkbox"][name="remember"]');
   assert(await checkbox.isChecked(),'Remember-me checkbox should be enabled by default');
   await checkbox.uncheck();
-  await page.locator('input[name="email"]').fill('session-qa-20261119@example.test');
+  await page.locator('input[name="email"]').fill(qaEmail);
   await page.locator('input[name="password"]').fill('StrongPassword7788');
   await page.locator('button[type="submit"]').click();
   await page.waitForURL('**/account');
@@ -140,7 +148,7 @@ try {
   await page.waitForURL(base+'/');
   await navigate('/login');
   assert(await page.locator('input[name="remember"][type="checkbox"]').isChecked(),'Remember checkbox default missing');
-  await page.locator('input[name="email"]').fill('session-qa-20261119@example.test');
+  await page.locator('input[name="email"]').fill(qaEmail);
   await page.locator('input[name="password"]').fill('StrongPassword7788');
   await page.locator('button[type="submit"]').click();
   await page.waitForURL('**/account');
@@ -152,7 +160,12 @@ try {
   console.log(JSON.stringify({status:'passed',results,jsErrors:errors},null,2));
 } catch(error) {
   console.error(error.stack||String(error));
+  if(page && !page.isClosed()){
+    console.error('FAILED_PAGE', new URL(page.url()).pathname);
+    console.error('FORM_ERRORS', (await page.locator('[role="alert"],.form-error').allTextContents()).slice(0,8));
+  }
   process.exitCode=1;
 } finally {
   if(context) await context.close();
+  rmSync(profile,{recursive:true,force:true});
 }

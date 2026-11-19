@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AnswerSelectionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DemoSubscriptionController;
 use App\Http\Controllers\LegalController;
@@ -80,7 +79,6 @@ Route::middleware(['auth', EnsureAdministrator::class])->group(function () {
 Route::post('/attempts', [QuizController::class, 'start'])->middleware('throttle:20,1')->name('attempt.start');
 Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
 Route::get('/attempts/{uuid}/resume', [QuizController::class, 'resume'])->name('attempt.resume');
-Route::post('/quiz/selection', AnswerSelectionController::class)->name('quiz.selection');
 Route::post('/quiz/answer', [QuizController::class, 'answer'])->name('quiz.answer');
 Route::get('/paywall/{uuid}', [QuizController::class, 'paywall'])->name('paywall');
 Route::get('/checkout/{uuid}', [QuizController::class, 'checkout'])->name('checkout');

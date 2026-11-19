@@ -113,6 +113,11 @@ function bindQuizForm(form) {
                 body: payload
             });
 
+            if (response.status === 409) {
+                // A second tab advanced the same attempt; sync with the server.
+                window.location.assign('/quiz');
+                return;
+            }
             if (!response.ok) throw new Error('Request failed: ' + response.status);
 
             const destination = new URL(response.url, window.location.href);

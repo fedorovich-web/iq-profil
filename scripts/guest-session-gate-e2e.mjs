@@ -1,13 +1,14 @@
 import { chromium } from 'playwright';
+import { resolveBrowserOptions } from './browser-options.mjs';
 import { resolve } from 'node:path';
-import { existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-const url = 'http://127.0.0.1:8124';
-const profile = resolve('storage/app/qa/guest-session-browser-20261119');
-if (existsSync(profile)) throw new Error('Guest QA browser profile already exists');
+const url = process.env.IQ_TEST_BASE_URL || 'http://127.0.0.1:8123';
+const profile = mkdtempSync(join(tmpdir(), 'iq-guest-qa-'));
 const options = {
-  executablePath:'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  headless:true,
+  ...resolveBrowserOptions(),
   viewport:{width:390,height:844},
 };
 let context;
@@ -32,10 +33,16 @@ try {
   await restart();
   assert(await start()==='/quiz','Guest progress was lost after restarting the browser');
   assert((await page.locator('.quiz-counter strong').textContent()).trim()==='2','Guest resumed at wrong question');
-  for(let i=2;i<=25;i++){
+  const total = Number((await page.locator('.quiz-counter').textContent()).match(/из\s+(\d+)/)?.[1]);
+  assert(total >= 3, 'Question count not found');
+  for(let i=2;i<=total;i++){
     await page.locator('.answer-grid input').nth(i%6).check({force:true});
-    if(i===25)await page.waitForURL('**/paywall/**');
-    else await page.waitForFunction(p=>document.querySelector('.quiz-counter strong')?.textContent.trim()===String(p+1),i);
+    if(i===total)await page.waitForURL('**/paywall/**');
+    else {
+      await page.waitForFunction(p=>document.querySelector('.quiz-counter strong')?.textContent.trim()===String(p+1),i);
+      const dialog=page.locator('[data-quiz-milestone]:visible');
+      if(await dialog.count())await dialog.locator('.quiz-milestone-continue').click();
+    }
   }
   const paywall=new URL(page.url()).pathname;
   assert((await start())===paywall,'Guest bypassed unpaid gate before browser restart');
@@ -54,4 +61,4 @@ try {
 } catch(error) {
   console.error(error.stack||String(error));
   process.exitCode=1;
-} finally {if(context)await context.close();}
+} finally {if(context)await context.close();rmSync(profile,{recursive:true,force:true});}

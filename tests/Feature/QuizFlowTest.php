@@ -115,9 +115,11 @@ final class QuizFlowTest extends TestCase
     {
         $uuid = $this->startAttempt();
         $optionId = (int) DB::table('answer_options')->where('question_id', DB::table('questions')->where('position', 1)->value('id'))->value('id');
-        $this->postJson('/quiz/selection', ['answer_option_id' => $optionId])->assertOk()->assertJson(['saved' => true]);
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
+            ->assertRedirect('/quiz');
         $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
         $this->assertDatabaseHas('attempt_answers', ['attempt_id' => $attemptId, 'answer_option_id' => $optionId]);
+        $this->post('/quiz/answer', ['navigation' => 'back'])->assertRedirect('/quiz');
         $this->get('/quiz')->assertOk()->assertSee('value="'.$optionId.'" checked', false);
     }
 
@@ -130,7 +132,8 @@ final class QuizFlowTest extends TestCase
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'current_position' => 2]);
         $this->post('/quiz/answer', ['navigation' => 'back'])->assertRedirect('/quiz');
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'current_position' => 1]);
-        $this->post('/quiz/selection', ['answer_option_id' => $options[1]])->assertOk();
+        $this->post('/quiz/answer', ['navigation' => 'back', 'answer_option_id' => $options[1]])
+            ->assertRedirect('/quiz');
         $this->get('/quiz')->assertSee('value="'.$options[1].'" checked', false);
         $this->assertDatabaseCount('attempt_answers', 1);
     }
@@ -139,7 +142,8 @@ final class QuizFlowTest extends TestCase
     {
         $this->startAttempt();
         $foreignOption = (int) DB::table('answer_options')->where('question_id', DB::table('questions')->where('position', 2)->value('id'))->value('id');
-        $this->postJson('/quiz/selection', ['answer_option_id' => $foreignOption])->assertUnprocessable();
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $foreignOption])
+            ->assertSessionHasErrors('answer_option_id');
         $this->assertDatabaseCount('attempt_answers', 0);
     }
 
@@ -388,8 +392,8 @@ final class QuizFlowTest extends TestCase
 
         $questionId = DB::table('questions')->where('position', 1)->value('id');
         $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
-        $this->postJson('/quiz/selection', ['answer_option_id' => $optionId])
-            ->assertOk()->assertJson(['saved' => true]);
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
+            ->assertRedirect('/quiz');
 
         $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
         $this->assertDatabaseHas('attempt_answers', [

@@ -10,8 +10,6 @@ use SocialiteProviders\Yandex\Provider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
-
     public function boot(): void
     {
         Auth::guard('web')->setRememberDuration((int) config('auth.remember_minutes'));

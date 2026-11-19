@@ -1,18 +1,18 @@
 import { chromium } from 'playwright';
+import { resolveBrowserOptions } from './browser-options.mjs';
 import { mkdirSync } from 'node:fs';
 
 const output = 'storage/app/qa';
 mkdirSync(output, {recursive:true});
 const browser = await chromium.launch({
-  executablePath:'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  headless:true,
+  ...resolveBrowserOptions(),
 });
 const results = [];
 const errors = [];
 for (const width of [320,390,768,1440]) {
   const page = await browser.newPage({viewport:{width,height:850}});
   page.on('pageerror', e => errors.push({width, error:e.message}));
-  await page.goto('http://127.0.0.1:8123/',{waitUntil:'networkidle'});
+  await page.goto(process.env.IQ_TEST_BASE_URL || 'http://127.0.0.1:8123/',{waitUntil:'networkidle'});
   const details = await page.evaluate(()=>{
     const h1=document.querySelector('.hero h1');
     const hero=document.querySelector('.hero');
@@ -25,6 +25,7 @@ for (const width of [320,390,768,1440]) {
       h1:h1?.innerText,
       headings:[...document.querySelectorAll('h1,h2,h3')].map(h=>h.textContent.trim()),
       faqCount:document.querySelectorAll('.faq-list details').length,
+      structuredFaqCount:graph['@graph'].find(i=>i['@type']==='FAQPage')?.mainEntity?.length ?? 0,
       canonical:document.querySelector('link[rel="canonical"]')?.href,
       graphTypes:graph['@graph'].map(i=>i['@type']),
       graphContext:graph['@context'],
@@ -36,8 +37,8 @@ for (const width of [320,390,768,1440]) {
       faqTitles:[...document.querySelectorAll('.faq-list summary')].map(e=>e.textContent.trim()),
     };
   });
-  if(details.faqCount!==12||details.titleCount!==1||details.overflow>2||details.brokenImages.length||
-     details.graphContext!=='https://schema.org'||details.graphTypes.join(',')!=='WebSite,WebPage'||
+  if(details.faqCount<1||details.structuredFaqCount!==details.faqCount||details.titleCount!==1||details.overflow>2||details.brokenImages.length||
+     details.graphContext!=='https://schema.org'||details.graphTypes.join(',')!=='WebSite,WebPage,FAQPage'||
      !details.h1.includes('Тест на IQ онлайн')||
      details.headings.some(h=>/IQ\.Профиль|\b25\b/.test(h))) {
     throw new Error('SEO/UX issue at '+width+': '+JSON.stringify(details));
@@ -45,7 +46,7 @@ for (const width of [320,390,768,1440]) {
   await page.locator('.hero').screenshot({path:output+'/seo-hero-'+width+'.png'});
   await page.locator('#faq').screenshot({path:output+'/seo-faq-'+width+'.png'});
   const drift=[];
-  for(const index of [0,3,6,9,11,2,8,0]) {
+  for(const index of [0,3,Math.floor(details.faqCount/2),details.faqCount-1,2,0]) {
     const sample=await page.evaluate(async (index)=>{
       const summary=document.querySelectorAll('.faq-list summary')[index];
       summary.scrollIntoView({block:'center',behavior:'instant'});

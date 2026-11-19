@@ -27,6 +27,7 @@
     <p>Выберите один из шести вариантов ответа</p>
     <form id="answer-form" action="{{ route('quiz.answer') }}" method="POST">
       <input type="hidden" name="_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="question_id" value="{{ $question->id }}">
       <div class="answer-grid" role="radiogroup" aria-label="Варианты ответа">
       @foreach ($options as $option)
         <label class="answer-tile">

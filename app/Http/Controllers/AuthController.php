@@ -106,7 +106,10 @@ final class AuthController extends Controller
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', PasswordRule::min(10)->letters()->numbers()],
         ]);
-        $request->user()->update(['password' => $data['password']]);
+        $user = $request->user();
+        $user->password = $data['password'];
+        $user->setRememberToken(Str::random(60));
+        $user->save();
         $request->session()->regenerate();
 
         return back()->with('status', 'Пароль изменён');

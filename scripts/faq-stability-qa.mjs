@@ -1,10 +1,11 @@
 import { chromium } from 'playwright';
+import { resolveBrowserOptions } from './browser-options.mjs';
 
-const browser = await chromium.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true });
+const browser = await chromium.launch(resolveBrowserOptions());
 const results = [];
 for (const width of [320, 390, 768, 1440]) {
   const page = await browser.newPage({ viewport: { width, height: 800 } });
-  await page.goto('http://127.0.0.1:8123', { waitUntil: 'networkidle' });
+  await page.goto(process.env.IQ_TEST_BASE_URL || 'http://127.0.0.1:8123', { waitUntil: 'networkidle' });
   for (const index of [0, 1, 2, 3, 1, 1, 5, 0]) {
     const result = await page.evaluate(async (i) => {
       const summary = document.querySelectorAll('.faq-list summary')[i];
