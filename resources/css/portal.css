@@ -252,3 +252,43 @@
   .portal-recommendation>form{grid-column:1/-1;width:100%}
   .portal-recommendation button{width:100%;min-height:40px}
 }
+
+/* History is rendered as readable rows on phones; no horizontal table panning. */
+@media(max-width:690px){
+  .portal-table-stack-mobile{overflow-x:visible}
+  .portal-table-stack-mobile .portal-table,
+  .portal-table-stack-mobile .portal-table tbody{display:block;width:100%}
+  .portal-table-stack-mobile .portal-table thead{display:none}
+  .portal-table-stack-mobile .portal-table tr{
+    display:grid;grid-template-columns:minmax(0,1fr);gap:8px;
+    margin-bottom:10px;padding:13px 12px;
+    background:#f4f8ff;border:1px solid #dfebfa;border-radius:13px
+  }
+  .portal-table-stack-mobile .portal-table td{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:9px;min-width:0;width:100%;padding:0;border:0;
+    white-space:normal;text-align:right;overflow-wrap:anywhere
+  }
+  .portal-table-stack-mobile .portal-table td::before{
+    content:attr(data-label);flex:0 0 66px;
+    color:#516587;font-size:12px;font-weight:750;text-align:left
+  }
+  .portal-table-stack-mobile .portal-table td:last-child a{
+    display:inline-flex;min-height:35px;align-items:center;
+    padding:6px 10px;background:#e4efff;border-radius:8px
+  }
+}
+
+@media(max-width:690px){
+  .admin-report-metrics{grid-template-columns:minmax(0,1fr);gap:10px}
+  .admin-report-metrics>div{min-width:0;padding:18px}
+  .admin-report-metrics strong{font-size:clamp(27px,8vw,35px);overflow-wrap:anywhere}
+  .portal-table-stack-mobile .portal-table td.portal-empty-row{justify-content:flex-start;text-align:left}
+  .portal-table-stack-mobile .portal-table td.portal-empty-row::before{display:none}
+}
+
+@media(max-width:420px){
+  .portal-panel-heading{flex-wrap:wrap;align-items:flex-start}
+  .portal-panel-heading h2{min-width:0;overflow-wrap:normal}
+  .portal-panel-heading a{max-width:100%;white-space:normal;text-align:center}
+}

@@ -38,8 +38,8 @@
 <section class="portal-panel portal-full"><h2>Операционные метрики</h2><p>Данные рассчитаны по реальным записям SQLite. Эти значения не являются нормативной оценкой IQ и не включают реальные доходы.</p><div class="admin-report-metrics"><div><strong>{{ $stats['completed'] }}</strong><span>Завершённых попыток</span></div><div><strong>{{ $stats['attempts'] ? round($stats['completed'] / $stats['attempts'] * 100,1) : 0 }}%</strong><span>Доля завершённых</span></div><div><strong>{{ $stats['payments'] }}</strong><span>Демо-подтверждений</span></div></div></section>
 @elseif($section==='audit')
 <section class="portal-panel portal-full"><h2>Журнал действий администраторов</h2>
-<div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Дата</th><th>Администратор</th><th>Действие</th></tr></thead><tbody>
-@forelse($audit as $item)<tr><td>{{ $item->created_at }}</td><td>{{ $item->email }}</td><td>{{ $item->action }}</td></tr>@empty<tr><td colspan="3">Событий ещё нет.</td></tr>@endforelse
+<div class="portal-table-wrap portal-table-stack-mobile"><table class="portal-table"><thead><tr><th>Дата</th><th>Администратор</th><th>Действие</th></tr></thead><tbody>
+@forelse($audit as $item)<tr><td data-label="Дата">{{ $item->created_at }}</td><td data-label="Администратор">{{ $item->email }}</td><td data-label="Действие">{{ $item->action }}</td></tr>@empty<tr><td class="portal-empty-row" colspan="3">Событий ещё нет.</td></tr>@endforelse
 </tbody></table></div>{{ $audit->links() }}</section>
 @endif
 @endsection

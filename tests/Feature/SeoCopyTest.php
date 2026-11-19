@@ -20,7 +20,13 @@ final class SeoCopyTest extends TestCase
         $this->assertSame(1, preg_match_all('/<link rel="canonical"/', $html));
         $this->assertStringContainsString('Тест на IQ онлайн без регистрации — задачи на логику', $html);
         $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн:<br><span>задачи на логику</span>', $html);
-        $this->assertStringContainsString('Какие задания', $html);
+        $this->assertStringContainsString('Преимущества', $html);
+        $this->assertStringContainsString('онлайн-теста на IQ', $html);
+        $this->assertStringContainsString('Персональный отчёт с результатами', $html);
+        $this->assertStringContainsString('Проверьте логику — <span>пройдите тест на IQ</span>', $html);
+        $this->assertSame(2, preg_match_all('/class="bottom-cta-description-line"/', $html));
+        $this->assertStringContainsString('Начните без регистрации и откройте персональный отчёт после прохождения.', $html);
+        $this->assertStringNotContainsString('Какие задания <span>в IQ-тесте</span>', $html);
         $this->assertStringContainsString('Как пройти', $html);
         $this->assertStringContainsString('Частые вопросы', $html);
         $this->assertStringNotContainsString('Почему выбирают', $html);
