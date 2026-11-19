@@ -10,7 +10,7 @@
 <thead><tr><th>Дата активации</th><th>Попытка</th><th>Статус</th></tr></thead>
 <tbody>@foreach($subscriptions as $s)
 <tr><td>{{ \Carbon\Carbon::parse($s->activated_at)->format('d.m.Y H:i') }}</td>
-<td>{{ mb_substr($s->uuid,0,8) }}…</td><td><strong>{{ $s->status==='cancelled'?'Отменена (демо)':'Активна (демо)' }}</strong></td></tr>
+<td>{{ mb_substr($s->uuid,0,8) }}…</td><td><strong>{{ match ($s->status) { 'active' => 'Активна (демо)', 'cancelled' => 'Отменена (демо)', 'superseded' => 'Заменена новым демо-продлением', default => 'Неизвестный статус' } }}</strong></td></tr>
 @endforeach</tbody></table></div>
 @if($subscriptions->contains('status','active'))
 <form method="POST" action="{{ route('subscription.cancel.perform') }}" class="cancel-form">

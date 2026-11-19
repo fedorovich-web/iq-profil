@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\DemoSubscriptionLifecycle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -148,9 +149,6 @@ final class AuthController extends Controller
 
     private function claimAttempts(Request $request, User $user): void
     {
-        $owned = array_filter($request->session()->get('owned_attempts', []), fn ($uuid) => is_string($uuid) && Str::isUuid($uuid));
-        if ($owned) {
-            DB::table('quiz_attempts')->whereIn('uuid', $owned)->whereNull('user_id')->update(['user_id' => $user->id]);
-        }
+        DemoSubscriptionLifecycle::claimAttempts($request, $user);
     }
 }

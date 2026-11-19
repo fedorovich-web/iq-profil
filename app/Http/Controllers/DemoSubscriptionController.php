@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\DemoSubscriptionLifecycle;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,21 +27,7 @@ final class DemoSubscriptionController extends Controller
     {
         $request->validate(['confirm_cancel' => ['required', 'accepted']]);
 
-        $count = DB::transaction(function () use ($request): int {
-            $ids = $this->query($request)->where('s.status', 'active')
-                ->orderBy('s.id')->lockForUpdate()->pluck('s.id')->all();
-
-            if ($ids === []) {
-                return 0;
-            }
-
-            return DB::table('demo_subscriptions')->whereIn('id', $ids)
-                ->where('status', 'active')->update([
-                    'status' => 'cancelled',
-                    'cancelled_at' => now(),
-                    'updated_at' => now(),
-                ]);
-        }, 3);
+        $count = DemoSubscriptionLifecycle::cancel($request);
 
         return redirect()->route('subscription.cancel')
             ->with('status', $count > 0

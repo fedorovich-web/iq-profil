@@ -137,6 +137,141 @@ final class LegalSeoSubscriptionTest extends TestCase
         $this->get('/result/'.$uuid)->assertOk();
     }
 
+    public function test_new_account_purchase_supersedes_prior_demo_subscription_without_revoking_reports(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $first = $this->completeAsCurrentSession();
+        $second = $this->completeAsCurrentSession();
+        $firstId = DB::table('quiz_attempts')->where('uuid', $first)->value('id');
+        $secondId = DB::table('quiz_attempts')->where('uuid', $second)->value('id');
+
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $firstId, 'status' => 'superseded', 'active_scope_key' => null,
+        ]);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $secondId, 'status' => 'active', 'active_scope_key' => 'u:'.$user->id,
+        ]);
+        $this->assertDatabaseCount('demo_payments', 2);
+        $this->assertSame(1, DB::table('demo_subscriptions')->where('status', 'active')->count());
+        $this->get('/subscription/cancel')->assertOk()->assertSee('Заменена новым демо-продлением');
+        $this->get('/result/'.$first)->assertOk();
+        $this->get('/result/'.$second)->assertOk();
+
+        // A replayed, already-paid older attempt must not supersede the new active subscription.
+        $this->post('/checkout/'.$first.'/confirm')->assertRedirect('/result/'.$first);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $secondId, 'status' => 'active',
+        ]);
+
+        $this->post('/subscription/cancel', ['confirm_cancel' => 1])
+            ->assertRedirect('/subscription/cancel');
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $secondId, 'status' => 'cancelled', 'active_scope_key' => null,
+        ]);
+        $this->post('/checkout/'.$second.'/confirm')->assertRedirect('/result/'.$second);
+        $this->assertSame(0, DB::table('demo_subscriptions')->where('status', 'active')->count());
+        $this->assertDatabaseCount('demo_payments', 2);
+        $this->get('/result/'.$first)->assertOk();
+        $this->get('/result/'.$second)->assertOk();
+    }
+
+    public function test_guest_scope_is_not_shared_with_other_guests(): void
+    {
+        $first = $this->completeAsCurrentSession();
+        $second = $this->completeAsCurrentSession();
+
+        $firstId = DB::table('quiz_attempts')->where('uuid', $first)->value('id');
+        $secondId = DB::table('quiz_attempts')->where('uuid', $second)->value('id');
+        $this->assertDatabaseHas('demo_subscriptions', ['attempt_id' => $firstId, 'status' => 'superseded']);
+        $active = DB::table('demo_subscriptions')->where('attempt_id', $secondId)->first();
+        $this->assertSame('active', $active->status);
+        $this->assertStringStartsWith('g:', $active->active_scope_key);
+        $this->assertSame(66, strlen($active->active_scope_key));
+
+        // A different browser session must not see or cancel these subscriptions.
+        $this->flushSession();
+        $this->get('/subscription/cancel')->assertOk()->assertDontSee('Активна (демо)');
+        $this->post('/subscription/cancel', ['confirm_cancel' => 1])
+            ->assertRedirect('/subscription/cancel');
+        $this->assertDatabaseHas('demo_subscriptions', ['attempt_id' => $secondId, 'status' => 'active']);
+        $this->get('/result/'.$first)->assertNotFound();
+        $this->get('/result/'.$second)->assertNotFound();
+    }
+
+    public function test_guest_subscription_is_claimed_and_rescoped_on_registration(): void
+    {
+        $guestUuid = $this->completeAsCurrentSession();
+        $guestAttempt = DB::table('quiz_attempts')->where('uuid', $guestUuid)->first();
+
+        $this->post('/register', [
+            'email' => 'guest-claim@example.com',
+            'password' => 'StrongPassword7788',
+            'password_confirmation' => 'StrongPassword7788',
+            'personal_data_consent' => 1,
+            'terms_acceptance' => 1,
+        ])->assertRedirect('/account');
+
+        $userId = auth()->id();
+        $this->assertNotNull($userId);
+        $this->assertDatabaseHas('quiz_attempts', ['id' => $guestAttempt->id, 'user_id' => $userId]);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $guestAttempt->id,
+            'status' => 'active',
+            'active_scope_key' => 'u:'.$userId,
+        ]);
+        $this->get('/account?section=subscription')->assertOk()->assertSee('Активна (демо)');
+
+        $next = $this->completeAsCurrentSession();
+        $nextId = DB::table('quiz_attempts')->where('uuid', $next)->value('id');
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $guestAttempt->id, 'status' => 'superseded', 'active_scope_key' => null,
+        ]);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $nextId, 'status' => 'active', 'active_scope_key' => 'u:'.$userId,
+        ]);
+        $this->get('/result/'.$guestUuid)->assertOk();
+    }
+
+    public function test_login_merges_guest_and_existing_account_subscription_without_duplicate_active_records(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'subscription-merge@example.com',
+            'password' => 'StrongPassword1122',
+        ]);
+        $this->actingAs($user);
+
+        $accountUuid = $this->completeAsCurrentSession();
+        $accountId = DB::table('quiz_attempts')->where('uuid', $accountUuid)->value('id');
+
+        $this->post('/logout')->assertRedirect('/');
+        $this->assertGuest();
+
+        $guestUuid = $this->completeAsCurrentSession();
+        $guestId = DB::table('quiz_attempts')->where('uuid', $guestUuid)->value('id');
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'StrongPassword1122',
+        ])->assertRedirect('/account');
+
+        $this->assertDatabaseHas('quiz_attempts', ['id' => $guestId, 'user_id' => $user->id]);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $accountId,
+            'status' => 'superseded',
+            'active_scope_key' => null,
+        ]);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $guestId,
+            'status' => 'active',
+            'active_scope_key' => 'u:'.$user->id,
+        ]);
+        $this->assertSame(1, DB::table('demo_subscriptions')->where('status', 'active')->count());
+        $this->get('/result/'.$accountUuid)->assertOk();
+        $this->get('/result/'.$guestUuid)->assertOk();
+    }
+
     public function test_subscription_cancellation_is_scoped_to_account_owner(): void
     {
         $owner = User::factory()->create();

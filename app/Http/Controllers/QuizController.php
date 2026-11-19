@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\DemoSubscriptionLifecycle;
 use App\Support\PuzzleCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -223,29 +224,7 @@ final class QuizController extends Controller
             return redirect()->route('quiz.show');
         }
 
-        DB::transaction(function () use ($attempt): void {
-            DB::table('quiz_attempts')->where('id', $attempt->id)->lockForUpdate()->first();
-
-            DB::table('demo_payments')->insertOrIgnore([
-                'attempt_id' => $attempt->id,
-                'status' => 'succeeded',
-                'amount_kopecks' => 2000,
-                'currency' => 'RUB',
-                'future_monthly_kopecks' => 49900,
-                'confirmed_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            DB::table('demo_subscriptions')->insertOrIgnore([
-                'attempt_id' => $attempt->id,
-                'status' => 'active',
-                'monthly_amount_kopecks' => 49900,
-                'activated_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }, 3);
+        DemoSubscriptionLifecycle::confirm($request, $attempt);
 
         return redirect()->route('result', $uuid);
     }

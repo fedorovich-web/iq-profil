@@ -142,6 +142,36 @@ final class AccountSecurityTest extends TestCase
         ]);
     }
 
+    public function test_yandex_registration_claims_guest_demo_subscription_scope(): void
+    {
+        $this->seed(QuestionSeeder::class);
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $uuid = (string) session('active_attempt');
+        $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
+
+        DB::table('quiz_attempts')->where('id', $attemptId)->update([
+            'status' => 'completed',
+            'correct_count' => 0,
+            'elapsed_seconds' => 15,
+            'completed_at' => now(),
+        ]);
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+
+        $pending = ['id' => 'test-yandex-claim-id', 'email' => 'yandex-claim@example.com', 'name' => 'Тестовый пользователь'];
+        $this->withSession(['pending_yandex' => $pending]);
+        $this->post('/auth/yandex/consent', [
+            'terms_acceptance' => 1,
+            'personal_data_consent' => 1,
+        ])->assertRedirect('/account');
+
+        $user = User::where('yandex_id', $pending['id'])->firstOrFail();
+        $this->assertDatabaseHas('quiz_attempts', ['id' => $attemptId, 'user_id' => $user->id]);
+        $this->assertDatabaseHas('demo_subscriptions', [
+            'attempt_id' => $attemptId, 'status' => 'active', 'active_scope_key' => 'u:'.$user->id,
+        ]);
+        $this->get('/result/'.$uuid)->assertOk();
+    }
+
     public function test_prepared_avif_icon_assets_are_rendered_in_public_and_private_views(): void
     {
         $assets = [

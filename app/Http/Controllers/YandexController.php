@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\DemoSubscriptionLifecycle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -135,14 +136,7 @@ final class YandexController extends Controller
         $request->session()->regenerate();
         $request->session()->forget('pending_yandex');
 
-        $owned = array_filter(
-            $request->session()->get('owned_attempts', []),
-            fn ($uuid): bool => is_string($uuid) && Str::isUuid($uuid)
-        );
-        if ($owned !== []) {
-            DB::table('quiz_attempts')->whereIn('uuid', $owned)
-                ->whereNull('user_id')->update(['user_id' => $user->id]);
-        }
+        DemoSubscriptionLifecycle::claimAttempts($request, $user);
 
         return redirect()->route($user->is_admin ? 'admin.home' : 'account.home');
     }
