@@ -132,7 +132,7 @@ final class YandexController extends Controller
 
     private function finishLogin(Request $request, User $user): RedirectResponse
     {
-        Auth::login($user);
+        Auth::login($user, true);
         $request->session()->regenerate();
         $request->session()->forget('pending_yandex');
 

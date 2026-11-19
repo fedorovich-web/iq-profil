@@ -15,6 +15,9 @@ return [
     |
     */
 
+    // Browser persistence for logins made with the "remember me" option.
+    'remember_minutes' => max(1, (int) env('AUTH_REMEMBER_DAYS', 30)) * 24 * 60,
+
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),

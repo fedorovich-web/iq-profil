@@ -21,24 +21,60 @@ final class QuizController extends Controller
     {
         abort_unless(DB::table('questions')->exists(), 503, 'Банк вопросов пока не подготовлен.');
 
-        $uuid = (string) Str::uuid();
-        DB::table('quiz_attempts')->insert([
-            'uuid' => $uuid,
-            'user_id' => $request->user()?->id,
-            'status' => 'in_progress',
-            'question_revision' => PuzzleCatalog::VERSION,
-            'current_position' => 1,
-            'started_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $attempt = DB::transaction(function () use ($request): object {
+            // Two simultaneous clicks must not create two unpaid attempts.
+            // A completed unpaid attempt takes precedence over a newer unfinished one.
+            DemoSubscriptionLifecycle::lockOwner($request);
+            $query = DB::table('quiz_attempts as a')
+                ->leftJoin('demo_payments as p', function ($join): void {
+                    $join->on('p.attempt_id', '=', 'a.id')->where('p.status', '=', 'succeeded');
+                });
+
+            if ($request->user()) {
+                $query->where('a.user_id', $request->user()->id);
+            } else {
+                $query->whereNull('a.user_id')->whereIn('a.uuid', $request->session()->get('owned_attempts', []));
+            }
+
+            $blocked = $query->where(function ($query): void {
+                $query->where(function ($query): void {
+                    $query->where('a.status', 'completed')->whereNull('p.id');
+                })->orWhere(function ($query): void {
+                    $query->where('a.status', 'in_progress')
+                        ->where('a.question_revision', PuzzleCatalog::VERSION);
+                });
+            })->orderByRaw("CASE WHEN a.status = 'completed' THEN 0 ELSE 1 END")
+                ->orderByDesc('a.id')
+                ->select('a.uuid', 'a.status')->first();
+
+            if ($blocked !== null) {
+                return $blocked;
+            }
+
+            $uuid = (string) Str::uuid();
+            DB::table('quiz_attempts')->insert([
+                'uuid' => $uuid,
+                'user_id' => $request->user()?->id,
+                'status' => 'in_progress',
+                'question_revision' => PuzzleCatalog::VERSION,
+                'current_position' => 1,
+                'started_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return (object) ['uuid' => $uuid, 'status' => 'in_progress'];
+        }, 3);
 
         $owned = $request->session()->get('owned_attempts', []);
-        $owned[] = $uuid;
+        $owned[] = $attempt->uuid;
         $request->session()->put('owned_attempts', array_values(array_unique($owned)));
-        $request->session()->put('active_attempt', $uuid);
+        $request->session()->put('active_attempt', $attempt->uuid);
 
-        return redirect()->route('quiz.show');
+        return $attempt->status === 'completed'
+            ? redirect()->route('paywall', $attempt->uuid)
+                ->with('quiz_gate_notice', 'Предыдущая попытка завершена. Сначала откройте её результат — после демо-подтверждения можно начать новый тест.')
+            : redirect()->route('quiz.show');
     }
 
     public function resume(Request $request, string $uuid): RedirectResponse

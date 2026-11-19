@@ -3,6 +3,9 @@
 @section('private', 'yes')
 @section('page-class', 'paywall-page')
 @section('content')
+@if(session('quiz_gate_notice'))
+<p class="quiz-gate-notice" role="status">{{ session('quiz_gate_notice') }}</p>
+@endif
 <section class="paywall-layout">
   <div class="paywall-copy">
     <span class="pill">Результат готов</span>

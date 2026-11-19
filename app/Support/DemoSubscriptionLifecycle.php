@@ -168,6 +168,12 @@ final class DemoSubscriptionLifecycle
         return 'g:'.hash_hmac('sha256', $request->session()->getId(), (string) config('app.key'));
     }
 
+    /** Serialize quiz starts with demo payments for this authenticated user or guest session. */
+    public static function lockOwner(Request $request): void
+    {
+        self::lockScope(self::scopeKey($request));
+    }
+
     private static function lockScope(string $scope): void
     {
         DB::table('demo_subscription_scopes')->insertOrIgnore([

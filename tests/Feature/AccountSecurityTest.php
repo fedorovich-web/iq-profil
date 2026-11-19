@@ -42,6 +42,38 @@ final class AccountSecurityTest extends TestCase
         $this->get('/login')->assertOk()->assertSee('Вход в аккаунт');
     }
 
+    public function test_persistent_login_session_configuration_and_remember_choice(): void
+    {
+        // PHPUnit isolates sessions in memory; the running application uses database sessions.
+        $this->assertContains(config('session.driver'), ['array', 'database']);
+        $this->assertSame(10080, config('session.lifetime'));
+        $this->assertFalse(config('session.expire_on_close'));
+        $this->assertTrue(config('session.http_only'));
+        $this->assertSame('lax', config('session.same_site'));
+        $this->assertSame(43200, config('auth.remember_minutes'));
+
+        $html = $this->get('/login')->assertOk()->getContent();
+        $this->assertStringContainsString('Запомнить вход на 30 дней', $html);
+        $this->assertStringContainsString('name="remember" type="hidden" value="0"', $html);
+        $this->assertMatchesRegularExpression('/name="remember" type="checkbox" value="1"[^>]*checked/u', $html);
+
+        $user = User::factory()->create([
+            'email' => 'remember@example.com',
+            'password' => 'StrongPassword1122',
+        ]);
+        $this->post('/login', [
+            'email' => $user->email, 'password' => 'StrongPassword1122', 'remember' => 0,
+        ])->assertRedirect('/account');
+        $this->assertAuthenticatedAs($user);
+        $this->post('/logout')->assertRedirect('/');
+
+        $this->post('/login', [
+            'email' => $user->email, 'password' => 'StrongPassword1122', 'remember' => 1,
+        ])->assertRedirect('/account');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotNull($user->fresh()->getRememberToken());
+    }
+
     public function test_password_authentication_and_logout_work(): void
     {
         $user = User::factory()->create(['email' => 'account@example.com', 'password' => 'StrongPassword1122']);

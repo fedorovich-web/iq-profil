@@ -55,7 +55,7 @@ final class AuthController extends Controller
 
             return $user;
         });
-        Auth::login($user);
+        Auth::login($user, true);
         $request->session()->regenerate();
         $this->claimAttempts($request, $user);
 

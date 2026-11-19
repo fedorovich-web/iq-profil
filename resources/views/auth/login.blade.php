@@ -9,7 +9,7 @@
 @error('email')<div role="alert" class="form-error">{{ $message }}</div>@enderror
 <label class="auth-field"><span>Пароль</span><input type="password" name="password" placeholder="Пароль" autocomplete="current-password" required></label>
 @error('password')<div role="alert" class="form-error">{{ $message }}</div>@enderror
-<div class="auth-options"><label><input name="remember" type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}> Запомнить меня</label><a href="{{ route('password.request') }}">Забыли пароль?</a></div>
+<div class="auth-options"><label><input name="remember" type="hidden" value="0"><input name="remember" type="checkbox" value="1" {{ old('remember', '1') == '1' ? 'checked' : '' }}> Запомнить вход на 30 дней</label><a href="{{ route('password.request') }}">Забыли пароль?</a></div>
 <button type="submit" class="btn btn-primary btn-block">Войти <span aria-hidden="true">→</span></button>
 </form>
 <div class="auth-divider"><span>или</span></div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Support\PuzzleCatalog;
 use Database\Seeders\QuestionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -277,13 +278,81 @@ final class QuizFlowTest extends TestCase
         ]);
     }
 
-    public function test_a_new_attempt_does_not_modify_the_previous_one(): void
+    public function test_repeated_start_resumes_the_same_unfinished_attempt_without_resetting_answers(): void
     {
-        $old = $this->startAttempt();
-        $new = $this->startAttempt();
-        $this->assertNotSame($old, $new);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'current_position' => 1]);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $new, 'current_position' => 1]);
+        $uuid = $this->startAttempt();
+        $questionId = DB::table('questions')->where('position', 1)->value('id');
+        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
+            ->assertRedirect('/quiz');
+
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $this->assertSame($uuid, session('active_attempt'));
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'current_position' => 2]);
+        $this->assertDatabaseCount('quiz_attempts', 1);
+        $this->assertDatabaseCount('attempt_answers', 1);
+    }
+
+    public function test_unpaid_completed_attempt_blocks_new_attempt_until_demo_confirmation(): void
+    {
+        $uuid = $this->startAttempt();
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update([
+            'status' => 'completed',
+            'correct_count' => 0,
+            'elapsed_seconds' => 10,
+            'completed_at' => now(),
+        ]);
+
+        $this->post('/attempts')->assertRedirect('/paywall/'.$uuid)
+            ->assertSessionHas('quiz_gate_notice');
+        $this->get('/paywall/'.$uuid)->assertOk()->assertSee('Предыдущая попытка завершена.');
+        $this->post('/attempts')->assertRedirect('/paywall/'.$uuid);
+        $this->assertDatabaseCount('quiz_attempts', 1);
+
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $this->assertNotSame($uuid, session('active_attempt'));
+        $this->assertDatabaseCount('quiz_attempts', 2);
+    }
+
+    public function test_logged_in_user_resumes_in_progress_attempt_after_session_is_recreated(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $uuid = $this->startAttempt();
+        $questionId = DB::table('questions')->where('position', 1)->value('id');
+        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
+            ->assertRedirect('/quiz');
+
+        $this->withSession(['active_attempt' => null, 'owned_attempts' => []]);
+        $this->post('/attempts')->assertRedirect('/quiz');
+
+        $this->assertSame($uuid, session('active_attempt'));
+        $this->assertDatabaseHas('quiz_attempts', [
+            'uuid' => $uuid, 'user_id' => $user->id, 'current_position' => 2,
+        ]);
+        $this->assertDatabaseCount('quiz_attempts', 1);
+        $this->get('/quiz')->assertOk()->assertSee('из '.DB::table('questions')->count());
+    }
+
+    public function test_user_cannot_bypass_unpaid_gate_by_losing_the_browser_session(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $uuid = $this->startAttempt();
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update([
+            'status' => 'completed',
+            'correct_count' => 0,
+            'elapsed_seconds' => 10,
+            'completed_at' => now(),
+        ]);
+        $this->withSession(['active_attempt' => null, 'owned_attempts' => []]);
+        $this->post('/attempts')->assertRedirect('/paywall/'.$uuid);
+        $this->assertDatabaseCount('quiz_attempts', 1);
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->post('/attempts')->assertRedirect('/quiz');
         $this->assertDatabaseCount('quiz_attempts', 2);
     }
 }
