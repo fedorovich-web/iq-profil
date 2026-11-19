@@ -64,7 +64,7 @@
 .account-score-empty{font-size:31px;max-width:380px}
 .account-score-label{background:#e8ffeb;color:#087f36;border-radius:25px;padding:8px 13px;display:inline-flex;font-size:13px;font-weight:800;margin:2px 0}
 .account-hero-copy>p{font-size:15px;margin:14px 0 23px}
-.account-brain{position:absolute;right:-5%;top:0;width:55%;height:100%;object-fit:contain;z-index:0;pointer-events:none}
+.account-brain{position:absolute;top:0;right:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
 .account-brain-placeholder{position:absolute;right:9%;top:58px;font-size:160px;color:#dceaff45;pointer-events:none}
 .hero-account-actions{display:flex;gap:12px;margin-top:22px;align-items:center}
 .account-white-button,.account-ghost-button{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:10px 23px;border:1px solid #ecf2ff;border-radius:13px;font-weight:750;font-size:15px;text-decoration:none}
@@ -148,7 +148,7 @@
 .account-overview{gap:13px}
 .account-hero{padding:23px}
 .account-score{font-size:49px}
-.account-brain{width:49%}
+
 .subscription-panel>p:not(.sub-price){font-size:13px}
 .admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -169,7 +169,7 @@
 .account-hero{min-height:255px;border-radius:23px}
 .account-hero-copy>span:first-child{font-size:20px}
 .account-score{font-size:54px}
-.account-brain{right:-6%;width:52%;height:95%}
+
 .account-brain-placeholder{font-size:110px;top:66px}
 .mobile-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mobile-shortcuts a{display:flex;align-items:center;gap:9px;padding:16px 12px;background:#fff;border:1px solid #dfebff;box-shadow:0 8px 18px #164ca111;border-radius:17px;min-height:83px}
@@ -195,7 +195,7 @@
 .account-hero{padding:21px 16px;min-height:250px}
 .account-score{font-size:45px}
 .account-score small{font-size:15px}
-.account-brain{width:53%;right:-8%}
+
 .account-hero-copy>span:first-child{font-size:17px}
 .account-white-button,.account-ghost-button{font-size:12px;padding:10px 13px}
 .portal-panel{padding:18px}
@@ -243,10 +243,9 @@
 .subscription-panel>.portal-tag{position:static;max-width:100%;white-space:normal;line-height:1.4;margin:0 0 2px}
 .subscription-panel>.sub-price{margin-bottom:10px}
 .subscription-panel>p:not(.sub-price){margin:12px 0;color:#43577a}
-.account-hero-no-result .account-brain{opacity:.19}
+
 @media(max-width:420px){
   .account-score-empty{font-size:clamp(23px,7.5vw,29px);line-height:1.14;letter-spacing:-.035em;max-width:100%}
-  .account-hero-no-result .account-brain{opacity:.12;right:-30%;width:68%}
   .portal-recommendation{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px}
   .portal-recommendation>.portal-rec-icon{grid-column:1;grid-row:1}
   .portal-recommendation>div{grid-column:2;grid-row:1;min-width:0}
