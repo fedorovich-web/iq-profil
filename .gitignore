@@ -46,3 +46,26 @@ Thumbs.db
 # SQLite backups must never be committed
 /database/backups/
 
+# Local agent instructions and machine-specific bootstrap are not part of the public repo
+/AGENTS.md
+/CLAUDE.md
+/bootstrap.ps1
+
+# Keep only operational documentation and the README image in the repository
+/docs/*
+!/docs/development.md
+!/docs/legal-prelaunch-checklist.md
+!/docs/images/
+/docs/images/*
+!/docs/images/iq-profil-home.png
+
+# Keep only maintainable automated QA and recovery tools; preserve other scripts locally
+/scripts/*
+!/scripts/backup-database.php
+!/scripts/browser-e2e.mjs
+!/scripts/faq-stability-qa.mjs
+!/scripts/guest-session-gate-e2e.mjs
+!/scripts/session-cookie-e2e.mjs
+!/scripts/seo-content-qa.mjs
+!/scripts/validate-html.mjs
+
