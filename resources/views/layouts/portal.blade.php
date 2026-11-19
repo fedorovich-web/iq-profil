@@ -4,6 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>@yield('title', 'Личный кабинет — IQ.Профиль')</title>
+<link rel="preload" href="{{ asset('fonts/onest/onest-cyrillic-wght-v1.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ asset('fonts/onest/onest-latin-wght-v1.woff2') }}" as="font" type="font/woff2" crossorigin>
 @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 <body class="portal-page">

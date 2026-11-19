@@ -51,6 +51,8 @@
 @hasSection('private')<meta name="robots" content="noindex,nofollow,noarchive">@endif
 <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link rel="icon" sizes="any" href="{{ asset('favicon.ico') }}">
+<link rel="preload" href="{{ asset('fonts/onest/onest-cyrillic-wght-v1.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ asset('fonts/onest/onest-latin-wght-v1.woff2') }}" as="font" type="font/woff2" crossorigin>
 @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 <body class="@yield('page-class','page-default')">

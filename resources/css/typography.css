@@ -1,0 +1,212 @@
+/* Self-hosted Onest Variable; Russian + Latin subsets only. SIL OFL 1.1. */
+@font-face {
+    font-family: 'Onest Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/onest/onest-cyrillic-wght-v1.woff2') format('woff2');
+    unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
+}
+@font-face {
+    font-family: 'Onest Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/onest/onest-latin-wght-v1.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Semantic typography tokens; override a role instead of individual components. */
+:root {
+    --font-ui-family: 'Onest Variable', Arial, sans-serif;
+    --font-body-size: var(--type-size-16px);
+    --font-h1-size: var(--type-size-fluid-01);
+    --font-h1-weight: var(--type-weight-850);
+    --font-h1-line-height: var(--type-leading-1-1);
+    --font-h1-margin-bottom: var(--type-space-20px);
+    --font-h2-size: var(--type-size-fluid-02);
+    --font-h2-weight: var(--type-weight-820);
+    --font-h2-line-height: var(--type-leading-1-17);
+    --font-h2-margin-bottom: var(--type-space-13px);
+    --font-h3-size: var(--type-size-21px);
+    --font-h3-weight: var(--type-weight-500);
+    --font-h3-margin-bottom: var(--type-space-12px);
+    --font-heading-tracking: var(--type-tracking-minus-0-038em);
+    --font-lead-size: var(--type-size-20px);
+    --font-lead-line-height: var(--type-leading-1-55);
+    --font-subtitle-size: var(--type-size-17px);
+    --font-subtitle-line-height: var(--type-leading-1-5);
+    --font-subtitle-margin-bottom: var(--type-space-42px);
+    --font-menu-size: var(--type-size-14px);
+    --font-menu-weight: var(--type-weight-700);
+    --font-button-size: var(--type-size-16px);
+    --font-button-weight: var(--type-weight-750);
+    --font-quiz-h1-size: var(--type-size-fluid-03);
+    --font-paywall-h1-size: var(--type-size-fluid-04);
+    --font-checkout-h1-size: var(--type-size-38px);
+    --font-auth-h1-size: var(--type-size-26px);
+    --font-auth-h1-weight: var(--type-weight-850);
+    --font-portal-h2-size: var(--type-size-21px);
+    --font-admin-h1-size: var(--type-size-34px);
+    --font-legal-small-size: var(--type-size-10px);
+    --font-caption-size: var(--type-size-13px);
+}
+
+/* Primitive values retain existing desktop/mobile typography until visual QA. */
+:root {
+    /* font-size */
+    --type-size-16px: 16px;
+    --type-size-24px: 24px;
+    --type-size-14px: 14px;
+    --type-size-15px: 15px;
+    --type-size-25px: 25px;
+    --type-size-17px: 17px;
+    --type-size-fluid-01: clamp(38px,3.8vw,55px);
+    --type-size-20px: 20px;
+    --type-size-38px: 38px;
+    --type-size-fluid-02: clamp(32px,3.3vw,43px);
+    --type-size-21px: 21px;
+    --type-size-70px: 70px;
+    --type-size-83px: 83px;
+    --type-size-42px: 42px;
+    --type-size-90px: 90px;
+    --type-size-19px: 19px;
+    --type-size-33px: 33px;
+    --type-size-13px: 13px;
+    --type-size-22px: 22px;
+    --type-size-fluid-03: clamp(24px,3.3vw,34px);
+    --type-size-49px: 49px;
+    --type-size-fluid-04: clamp(33px,3.6vw,48px);
+    --type-size-35px: 35px;
+    --type-size-18px: 18px;
+    --type-size-29px: 29px;
+    --type-size-48px: 48px;
+    --type-size-12px: 12px;
+    --type-size-10px: 10px;
+    --type-size-30px: 30px;
+    --type-size-23px: 23px;
+    --type-size-45px: 45px;
+    --type-size-fluid-05: clamp(30px,3.7vw,36px);
+    --type-size-28px: 28px;
+    --type-size-fluid-06: clamp(25px,7.6vw,36px);
+    --type-size-32px: 32px;
+    --type-size-57px: 57px;
+    --type-size-72px: 72px;
+    --type-size-75px: 75px;
+    --type-size-11px: 11px;
+    --type-size-31px: 31px;
+    --type-size-fluid-07: clamp(29px,3.1vw,38px);
+    --type-size-47px: 47px;
+    --type-size-27px: 27px;
+    --type-size-26px: 26px;
+    --type-size-fluid-08: clamp(27px,2.7vw,34px);
+    --type-size-fluid-09: clamp(25px,7vw,30px);
+    --type-size-fluid-10: clamp(32px,4vw,48px);
+    --type-size-1-3em: 1.3em;
+    --type-size-0-55em: .55em;
+    --type-size-fluid-11: clamp(45px,6vw,65px);
+    --type-size-0-5em: .5em;
+    --type-size-fluid-12: clamp(25px,8vw,29px);
+    --type-size-fluid-13: clamp(22px,3vw,33px);
+    --type-size-fluid-14: clamp(12px,1.2vw,14px);
+    --type-size-fluid-15: clamp(25px,4dvh,44px);
+    --type-size-fluid-16: clamp(19px,5.7vw,25px);
+    --type-size-34px: 34px;
+    --type-size-63px: 63px;
+    --type-size-160px: 160px;
+    --type-size-36px: 36px;
+    --type-size-54px: 54px;
+    --type-size-110px: 110px;
+    --type-size-fluid-17: clamp(28px,4vw,43px);
+    --type-size-fluid-18: clamp(23px,7.5vw,29px);
+    --type-size-fluid-19: clamp(27px,8vw,35px);
+
+    /* font-weight */
+    --type-weight-820: 820;
+    --type-weight-700: 700;
+    --type-weight-650: 650;
+    --type-weight-750: 750;
+    --type-weight-850: 850;
+    --type-weight-500: 500;
+    --type-weight-600: 600;
+    --type-weight-730: 730;
+    --type-weight-800: 800;
+    --type-weight-810: 810;
+    --type-weight-790: 790;
+    --type-weight-680: 680;
+    --type-weight-770: 770;
+    --type-weight-400: 400;
+    --type-weight-720: 720;
+    --type-weight-780: 780;
+    --type-weight-550: 550;
+    --type-weight-830: 830;
+
+    /* line-height */
+    --type-leading-1-1: 1.1;
+    --type-leading-1-55: 1.55;
+    --type-leading-1-17: 1.17;
+    --type-leading-1-5: 1.5;
+    --type-leading-1-42: 1.42;
+    --type-leading-1-05: 1.05;
+    --type-leading-1: 1;
+    --type-leading-1-45: 1.45;
+    --type-leading-1-2: 1.2;
+    --type-leading-1-49: 1.49;
+    --type-leading-1-4: 1.4;
+    --type-leading-1-14: 1.14;
+    --type-leading-1-3: 1.3;
+    --type-leading-1-6: 1.6;
+    --type-leading-1-22: 1.22;
+    --type-leading-1-18: 1.18;
+    --type-leading-1-15: 1.15;
+    --type-leading-1-16: 1.16;
+    --type-leading-1-35: 1.35;
+    --type-leading-1-24: 1.24;
+    --type-leading-1-25: 1.25;
+    --type-leading-1-7: 1.7;
+
+    /* letter-spacing */
+    --type-tracking-minus-1px: -1px;
+    --type-tracking-minus-1-5px: -1.5px;
+    --type-tracking-minus-0-038em: -.038em;
+    --type-tracking-minus-0-02em: -.02em;
+    --type-tracking-minus-0-7px: -.7px;
+    --type-tracking-minus-0-035em: -.035em;
+    --type-tracking-minus-0-04em: -.04em;
+    --type-tracking-minus-0-03em: -.03em;
+    --type-tracking-minus-0-025em: -.025em;
+    --type-tracking-minus-1-05px: -1.05px;
+    --type-tracking-minus-0-05em: -.05em;
+    --type-tracking-0: 0;
+
+    /* margin-bottom */
+    --type-space-20px: 20px;
+    --type-space-13px: 13px;
+    --type-space-42px: 42px;
+    --type-space-12px: 12px;
+    --type-space-8px: 8px;
+    --type-space-9px: 9px;
+    --type-space-26px: 26px;
+    --type-space-17px: 17px;
+    --type-space-18px: 18px;
+    --type-space-22px: 22px;
+    --type-space-39px: 39px;
+    --type-space-10px: 10px;
+    --type-space-24px: 24px;
+    --type-space-25px: 25px;
+    --type-space-37px: 37px;
+    --type-space-14px: 14px;
+    --type-space-16px: 16px;
+    --type-space-fluid-01: clamp(13px,4.4vh,48px);
+    --type-space-fluid-02: clamp(10px,2.5vh,24px);
+    --type-space-fluid-03: clamp(11px,2.2vh,20px);
+    --type-space-92px: 92px;
+    --type-space-72px: 72px;
+    --type-space-15px: 15px;
+    --type-space-56px: 56px;
+    --type-space-7px: 7px;
+    --type-space-27px: 27px;
+    --type-space-19px: 19px;
+    --type-space-21px: 21px;
+
+}
