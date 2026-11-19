@@ -13,6 +13,7 @@ final class SeoCopyTest extends TestCase
 
     public function test_landing_has_consistent_seo_metadata_and_valid_json_ld(): void
     {
+        $landingUrl = rtrim(route('landing'), '/').'/';
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertSame(1, preg_match_all('/<title>/', $html));
@@ -43,8 +44,8 @@ final class SeoCopyTest extends TestCase
         $this->assertStringNotContainsString('Почему выбирают', $html);
         $this->assertStringContainsString('<meta name="description"', $html);
         $this->assertStringContainsString('<meta property="og:title"', $html);
-        $this->assertStringContainsString('<meta property="og:url" content="'.route('landing').'">', $html);
-        $this->assertStringContainsString('<link rel="canonical" href="'.route('landing').'">', $html);
+        $this->assertStringContainsString('<meta property="og:url" content="'.$landingUrl.'">', $html);
+        $this->assertStringContainsString('<link rel="canonical" href="'.$landingUrl.'">', $html);
         $this->assertStringNotContainsString('<meta name="robots" content="noindex', $html);
         $this->assertStringNotContainsString('Предварительные ответы', $html);
         $this->assertStringContainsString('FAQPage', $html);
@@ -55,10 +56,10 @@ final class SeoCopyTest extends TestCase
         $schema = json_decode($found[1][0], true, 512, JSON_THROW_ON_ERROR);
         $this->assertSame('https://schema.org', $schema['@context']);
         $this->assertSame(['WebSite', 'WebPage', 'FAQPage'], array_column($schema['@graph'], '@type'));
-        $this->assertSame(route('landing'), $schema['@graph'][1]['url']);
+        $this->assertSame($landingUrl, $schema['@graph'][1]['url']);
         $this->assertSame('ru-RU', $schema['@graph'][1]['inLanguage']);
-        $this->assertSame(route('landing').'#faq', $schema['@graph'][2]['url']);
-        $this->assertSame(['@id' => route('landing').'#webpage'], $schema['@graph'][2]['isPartOf']);
+        $this->assertSame($landingUrl.'#faq', $schema['@graph'][2]['url']);
+        $this->assertSame(['@id' => $landingUrl.'#webpage'], $schema['@graph'][2]['isPartOf']);
         $faqEntities = $schema['@graph'][2]['mainEntity'];
         $faq = config('iq_faq');
         $this->assertCount(count($faq), $faqEntities);

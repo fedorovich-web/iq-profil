@@ -44,7 +44,7 @@ final class LegalSeoSubscriptionTest extends TestCase
         $xml = simplexml_load_string($response->getContent());
         $this->assertNotFalse($xml);
         $content = $response->getContent();
-        $this->assertStringContainsString('<loc>'.route('landing').'</loc>', $content);
+        $this->assertStringContainsString('<loc>'.rtrim(route('landing'), '/').'/</loc>', $content);
         foreach (['legal.privacy', 'legal.offer', 'legal.consent'] as $name) {
             $this->assertStringNotContainsString(route($name), $content);
         }

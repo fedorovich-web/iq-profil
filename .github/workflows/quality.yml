@@ -47,6 +47,12 @@ jobs:
           node --check scripts/browser-e2e.mjs
           npm run build
 
+      - name: Validate production Compose configuration
+        env:
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          APP_URL: https://flatero.ru
+        run: docker compose config --quiet
+
       - name: PHP style and tests
         run: |
           vendor/bin/pint --test

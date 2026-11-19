@@ -46,6 +46,26 @@ node scripts/browser-e2e.mjs
 5. В настройках Compose по возможности включите **Isolated Deployments**. Иначе необходимо убедиться через **Preview Compose**, что `web` и `app` находятся в общей Docker-сети, а `web` также доступен Traefik. Иначе возникнет 502 или ошибка `app:9000`.
 6. Нажмите **Deploy**. Проверьте логи контейнера `app`: миграции завершаются успешно и seed добавляет 25 вопросов, контейнер `web` получает статус `healthy`. Создание таблиц допустимо только для **новой пустой** SQLite; не указывайте на существующий volume без резервной копии.
 
+### WWW -> основной домен
+
+DNS-записи flatero.ru и www.flatero.ru указывают на один сервер. Для
+Docker Compose маршруты www.flatero.ru на HTTP (web) и HTTPS (websecure)
+с сертификатом Let's Encrypt объявлены в compose.yaml отдельными
+Traefik labels. Middleware iqprofil-www-redirect выполняет постоянный
+редирект (301) на https://flatero.ru с сохранением пути и query string.
+Основной домен продолжает обслуживаться через Dokploy Domains -> web:80.
+Существующую запись flatero.ru удалять не следует.
+
+Изменения Docker labels требуют Deploy/Redeploy Compose в Dokploy.
+После него нужно проверить http://www.flatero.ru/test?x=1 и
+https://www.flatero.ru/test?x=1: оба адреса должны перенаправлять на
+https://flatero.ru/test?x=1 с действительным HTTPS-сертификатом.
+Для автоматической проверки после Deploy запустите node tests/domain-post-deploy.mjs.
+Скрипт проверяет 301 с обоих протоколов, canonical, Open Graph и sitemap.
+
+В sitemap, canonical, Open Graph и JSON-LD для главной страницы используется
+один абсолютный URL: https://flatero.ru/ (с завершающим слешем).
+
 В production заданы `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_LIFETIME=10080` (семь дней), `SESSION_SECURE_COOKIE=true`. SSL завершается на Traefik. Laravel доверяет forwarded-заголовкам только от адресов приватных сетей.
 
 **Важно:** при удалении Compose-сервиса никогда не включайте «Delete volumes» без проверенной резервной копии. Не запускайте `docker compose down -v`, `migrate:fresh`, `db:wipe` и не меняйте имя Compose-проекта: это может скрыть старый volume под новым именем.

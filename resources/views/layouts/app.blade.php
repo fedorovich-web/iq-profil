@@ -8,13 +8,14 @@
 <meta name="description" content="@yield('description', 'Тест на IQ онлайн с графическими заданиями на логику и поиск закономерностей.')">
 @hasSection('canonical-url')<link rel="canonical" href="@yield('canonical-url')">@endif
 @hasSection('landing-nav')
-<link rel="canonical" href="{{ route('landing') }}">
+@php($landingCanonicalUrl = rtrim(route('landing'), '/') . '/')
+<link rel="canonical" href="{{ $landingCanonicalUrl }}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="IQ.Профиль">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="{{ trim($__env->yieldContent('title')) }}">
 <meta property="og:description" content="{{ trim($__env->yieldContent('description')) }}">
-<meta property="og:url" content="{{ route('landing') }}">
+<meta property="og:url" content="{{ $landingCanonicalUrl }}">
 @if(file_exists(public_path('assets/iq_profile_hero_logic_matrix_desktop.avif')))
 <meta property="og:image" content="{{ asset('assets/iq_profile_hero_logic_matrix_desktop.avif') }}">
 <meta property="og:image:alt" content="Графическая матрица из фигур — IQ.Профиль">
@@ -23,18 +24,18 @@
 <script type="application/ld+json">{!! json_encode([
     '@'.'context' => 'https://schema.org',
     '@graph' => [
-        ['@type' => 'WebSite', '@id' => route('landing').'#website', 'name' => 'IQ.Профиль', 'url' => route('landing'), 'inLanguage' => 'ru-RU'],
-        ['@type' => 'WebPage', '@id' => route('landing').'#webpage', 'url' => route('landing'),
+        ['@type' => 'WebSite', '@id' => $landingCanonicalUrl.'#website', 'name' => 'IQ.Профиль', 'url' => $landingCanonicalUrl, 'inLanguage' => 'ru-RU'],
+        ['@type' => 'WebPage', '@id' => $landingCanonicalUrl.'#webpage', 'url' => $landingCanonicalUrl,
             'name' => trim($__env->yieldContent('title')),
             'description' => trim($__env->yieldContent('description')),
             'inLanguage' => 'ru-RU',
-            'isPartOf' => ['@id' => route('landing').'#website']],
+            'isPartOf' => ['@id' => $landingCanonicalUrl.'#website']],
         [
             '@type' => 'FAQPage',
-            '@id' => route('landing').'#faq',
-            'url' => route('landing').'#faq',
+            '@id' => $landingCanonicalUrl.'#faq',
+            'url' => $landingCanonicalUrl.'#faq',
             'inLanguage' => 'ru-RU',
-            'isPartOf' => ['@id' => route('landing').'#webpage'],
+            'isPartOf' => ['@id' => $landingCanonicalUrl.'#webpage'],
             'mainEntity' => array_map(static fn (array $item): array => [
                 '@type' => 'Question',
                 'name' => $item['question'],

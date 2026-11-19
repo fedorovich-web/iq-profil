@@ -35,6 +35,27 @@ services:
       target: web
     expose:
       - "80"
+    # Dokploy's native Domain handles flatero.ru. These extra Traefik
+    # routers redirect www.flatero.ru without serving duplicate content.
+    # The www DNS record already resolves to this Dokploy server.
+    # Router names do not conflict with Dokploy's generated labels.
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.iqprofil-www-http.rule: "Host(`www.flatero.ru`)"
+      traefik.http.routers.iqprofil-www-http.entrypoints: "web"
+      traefik.http.routers.iqprofil-www-http.middlewares: "iqprofil-www-redirect"
+      traefik.http.routers.iqprofil-www-http.service: "iqprofil-www-backend"
+      traefik.http.routers.iqprofil-www-https.rule: "Host(`www.flatero.ru`)"
+      traefik.http.routers.iqprofil-www-https.entrypoints: "websecure"
+      traefik.http.routers.iqprofil-www-https.tls: "true"
+      traefik.http.routers.iqprofil-www-https.tls.certresolver: "letsencrypt"
+      traefik.http.routers.iqprofil-www-https.middlewares: "iqprofil-www-redirect"
+      traefik.http.routers.iqprofil-www-https.service: "iqprofil-www-backend"
+      traefik.http.middlewares.iqprofil-www-redirect.redirectregex.regex: "^https?://www\\.flatero\\.ru(.*)"
+      # $$ is escaped by Compose to one $ so Traefik preserves the path and query.
+      traefik.http.middlewares.iqprofil-www-redirect.redirectregex.replacement: "https://flatero.ru$${1}"
+      traefik.http.middlewares.iqprofil-www-redirect.redirectregex.permanent: "true"
+      traefik.http.services.iqprofil-www-backend.loadbalancer.server.port: "80"
     depends_on:
       - app
     healthcheck:
