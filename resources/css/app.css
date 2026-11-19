@@ -83,6 +83,9 @@ h1,h2,h3{letter-spacing:-.038em}
 .footer{display:grid;grid-template-columns:2fr 1fr 1fr 1.8fr;gap:32px;max-width:1310px;margin:0 auto;padding:27px 58px 35px;color:#283b5a;font-size:13px}
 .footer strong{color:#0a1638;display:block;margin-bottom:12px}
 .footer .footer-brand{font-size:22px;letter-spacing:-.7px}
+.footer-about{display:flex;flex-direction:column;align-items:flex-start;gap:15px;min-width:0}
+.footer-about>.footer-brand{margin:0;line-height:1}
+.footer-about>p{margin:0}
 .footer a{display:block;margin:8px 0}
 .footer p{font-size:13px;line-height:1.45}
 
@@ -624,18 +627,26 @@ body.auth-page{min-height:100vh;min-height:100dvh;height:auto;overflow:visible;p
   align-items:center;
   gap:24px;
 }
-.landing-page .bottom-cta-copy{min-width:0}
+.landing-page .bottom-cta-copy{min-width:0;max-width:min(100%,460px)}
 .landing-page .bottom-cta-copy h2{font-size:clamp(27px,2.7vw,34px);line-height:1.18}
 .landing-page .bottom-cta-copy p{font-size:16px;line-height:1.5;max-width:100%}
 .landing-page .bottom-cta-description-line{display:block}
 .landing-page .bottom-cta form{min-width:0;max-width:100%}
 @media(max-width:1050px){
-  .landing-page .bottom-cta{grid-template-columns:minmax(0,1fr);gap:18px}
+  .landing-page .bottom-cta{
+    grid-template-columns:minmax(0,1fr);
+    gap:18px;
+    background-color:#edf4ff;
+    background-size:auto 155px;
+    background-position:right bottom;
+    padding-bottom:165px;
+  }
+  .landing-page .bottom-cta-copy{max-width:min(100%,520px)}
   .landing-page .bottom-cta-description-line{display:inline}
   .landing-page .bottom-cta form{justify-self:start}
 }
 @media(max-width:690px){
-  .landing-page .bottom-cta{padding:28px 22px;min-height:0;margin-bottom:72px;background-position:center center}
+  .landing-page .bottom-cta{padding:28px 22px 165px;min-height:0;margin-bottom:72px;background-position:right bottom;background-size:auto 155px}
   .landing-page .bottom-cta-copy h2{font-size:clamp(25px,7vw,30px);overflow-wrap:normal}
   .landing-page .bottom-cta form,.landing-page .bottom-cta .btn{max-width:100%}
   .topbar .original-brand{max-height:43px;height:auto}
@@ -780,18 +791,11 @@ body.auth-page{min-height:100vh;min-height:100dvh;height:auto;overflow:visible;p
   .portal-header .portal-avatar{flex:none}
 }
 
-/* FAQ: one scroll anchor strategy, coordinated with the animation in app.js. */
+/* FAQ: prevent native scroll anchoring from competing with the synchronous position correction. */
 html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
 .faq-list,.faq-list details{overflow-anchor:none}
-.faq-list{interpolate-size:allow-keywords}
-.faq-list details::details-content{
-  block-size:0;overflow:hidden;
-  transition:block-size .3s ease,content-visibility .3s allow-discrete;
-}
+.faq-list details::details-content{block-size:0;overflow:hidden}
 .faq-list details[open]::details-content{block-size:auto}
-@media(prefers-reduced-motion:reduce){
- .faq-list details::details-content{transition:none}
-}
 /* Make lower call-to-action heading visually prominent. */
 .landing-page .bottom-cta h2{font-weight:850;letter-spacing:-.035em;line-height:1.15}
 
@@ -847,6 +851,9 @@ html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
 /* Gate notice is only shown after retrying a completed, unpaid attempt. */
 .quiz-gate-notice{max-width:1060px;margin:18px auto 0;padding:12px 18px;border:1px solid #c9daf6;border-radius:12px;background:#f4f8ff;color:#29466e;font-size:14px;line-height:1.55}
 @media(max-width:690px){.quiz-gate-notice{margin:14px 16px 0;padding:10px 13px}}
+
+/* Conversion disclosure: show the no-charge demo conditions before starting. */
+.hero-copy>.hero-disclosure{font-size:13px;line-height:1.5;color:#536885;margin:16px 0 0;max-width:500px}
 
 /* Responsive content sizing: never conceal a grid/flex sizing error by clipping the page. */
 .checkout-layout,.checkout-intro,.checkout-card{min-width:0}

@@ -95,40 +95,26 @@ if (toggle && menu && backdrop) {
     });
 }
 
-// Keep the activated FAQ heading stationary while another answer collapses above it.
-// Disable native scroll anchoring for this page: the two mechanisms must not compete.
+// Opening one FAQ item must not move the activated heading when another item closes.
+// Update the layout synchronously and compensate only for the actual displacement.
 const faq = document.querySelector('.faq-list');
 if (faq) {
     const entries = [...faq.querySelectorAll('details')];
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let animationToken = 0;
-
     for (const entry of entries) {
         const summary = entry.querySelector('summary');
         if (!summary) continue;
         summary.addEventListener('click', event => {
             event.preventDefault();
-            const targetTop = summary.getBoundingClientRect().top;
+            const initialTop = summary.getBoundingClientRect().top;
             const shouldOpen = !entry.open;
-            const token = ++animationToken;
-
             for (const other of entries) {
                 if (other !== entry && other.open) other.open = false;
             }
             entry.open = shouldOpen;
-
-            const startedAt = performance.now();
-            const stabilize = () => {
-                if (token !== animationToken) return;
-                const shift = summary.getBoundingClientRect().top - targetTop;
-                if (Math.abs(shift) > 0.5) {
-                    window.scrollBy({ top: shift, left: 0, behavior: 'instant' });
-                }
-                if (!reducedMotion.matches && performance.now() - startedAt < 400) {
-                    requestAnimationFrame(stabilize);
-                }
-            };
-            stabilize();
+            const displacement = summary.getBoundingClientRect().top - initialTop;
+            if (Math.abs(displacement) > 0.5) {
+                window.scrollBy({ top: displacement, left: 0, behavior: 'instant' });
+            }
         });
     }
 }

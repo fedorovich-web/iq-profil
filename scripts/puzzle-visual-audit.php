@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 require dirname(__DIR__).'/vendor/autoload.php';
@@ -7,7 +8,7 @@ use App\Support\GraphicPuzzle;
 use App\Support\PuzzleCatalog;
 
 $folder = dirname(__DIR__).'/storage/app/qa';
-if (!is_dir($folder)) {
+if (! is_dir($folder)) {
     mkdir($folder, 0770, true);
 }
 foreach (array_chunk(PuzzleCatalog::definitions(), 5, true) as $index => $group) {
@@ -28,7 +29,7 @@ h2{font-size:17px;margin:0 0 6px}.prompt{font-size:13px;color:#3d5077;line-heigh
 HTML;
     foreach ($group as $offset => [$slug, $motif, $prompt, $cells, $candidates]) {
         $position = $offset + 1;
-        $esc = static fn ($value) => htmlspecialchars((string)$value, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8');
+        $esc = static fn ($value) => htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $html .= '<section class="card"><h2>№ '.$position.' — '.$esc($slug).'</h2><p class="prompt">'.$esc($prompt).'</p><div class="matrix">';
         foreach ($cells as $cellIndex => $value) {
             $html .= $cellIndex === 8 ? '<div class="cell missing">?</div>' :
@@ -39,7 +40,7 @@ HTML;
         $choices = array_values(array_filter($candidates, static fn (int $v) => $v !== $answer));
         array_splice($choices, ($offset * 5 + 2) % 6, 0, [$answer]);
         foreach ($choices as $slot => $value) {
-            $html .= '<div class="opt">'.GraphicPuzzle::image($slug, $value, 50).'<span>'.chr(65+$slot).'</span></div>';
+            $html .= '<div class="opt">'.GraphicPuzzle::image($slug, $value, 50).'<span>'.chr(65 + $slot).'</span></div>';
         }
         $html .= '</div></section>';
     }

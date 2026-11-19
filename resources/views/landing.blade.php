@@ -15,6 +15,7 @@
         <button class="btn btn-secondary" type="submit"><span class="play-symbol" aria-hidden="true"><svg viewBox="0 0 26 26" focusable="false"><circle cx="13" cy="13" r="10.5"></circle><path d="m10.5 8.4 7.3 4.6-7.3 4.6V8.4Z"></path></svg></span> Начать IQ-тест</button>
       </form>
     </div>
+    <p class="hero-disclosure">Начать можно бесплатно и без регистрации. Отчёт в демоверсии открывается без карты и реальных списаний.</p>
   </div>
   <div class="hero-visual" aria-hidden="true">
     @if(file_exists(public_path('assets/iq_profile_hero_logic_matrix_desktop.avif')))
