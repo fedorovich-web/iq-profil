@@ -46,15 +46,18 @@
 </section>
 @php($milestone = session('quiz_progress_milestone'))
 @if(is_array($milestone) && ($milestone['attempt_uuid'] ?? null) === $attempt->uuid)
-<aside class="quiz-milestone" data-quiz-milestone hidden role="status" aria-label="Прогресс тестирования">
-  <div class="quiz-milestone-ring" style="--progress-angle: {{ (int) $milestone['percent'] * 3.6 }}deg" aria-hidden="true">
-    <strong>{{ (int) $milestone['percent'] }}%</strong>
+<aside class="quiz-milestone" data-quiz-milestone hidden role="dialog" aria-modal="true" aria-labelledby="quiz-milestone-title" aria-describedby="quiz-milestone-description">
+  <div class="quiz-milestone-panel">
+    <button class="quiz-milestone-close" data-milestone-close type="button" aria-label="Закрыть уведомление">×</button>
+    <div class="quiz-milestone-ring" style="--progress-angle: {{ (int) $milestone['percent'] * 3.6 }}deg" aria-hidden="true">
+      <strong>{{ (int) $milestone['percent'] }}%</strong>
+    </div>
+    <div class="quiz-milestone-copy">
+      <strong id="quiz-milestone-title">{{ $milestone['stage'] === 1 ? 'Треть теста позади' : 'Большая часть теста пройдена' }}</strong>
+      <p id="quiz-milestone-description">{{ $milestone['stage'] === 1 ? 'Ответы сохранены. Продолжайте в своём темпе.' : 'До персонального отчёта осталось немного.' }}</p>
+    </div>
+    <button class="btn btn-primary quiz-milestone-continue" data-milestone-close type="button">Продолжить тест</button>
   </div>
-  <div class="quiz-milestone-copy">
-    <strong>{{ $milestone['stage'] === 1 ? 'Треть теста позади' : 'Большая часть теста пройдена' }}</strong>
-    <p>{{ $milestone['stage'] === 1 ? 'Ответы сохранены. Продолжайте в своём темпе.' : 'До персонального отчёта осталось немного.' }}</p>
-  </div>
-  <button class="quiz-milestone-close" data-milestone-close type="button" aria-label="Закрыть уведомление">×</button>
 </aside>
 @endif
 @endsection

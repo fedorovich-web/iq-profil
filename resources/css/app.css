@@ -886,23 +886,109 @@ html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
 }
 
 
-/* Progress milestone popup, without blocking answers. */
-.quiz-milestone[hidden]{display:none!important}
-.quiz-milestone{position:fixed;right:24px;bottom:24px;z-index:95;width:min(370px,calc(100vw - 28px));display:flex;align-items:center;gap:16px;padding:20px 42px 20px 18px;border-radius:21px;background:#fff;box-shadow:0 19px 56px #1a43823d,0 0 0 1px #d5e3f8;color:#0b244a;text-align:left;pointer-events:none;transition:opacity .2s,transform .2s}
-.quiz-milestone.is-hiding{opacity:0;transform:translateY(10px);pointer-events:none}
-.quiz-milestone-ring{flex:0 0 86px;width:86px;height:86px;border-radius:50%;position:relative;display:grid;place-items:center;background:conic-gradient(#1266ed var(--progress-angle),#dfeaff 0)}
-.quiz-milestone-ring::before{content:"";position:absolute;inset:10px;border-radius:50%;background:white}
-.quiz-milestone-ring strong{position:relative;font-size:20px;font-weight:850;color:#0b56d9}
-.quiz-milestone-copy{min-width:0}
-.quiz-milestone-copy strong{display:block;font-size:17px;line-height:1.25}
-.quiz-milestone-copy p{font-size:13px;line-height:1.45;color:#445b7b;margin:7px 0 0}
-.quiz-milestone-close{position:absolute;top:8px;right:10px;width:30px;height:30px;border:0;border-radius:9px;background:transparent;font-size:24px;line-height:1;color:#526688;pointer-events:auto}
-.quiz-milestone-close:hover{background:#eef3fd}
-@media(max-width:690px){
-  .quiz-milestone{right:14px;bottom:14px;padding:16px 36px 16px 14px;gap:12px}
-  .quiz-milestone-ring{flex-basis:70px;width:70px;height:70px}
-  .quiz-milestone-ring strong{font-size:17px}
-  .quiz-milestone-copy strong{font-size:15px}
-  .quiz-milestone-copy p{font-size:12px}
+/* The quiz is a stable screen. The page never scrolls; only exceptionally
+   short viewports can scroll within the question area. */
+body.quiz-page{height:100vh;height:100dvh;overflow:hidden}
+.quiz-page .site-shell{height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.quiz-page .site-shell>.topbar{flex:none}
+.quiz-page .site-shell>main{flex:1 1 auto;min-height:0;display:flex;overflow:hidden}
+.quiz-page .footer{display:none}
+.quiz-page .quiz-container{
+  --quiz-cell:clamp(44px,min(20vw,calc((100dvh - 455px)/3)),96px);
+  width:100%;height:100%;min-height:0;min-width:0;
+  display:grid;grid-template-columns:minmax(0,1fr);align-content:safe center;
+  row-gap:clamp(5px,1.2dvh,11px);overflow-y:auto;overscroll-behavior:contain;
+  overflow-anchor:none;scrollbar-width:thin;
+  margin:0 auto;padding:clamp(8px,1.1dvh,17px) 22px;
 }
-@media(prefers-reduced-motion:reduce){.quiz-milestone{transition:none}}
+.quiz-page .quiz-toolbar{height:clamp(47px,7dvh,62px);padding:0 20px;min-height:0}
+.quiz-page .quiz-timer{font-size:16px}
+.quiz-page .progress{position:static!important;width:auto!important;height:8px!important;margin:0 12px!important}
+.quiz-page .quiz-headline{min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.quiz-page .quiz-headline h1{font-size:clamp(22px,3vw,33px);margin:0;line-height:1.16}
+.quiz-page .quiz-headline p{font-size:clamp(12px,1.2vw,14px);line-height:1.35;margin:7px 0 0;max-width:630px}
+.quiz-page .question-board{
+  width:max-content;max-width:100%;display:grid;
+  grid-template-columns:repeat(3,var(--quiz-cell));
+  gap:6px;padding:clamp(6px,1.2dvh,12px);
+  margin:0 auto;border-radius:19px;
+}
+.quiz-page .matrix-cell{width:var(--quiz-cell);height:var(--quiz-cell);aspect-ratio:1;min-width:0;border-radius:10px}
+.quiz-page .matrix-cell svg{width:calc(var(--quiz-cell) * .76);height:calc(var(--quiz-cell) * .76)}
+.quiz-page .matrix-missing>span{font-size:clamp(25px,4dvh,44px)}
+.quiz-page .answer-block{min-width:0}
+.quiz-page .answer-grid{max-width:1060px;gap:clamp(6px,1vw,12px)}
+.quiz-page .answer-face{height:clamp(58px,10.2dvh,94px);border-radius:13px;gap:2px}
+.quiz-page .answer-face svg{width:clamp(38px,6.4dvh,65px);height:clamp(38px,6.4dvh,65px)}
+.quiz-page .answer-letter{font-size:13px}
+.quiz-page .save-status{min-height:0;margin:0;line-height:1.2}
+.quiz-page .quiz-navigation{max-width:1060px;margin:clamp(4px,1dvh,10px) auto 0}
+.quiz-page .quiz-navigation>.btn{min-width:114px;min-height:40px;padding:8px 15px}
+.quiz-page #answer-form.has-error .quiz-navigation button[name="navigation"][value="next"],
+.quiz-page #answer-form.has-error .quiz-navigation button[name="navigation"][value="finish"]{display:inline-flex!important}
+.quiz-page #answer-form .save-status:not(:empty){font-size:13px;color:#a32838;padding:8px 12px;background:#fff0f0;border-radius:10px}
+@media(max-width:690px){
+ .quiz-page .quiz-container{
+   --quiz-cell:clamp(44px,min(20vw,calc((100dvh - 455px)/3)),83px);
+   row-gap:clamp(5px,1dvh,9px);padding:7px 13px 12px;
+ }
+ .quiz-page .quiz-toolbar{height:clamp(47px,7dvh,57px);padding:0 12px;align-items:center}
+ .quiz-page .quiz-counter{font-size:15px;margin:0}
+ .quiz-page .quiz-counter strong{font-size:16px}
+ .quiz-page .quiz-timer{font-size:15px;padding-left:10px}
+ .quiz-page .quiz-timer-icon img{width:17px;height:17px}
+ .quiz-page .progress{margin:0 10px!important;height:7px!important}
+ .quiz-page .quiz-headline{min-height:62px}
+ .quiz-page .quiz-headline h1{font-size:clamp(19px,5.7vw,25px)}
+ .quiz-page .quiz-headline p{font-size:12px;line-height:1.3;margin:5px 0 0}
+ .quiz-page .question-board{gap:5px;padding:8px;border-radius:15px}
+ .quiz-page .matrix-cell{border-radius:8px}
+ .quiz-page .answer-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .quiz-page .answer-face{height:clamp(48px,8.7dvh,78px);border-radius:11px}
+ .quiz-page .answer-face svg{width:clamp(33px,6.2dvh,54px);height:clamp(33px,6.2dvh,54px)}
+ .quiz-page .answer-letter{font-size:12px}
+ .quiz-page .quiz-navigation{margin-top:5px}
+ .quiz-page .quiz-navigation>.btn{min-width:110px;min-height:38px;padding:7px 12px;font-size:13px}
+}
+@media(max-height:640px){
+ .quiz-page .quiz-container{row-gap:5px;padding-block:5px}
+ .quiz-page .quiz-toolbar{height:45px}
+ .quiz-page .quiz-headline{min-height:54px}
+ .quiz-page .quiz-headline h1{font-size:19px}
+ .quiz-page .quiz-headline p{font-size:11px;line-height:1.24;margin-top:4px}
+ .quiz-page .question-board{gap:4px;padding:6px}
+ .quiz-page .answer-face{height:48px}
+ .quiz-page .answer-face svg{width:34px;height:34px}
+ .quiz-page .quiz-navigation{margin-top:3px}
+}
+
+/* Progress milestone: prominent central dialog, visible until dismissed. */
+.quiz-milestone[hidden]{display:none!important}
+.quiz-milestone{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:#081f4a85;backdrop-filter:blur(4px)}
+.quiz-milestone-panel{
+ position:relative;width:min(420px,100%);max-height:calc(100dvh - 40px);
+ overflow-y:auto;border:1px solid #d9e6ff;border-radius:27px;
+ background:linear-gradient(170deg,#fff,#edf4ff);
+ box-shadow:0 28px 80px #06285650;
+ padding:32px 28px 27px;text-align:center;color:#0b244a;
+}
+.quiz-milestone-ring{
+ position:relative;display:grid;place-items:center;
+ width:150px;height:150px;margin:0 auto 21px;border-radius:50%;
+ background:conic-gradient(#1169fa var(--progress-angle),#d9e7ff 0);
+}
+.quiz-milestone-ring::before{content:"";position:absolute;inset:15px;border-radius:50%;background:#fff}
+.quiz-milestone-ring strong{position:relative;font-size:38px;font-weight:850;letter-spacing:-.04em;color:#0b57d8}
+.quiz-milestone-copy strong{display:block;font-size:24px;line-height:1.2;letter-spacing:-.025em}
+.quiz-milestone-copy p{margin:12px 0 0;font-size:15px;line-height:1.5;color:#3b5278}
+.quiz-milestone-continue{margin-top:26px;width:100%;min-height:51px}
+.quiz-milestone-close{position:absolute;top:12px;right:13px;width:36px;height:36px;border:0;border-radius:11px;background:transparent;font-size:26px;line-height:1;color:#526688}
+.quiz-milestone-close:hover{background:#e1ebfa}
+@media(max-width:690px){
+ .quiz-milestone{padding:16px}
+ .quiz-milestone-panel{padding:30px 22px 23px;border-radius:22px}
+ .quiz-milestone-ring{width:132px;height:132px;margin-bottom:18px}
+ .quiz-milestone-ring strong{font-size:34px}
+ .quiz-milestone-copy strong{font-size:21px}
+}
+@media(prefers-reduced-motion:reduce){.quiz-milestone{backdrop-filter:none}}

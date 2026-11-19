@@ -43,9 +43,12 @@ async function navigateAndTake(page, name) {
     return Number(counter.match(/\d+/)?.[0]) === expected;
   }, position);
   const initialTimer = await page.locator('#quiz-timer').textContent();
+  await page.evaluate(() => { window.__qaTimerElement = document.querySelector('#quiz-timer'); });
   await page.locator('.answer-tile').first().click();
   await waitForQuestion(2);
   check(true, name + ' automatically advanced to question 2');
+  check(await page.evaluate(() => window.__qaTimerElement === document.querySelector('#quiz-timer')), name + ' timer stays mounted through AJAX');
+  check(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 2), name + ' quiz fits viewport without document scrolling');
   await page.locator('button[name="navigation"][value="back"]').click();
   await waitForQuestion(1);
   await page.locator('.answer-tile').nth(1).click();
@@ -64,8 +67,17 @@ async function navigateAndTake(page, name) {
     await waitForQuestion(question);
     check(true, name + ' question ' + question);
     await page.locator('.answer-tile').first().click();
-    if (question < 25) await waitForQuestion(question + 1);
-    else await page.waitForURL(/\/paywall\//);
+    if (question < 25) {
+      await waitForQuestion(question + 1);
+      const milestone = page.locator('[data-quiz-milestone]:visible');
+      if (await milestone.count()) {
+        check((await milestone.getAttribute('role')) === 'dialog', name + ' prominent progress dialog');
+        check(await milestone.locator('.quiz-milestone-continue').isVisible(), name + ' persistent progress dialog has action');
+        await milestone.locator('.quiz-milestone-continue').click();
+      }
+    } else {
+      await page.waitForURL(/\/paywall\//);
+    }
   }
   check(new URL(page.url()).pathname.startsWith('/paywall/'), name + ' paywall after 25');
   const uuid = new URL(page.url()).pathname.split('/')[2];

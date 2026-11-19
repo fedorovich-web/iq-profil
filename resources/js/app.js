@@ -13,49 +13,155 @@ if (timer) {
     setInterval(updateTimer, 1000);
 }
 
-const answerForm = document.querySelector('#answer-form');
-if (answerForm) {
-    const answers = [...answerForm.querySelectorAll('input[name="answer_option_id"]')];
-    const forward = answerForm.querySelector('button[name="navigation"][value="next"], button[name="navigation"][value="finish"]');
-    let movingForward = false;
+// Keep the question on the same page. Only the question, its answers and
+// progress are replaced; the timer, viewport and header stay mounted.
+// The server-rendered form remains fully functional when JS is unavailable.
+function showQuizMilestone(notice) {
+    if (!notice) return;
 
-    answers.forEach(input => input.addEventListener('change', () => {
-        if (movingForward || !input.checked || !forward) return;
-        movingForward = true;
-        answerForm.classList.add('is-advancing');
-        answers.forEach(radio => { radio.disabled = radio !== input; });
-        window.setTimeout(() => answerForm.requestSubmit(forward), 200);
-    }));
+    // Move out of the shell so that the background can be made inert.
+    document.body.append(notice);
+    const shell = document.querySelector('.site-shell');
+    const controls = [...notice.querySelectorAll('[data-milestone-close]')];
+    const continueButton = notice.querySelector('.quiz-milestone-continue');
+    let closed = false;
 
-    window.addEventListener('pageshow', event => {
-        if (!event.persisted) return;
-        movingForward = false;
-        answerForm.classList.remove('is-advancing');
-        answers.forEach(input => { input.disabled = false; });
-    });
+    const onKeyDown = (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            close();
+        } else if (event.key === 'Tab') {
+            const first = controls[0], last = controls[controls.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    };
+
+    function close() {
+        if (closed) return;
+        closed = true;
+        document.removeEventListener('keydown', onKeyDown);
+        if (shell) shell.inert = false;
+        notice.remove();
+        document.querySelector('#answer-form input[name="answer_option_id"]')
+            ?.focus({ preventScroll: true });
+    }
+
+    controls.forEach(button => button.addEventListener('click', close));
+    notice.hidden = false;
+    if (shell) shell.inert = true;
+    document.addEventListener('keydown', onKeyDown);
+    continueButton.focus({ preventScroll: true });
 }
 
-// This notification appears only after newly saved answers cross one third or two
-// thirds of the current test. It never blocks the quiz or takes keyboard focus.
-const milestoneNotice = document.querySelector('[data-quiz-milestone]');
-if (milestoneNotice) {
-    milestoneNotice.hidden = false;
-    let hideTimeout;
+function bindQuizForm(form) {
+    const answers = [...form.querySelectorAll('input[name="answer_option_id"]')];
+    const forward = form.querySelector('button[name="navigation"][value="next"], button[name="navigation"][value="finish"]');
+    let movingForward = false;
+    let submitting = false;
 
-    const hideNotice = () => {
-        if (milestoneNotice.classList.contains('is-hiding')) return;
-        window.clearTimeout(hideTimeout);
-        milestoneNotice.classList.add('is-hiding');
-        window.setTimeout(() => milestoneNotice.remove(), 220);
-    };
-    const scheduleHide = () => {
-        hideTimeout = window.setTimeout(hideNotice, 5000);
-    };
+    function unlock(errorMessage) {
+        submitting = false;
+        movingForward = false;
+        form.classList.remove('is-advancing');
+        answers.forEach(input => { input.disabled = false; });
+        if (errorMessage) {
+            form.classList.add('has-error');
+            const message = form.querySelector('#save-status');
+            if (message) message.textContent = errorMessage;
+        }
+    }
 
-    milestoneNotice.querySelector('[data-milestone-close]').addEventListener('click', hideNotice);
-    milestoneNotice.addEventListener('focusin', () => window.clearTimeout(hideTimeout));
-    milestoneNotice.addEventListener('focusout', scheduleHide);
-    scheduleHide();
+    answers.forEach(input => input.addEventListener('change', () => {
+        if (submitting || movingForward || !input.checked || !forward) return;
+        movingForward = true;
+        form.classList.add('is-advancing');
+        answers.forEach(radio => { radio.disabled = radio !== input; });
+        window.setTimeout(() => {
+            if (form.isConnected) form.requestSubmit(forward);
+        }, 160);
+    }));
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (submitting) return;
+        submitting = true;
+
+        const submitter = event.submitter;
+        const payload = new FormData(form);
+        if (submitter && submitter.name === 'navigation') {
+            payload.set('navigation', submitter.value);
+        }
+
+        const oldContainer = document.querySelector('.quiz-container');
+        const savedScrollTop = oldContainer?.scrollTop ?? 0;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                credentials: 'same-origin',
+                redirect: 'follow',
+                headers: {
+                    'Accept': 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: payload
+            });
+
+            if (!response.ok) throw new Error('Request failed: ' + response.status);
+
+            const destination = new URL(response.url, window.location.href);
+            if (destination.origin !== window.location.origin ||
+                destination.pathname !== '/quiz') {
+                window.location.assign(destination.href);
+                return;
+            }
+
+            const documentFragment = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const nextContainer = documentFragment.querySelector('.quiz-container');
+
+            if (!nextContainer) throw new Error('No question returned by server');
+
+            // Do not replace the entire page or the persistent timer.
+            for (const selector of ['.quiz-headline', '.question-board', '.answer-block']) {
+                const current = oldContainer.querySelector(selector);
+                const next = nextContainer.querySelector(selector);
+                if (!current || !next) throw new Error('Incomplete question response');
+                current.replaceWith(next);
+            }
+
+            const counter = oldContainer.querySelector('.quiz-counter strong');
+            const nextCounter = nextContainer.querySelector('.quiz-counter strong');
+            if (counter && nextCounter) counter.textContent = nextCounter.textContent;
+
+            const progress = oldContainer.querySelector('.progress');
+            const nextProgress = nextContainer.querySelector('.progress');
+            if (progress && nextProgress) {
+                progress.setAttribute('aria-valuenow', nextProgress.getAttribute('aria-valuenow'));
+                progress.setAttribute('aria-valuemax', nextProgress.getAttribute('aria-valuemax'));
+                progress.querySelector('span').style.width = nextProgress.querySelector('span').style.width;
+            }
+
+            document.title = documentFragment.title;
+            oldContainer.scrollTop = savedScrollTop;
+            bindQuizForm(oldContainer.querySelector('#answer-form'));
+            showQuizMilestone(documentFragment.querySelector('[data-quiz-milestone]'));
+        } catch (error) {
+            unlock('Не удалось сохранить ответ. Проверьте соединение и нажмите «Далее» ещё раз.');
+        }
+    });
+
+}
+
+const initialAnswerForm = document.querySelector('#answer-form');
+if (initialAnswerForm) {
+    bindQuizForm(initialAnswerForm);
+    showQuizMilestone(document.querySelector('[data-quiz-milestone]'));
 }
 
 const toggle = document.querySelector('.mobile-menu-toggle');
