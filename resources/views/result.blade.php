@@ -19,7 +19,7 @@
   <header class="result-head">
     <span class="pill">Персональный отчёт</span>
     <h1 id="result-title">Ваш результат</h1>
-    <p class="lead">Ваш персональный отчёт о прохождении теста на логику и закономерности. Результат относится к этим заданиям и не является официальной оценкой IQ.</p>
+    <p class="lead">Персональный отчёт по выполненным заданиям на логику и поиск закономерностей.</p>
     <p class="result-report-date">Пройдено {{ \Carbon\Carbon::parse($attempt->completed_at)->format('d.m.Y в H:i') }}</p>
   </header>
 
@@ -28,7 +28,6 @@
       <span class="result-score-caption">Решено правильно</span>
       <h2 id="result-chart-title"><strong>{{ $score }}</strong> <span>из {{ $totalQuestions }}</span></h2>
       <p>{{ $summary }}</p>
-      <p class="result-score-note">Это результат упражнений, а не стандартизированная оценка IQ.</p>
     </div>
     <div class="result-chart">
       <div class="result-score-percentage">{{ $percentage }}<span>%</span></div>
@@ -58,7 +57,7 @@
     <section class="result-category-section" aria-labelledby="category-title">
       <div class="result-section-intro">
         <h2 id="category-title">По направлениям заданий</h2>
-        <p>Сравните результаты по направлениям заданий. Это статистика прохождения, а не оценка способностей по психометрической шкале.</p>
+        <p>Сравните результаты по категориям заданий.</p>
       </div>
       <div class="result-category-grid">
         @foreach ($categoryBreakdown as $category)
@@ -94,7 +93,7 @@
         <p>Пройти тест повторно и потренировать поиск закономерностей. Задания могут повторяться, что способно повлиять на следующий результат.</p>
       </div>
     </div>
-    <p class="result-interpretation-note">IQ.Профиль пока не проходил психометрическую стандартизацию. Этот отчёт нельзя интерпретировать как официальный IQ-балл, диагноз или научно подтверждённый профиль когнитивных способностей.</p>
+    <p class="result-interpretation-note">Результаты отражают выполнение заданий сервиса и не являются стандартизированной оценкой IQ.</p>
   </section>
 
   <div class="result-actions">

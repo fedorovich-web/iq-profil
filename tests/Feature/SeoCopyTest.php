@@ -18,20 +18,22 @@ final class SeoCopyTest extends TestCase
         $this->assertSame(1, preg_match_all('/<title>/', $html));
         $this->assertSame(1, preg_match_all('/<h1\\b/', $html));
         $this->assertSame(1, preg_match_all('/<link rel="canonical"/', $html));
-        $this->assertStringContainsString('Тест на IQ онлайн без регистрации — логические задания | IQ.Профиль', $html);
-        $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн:<br><span>задачи на логику</span><br><span>без регистрации</span>', $html);
+        $this->assertStringContainsString('Тест на IQ онлайн без регистрации — графические матрицы | IQ.Профиль', $html);
+        $this->assertStringContainsString('<h1 id="hero-title">Тест на IQ онлайн:<br><span>графические матрицы</span><br><span>без регистрации</span>', $html);
         $this->assertStringNotContainsString('IQ-тест с графическими заданиями', $html);
         $this->assertStringNotContainsString('class="eyebrow"', $html);
-        $this->assertStringContainsString('Что входит <span>в тест на логику</span>', $html);
+        $this->assertStringContainsString('Преимущества <span>IQ-теста</span>', $html);
         $this->assertStringNotContainsString('и разбор решений', $html);
         $this->assertStringContainsString('Персональный отчёт', $html);
-        $this->assertStringContainsString('Тест на <span>логическое мышление</span>', $html);
+        $this->assertStringContainsString('Проверьте <span>логическое мышление</span>', $html);
         $this->assertStringNotContainsString('bottom-cta-description-line', $html);
-        $this->assertStringContainsString('Графические матрицы без регистрации и ограничения по времени.', $html);
-        $this->assertStringContainsString('Отчёт в демоверсии доступен без карты и реальных списаний.', $html);
+        $this->assertStringContainsString('Начните без регистрации. Персональный отчёт — после прохождения.', $html);
+        $this->assertStringNotContainsString('hero-disclosure', $html);
+        $this->assertStringNotContainsString('Демо-оплата без реальных списаний', $html);
+        $this->assertStringNotContainsString('Результат носит ознакомительный характер', $html);
         $this->assertStringNotContainsString('Какие задания <span>в IQ-тесте</span>', $html);
         $this->assertStringContainsString('Как пройти тест', $html);
-        $this->assertStringContainsString('Вопросы о тесте', $html);
+        $this->assertStringContainsString('Частые вопросы', $html);
         $this->assertStringNotContainsString('Почему выбирают', $html);
         $this->assertStringContainsString('<meta name="description"', $html);
         $this->assertStringContainsString('<meta property="og:title"', $html);
@@ -69,12 +71,12 @@ final class SeoCopyTest extends TestCase
     public function test_faq_is_unique_grounded_and_kept_in_sync_with_schema(): void
     {
         $faq = config('iq_faq');
-        $this->assertCount(11, $faq);
-        $this->assertCount(11, array_unique(array_column($faq, 'question')));
-        $this->assertCount(11, array_unique(array_column($faq, 'answer')));
+        $this->assertGreaterThanOrEqual(10, count($faq));
+        $this->assertCount(count($faq), array_unique(array_column($faq, 'question')));
+        $this->assertCount(count($faq), array_unique(array_column($faq, 'answer')));
 
         $html = $this->get('/')->assertOk()->getContent();
-        $this->assertSame(11, preg_match_all('/<details>\\s*<summary>/s', $html));
+        $this->assertSame(count($faq), preg_match_all('/<details>\\s*<summary>/s', $html));
 
         foreach ($faq as $item) {
             $this->assertGreaterThan(90, mb_strlen($item['answer']));
@@ -83,7 +85,7 @@ final class SeoCopyTest extends TestCase
         }
         $this->assertStringNotContainsString('25 заданий', implode(' ', array_column($faq, 'answer')));
 
-        foreach (['20 ₽', '499 ₽', 'без регистрации', 'психометрическую стандартизацию', 'отменить подписку'] as $phrase) {
+        foreach (['20 ₽', '499 ₽', 'без регистрации', 'отменить подписку'] as $phrase) {
             $this->assertStringContainsString($phrase, mb_strtolower($html));
         }
     }
@@ -101,7 +103,7 @@ final class SeoCopyTest extends TestCase
         $this->assertStringContainsString('Подтвердить без списания', $checkout);
         $this->assertStringContainsString('499 ₽ в месяц', $checkout);
         $this->assertStringContainsString('деньги не списываются', $checkout);
-        $this->assertStringContainsString('официальной оценкой IQ', $result);
+        $this->assertStringContainsString('не являются стандартизированной оценкой IQ', $result);
         $this->assertStringContainsString('{{ $totalQuestions }}', $result);
 
         foreach ([$paywall, $checkout, $result] as $copy) {

@@ -34,7 +34,7 @@ h1,h2,h3{letter-spacing:-.038em}
 /* Landing */
 .hero{padding:90px 60px 72px;min-height:530px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:20px;position:relative;background:radial-gradient(ellipse at 73% 49%,#d8e5ff 0,#eef4ff 52%,#f7faff 95%)}
 .hero-copy{position:relative;z-index:1}
-.hero h1{font-size:clamp(38px,4.3vw,60px);line-height:1.1;font-weight:850;margin-bottom:20px}
+.hero h1{font-size:clamp(38px,3.8vw,55px);line-height:1.1;font-weight:850;margin-bottom:20px}
 .hero h1 span,.section h2 span,.bottom-cta h2 span{color:#0759e7}
 .hero-copy>p{font-size:20px;line-height:1.55;max-width:520px;color:#263a62}
 .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:35px}
@@ -245,7 +245,7 @@ body{background:#f4f7ff}
 .nav-login{font-size:12px;padding:10px 13px}
 .return-home{font-size:13px}
 .hero{grid-template-columns:1fr;gap:12px;text-align:left;min-height:0;padding:52px 23px 40px}
-.hero h1{font-size:clamp(30px,8.1vw,38px)}
+.hero h1{font-size:clamp(25px,7.6vw,36px)}
 .hero-copy>p{font-size:16px}
 .hero-actions{gap:11px;margin-top:25px}
 .hero-actions .btn{font-size:14px;min-height:50px;padding:12px 15px}
@@ -851,7 +851,6 @@ html:has(.faq-list),body:has(.faq-list),.landing-page:has(.faq-list),
 @media(max-width:690px){.quiz-gate-notice{margin:14px 16px 0;padding:10px 13px}}
 
 /* Conversion disclosure: show the no-charge demo conditions before starting. */
-.hero-copy>.hero-disclosure{font-size:13px;line-height:1.5;color:#536885;margin:16px 0 0;max-width:500px}
 
 /* Responsive content sizing: never conceal a grid/flex sizing error by clipping the page. */
 .checkout-layout,.checkout-intro,.checkout-card{min-width:0}
