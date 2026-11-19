@@ -33,3 +33,16 @@ Thumbs.db
 
 /.incoming/
 
+# Generated QA reports, local exports and scratch diagnostics
+/docs/*-report.json
+/docs/*-qa.json
+/docs/w3c-landing.json
+/public/assets/*.csv
+/scripts/account-overflow-debug.mjs
+/scripts/faq-jump-diagnose.mjs
+/scripts/right-drawer-qa.mjs
+/scripts/shared-brand-170-qa.mjs
+
+# SQLite backups must never be committed
+/database/backups/
+

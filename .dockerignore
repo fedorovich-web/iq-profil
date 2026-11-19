@@ -13,8 +13,10 @@ storage/framework/cache/data/*
 storage/framework/sessions/*
 storage/framework/views/*
 database/*.sqlite
-docs/screenshots
-docs/browser-report.json
+docs
+README.md
+AGENTS.md
+CLAUDE.md
 tests
 scripts
 .DS_Store

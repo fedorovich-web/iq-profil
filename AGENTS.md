@@ -1,47 +1,26 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# Инструкции для AI-агентов — IQ.Профиль
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+Эти правила относятся к Codex, Claude и другим агентам, работающим в репозитории.
 
-## Prerequisites
+## Контекст
 
-Verify that PHP and Composer are available:
+PHP 8.5 / Laravel 13 / Blade / SQLite / CSS / vanilla JavaScript / Vite. Продукт — **демо-MVP** с графическими заданиями, персональным отчётом и имитацией оплаты. Не представлять задания как стандартизированную психометрию, а демонстрационные платежи — как реальные.
 
-```sh
-php -v
-composer -V
-```
+## Обязательные ограничения
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
+- Перед редактированием изучить текущий `git status` и существующие файлы. Не откатывать чужие изменения и не использовать `git reset --hard`, `git clean -fd` или массовое удаление без отдельной проверки.
+- **Никогда** не удалять, обнулять, заменять и не переинициализировать существующую SQLite, пользовательские попытки, ответы, пользователей, демо-транзакции, сессии и тома Docker.
+- Не выполнять `migrate:fresh`, `db:wipe` или повторные destructive seed без отдельного явного разрешения. Для E2E использовать изолированную временную базу.
+- Не менять утверждённые пользователем AVIF, логотип, графику и структуру продукта без запроса.
+- Не устанавливать автоматически Laravel Boost, PHP, Composer и другие зависимости из скачиваемых скриптов. Использовать имеющиеся инструменты.
+- Не добавлять реальные платёжные операции, платёжные карты или несуществующие интеграции. Сохранять формат демо-воронки и раскрытие тарифных условий.
+- Любые запросы к данным должны проверять авторизацию владельца на сервере. Следить за CSRF, XSS, IDOR, гонками и идемпотентностью.
+- Сохранять существующие тесты; при исправлении дефекта добавлять регрессионный тест. Не заменять рабочий код костылями и не оставлять dead code, случайные генерируемые отчёты или временные файлы в Git.
+- Публичные SEO-тексты должны описывать фактическое поведение приложения и не обещать научно подтверждённый IQ-балл.
+- Перед завершением проверять `php artisan test`, `vendor/bin/pint --test`, `npm run build` и релевантные E2E. Не заявлять успех, если команда не запускалась или завершилась с ошибкой.
 
-macOS:
+## Документация
 
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+- [README.md](README.md) — публичное описание продукта.
+- [docs/development.md](docs/development.md) — локальный запуск, тесты, Docker и резервные копии.
+- [docs](docs) — исследования, решения и проведённые QA-проверки.
