@@ -12,8 +12,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="IQ.Профиль">
 <meta property="og:locale" content="ru_RU">
-<meta property="og:title" content="Тест на IQ онлайн без регистрации — задачи на логику">
-<meta property="og:description" content="Пройти тест на IQ онлайн: логические матрицы, абстрактное мышление и задания с фигурами. Без регистрации, с персональным отчётом.">
+<meta property="og:title" content="Тест на IQ онлайн — логические задачи | IQ.Профиль">
+<meta property="og:description" content="Графические задачи на закономерности без регистрации, с персональным отчётом после прохождения.">
 <meta property="og:url" content="{{ route('landing') }}">
 @if(file_exists(public_path('assets/iq_profile_hero_logic_matrix_desktop.avif')))
 <meta property="og:image" content="{{ asset('assets/iq_profile_hero_logic_matrix_desktop.avif') }}">
@@ -25,8 +25,8 @@
     '@graph' => [
         ['@type' => 'WebSite', '@id' => route('landing').'#website', 'name' => 'IQ.Профиль', 'url' => route('landing'), 'inLanguage' => 'ru-RU'],
         ['@type' => 'WebPage', '@id' => route('landing').'#webpage', 'url' => route('landing'),
-            'name' => 'Тест на IQ онлайн без регистрации — задачи на логику',
-            'description' => 'Тест на IQ онлайн с графическими матрицами, поиском закономерностей и персональным отчётом о прохождении.',
+            'name' => 'Тест на IQ онлайн — логические задачи | IQ.Профиль',
+            'description' => 'Графические задачи на логику и поиск закономерностей, с персональным отчётом по результатам.',
             'inLanguage' => 'ru-RU',
             'isPartOf' => ['@id' => route('landing').'#website']],
         [
