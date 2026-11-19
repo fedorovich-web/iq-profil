@@ -79,7 +79,7 @@
 .sub-price small{font-size:18px;font-weight:550;letter-spacing:0}
 .subscription-panel>.portal-tag{position:absolute;right:20px;top:78px}
 .subscription-panel>p:not(.sub-price){margin:17px 0;color:#43577a;font-size:15px}
-.portal-main-action{display:inline-flex;align-items:center;justify-content:center;background:#2255d5;color:white;border-radius:10px;padding:12px 16px;font-weight:700;margin-top:6px;max-width:100%;text-align:center}
+.portal-main-action{display:inline-flex;align-items:center;justify-content:center;background:#2255d5;color:white;border-radius:10px;padding:12px 16px;font-weight:700;margin-top:25px;max-width:100%;text-align:center}
 .subscription-panel>.portal-main-action{width:100%;margin-top:10px}
 .portal-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:21px}
 .portal-panel-heading a{background:#e8f0ff;border-radius:10px;color:#0850d4;padding:9px 13px;font-size:13px;font-weight:700;white-space:nowrap}
