@@ -134,25 +134,33 @@ function bindQuizForm(form) {
 
             if (!nextContainer) throw new Error('No question returned by server');
 
-            // Do not replace the entire page or the persistent timer.
-            for (const selector of ['.quiz-headline', '.question-board', '.answer-block']) {
-                const current = oldContainer.querySelector(selector);
-                const next = nextContainer.querySelector(selector);
-                if (!current || !next) throw new Error('Incomplete question response');
-                current.replaceWith(next);
-            }
-
+            // Validate every required part before changing the visible DOM.
+            // A truncated response must not leave a mixture of two questions.
+            const replacements = ['.quiz-headline', '.question-board', '.answer-block']
+                .map(selector => {
+                    const current = oldContainer?.querySelector(selector);
+                    const next = nextContainer.querySelector(selector);
+                    if (!current || !next) throw new Error('Incomplete question response');
+                    return { current, next };
+                });
             const counter = oldContainer.querySelector('.quiz-counter strong');
             const nextCounter = nextContainer.querySelector('.quiz-counter strong');
-            if (counter && nextCounter) counter.textContent = nextCounter.textContent;
-
             const progress = oldContainer.querySelector('.progress');
             const nextProgress = nextContainer.querySelector('.progress');
-            if (progress && nextProgress) {
-                progress.setAttribute('aria-valuenow', nextProgress.getAttribute('aria-valuenow'));
-                progress.setAttribute('aria-valuemax', nextProgress.getAttribute('aria-valuemax'));
-                progress.querySelector('span').style.width = nextProgress.querySelector('span').style.width;
+            const progressBar = progress?.querySelector('span');
+            const nextProgressBar = nextProgress?.querySelector('span');
+            const nextForm = nextContainer.querySelector('#answer-form');
+
+            if (!counter || !nextCounter || !progress || !nextProgress
+                || !progressBar || !nextProgressBar || !nextForm) {
+                throw new Error('Incomplete quiz state in response');
             }
+
+            for (const { current, next } of replacements) current.replaceWith(next);
+            counter.textContent = nextCounter.textContent;
+            progress.setAttribute('aria-valuenow', nextProgress.getAttribute('aria-valuenow'));
+            progress.setAttribute('aria-valuemax', nextProgress.getAttribute('aria-valuemax'));
+            progressBar.style.width = nextProgressBar.style.width;
 
             document.title = documentFragment.title;
             window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });

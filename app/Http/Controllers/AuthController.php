@@ -31,7 +31,7 @@ final class AuthController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
-        $request->merge(['email' => Str::lower((string) $request->input('email'))]);
+        $this->normalizeEmail($request);
         $data = $request->validate([
             'email' => ['required', 'email:rfc', 'max:254', 'unique:users,email'],
             'password' => ['required', 'confirmed', PasswordRule::min(10)->letters()->numbers()],
@@ -90,7 +90,7 @@ final class AuthController extends Controller
 
     public function profile(Request $request): RedirectResponse
     {
-        $request->merge(['email' => Str::lower((string) $request->input('email'))]);
+        $this->normalizeEmail($request);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:254', Rule::unique('users', 'email')->ignore($request->user()->id)],
@@ -122,6 +122,7 @@ final class AuthController extends Controller
 
     public function resetRequest(Request $request): RedirectResponse
     {
+        $this->normalizeEmail($request);
         $request->validate(['email' => ['required', 'email']]);
         Password::sendResetLink($request->only('email'));
 
@@ -135,6 +136,7 @@ final class AuthController extends Controller
 
     public function reset(Request $request): RedirectResponse
     {
+        $this->normalizeEmail($request);
         $data = $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
@@ -148,6 +150,14 @@ final class AuthController extends Controller
         }
 
         return redirect()->route('login')->with('status', 'Пароль обновлён. Войдите.');
+    }
+
+    private function normalizeEmail(Request $request): void
+    {
+        $email = $request->input('email');
+        if (is_string($email)) {
+            $request->merge(['email' => Str::lower(trim($email))]);
+        }
     }
 
     private function claimAttempts(Request $request, User $user): void

@@ -24,7 +24,11 @@
       <span>Ваш последний результат</span>
       @if($latest)
        <div class="account-score">{{ $latest->correct_count }} <small>верно</small></div>
-       <span class="account-score-label">{{ round($latest->correct_count / max(1, $latest->answered_count) * 100) }}% правильных ответов</span>
+       @if($latest->question_count > 0 && $latest->correct_count !== null && $latest->correct_count <= $latest->question_count)
+       <span class="account-score-label">{{ round($latest->correct_count / $latest->question_count * 100) }}% правильных ответов</span>
+       @else
+       <span class="account-score-label">Процент для этой архивной попытки недоступен</span>
+       @endif
        <p>Дата: {{ \Carbon\Carbon::parse($latest->completed_at)->format('d.m.Y') }}</p>
        <div class="hero-account-actions"><a class="account-white-button" href="{{ route('result', $latest->uuid) }}">Открыть отчёт →</a><a class="account-ghost-button" href="{{ route('account.export', $latest->uuid) }}" title="Скачать CSV-отчёт"><img src="{{ asset('assets/icons/client/download.avif') }}" width="17" height="17" alt=""> CSV</a></div>
       @else
@@ -57,7 +61,7 @@
  </section>
  <section class="portal-panel">
   <div class="portal-panel-heading"><h2>Мои отчёты</h2><a href="{{ route('account.home',['section'=>'reports']) }}">Все отчёты →</a></div>
-  @include('account.partials.reports',['subset'=>$attempts->filter(fn($a) => $a->status==='completed' && $a->payment_status==='succeeded')->take(3)])
+  @include('account.partials.reports',['subset'=>$reports])
  </section>
  <section class="portal-panel">
   <h2>Рекомендуем продолжить</h2>
@@ -71,9 +75,9 @@
  </section>
 </div>
 @elseif($section==='history')
-<section class="portal-panel portal-full"><h1>История прохождений</h1><p>Ваши попытки сохраняются в базе данных и доступны после входа.</p>@include('account.partials.history',['subset'=>$attempts])</section>
+<section class="portal-panel portal-full"><h1>История прохождений</h1><p>Ваши попытки сохраняются в базе данных и доступны после входа.</p>@include('account.partials.history',['subset'=>$attempts]){{ $attempts->links() }}</section>
 @elseif($section==='reports')
-<section class="portal-panel portal-full"><h1>Мои отчёты</h1><p>Открытые отчёты и экспорт персональной сводки в CSV.</p>@include('account.partials.reports',['subset'=>$attempts->filter(fn($a)=>$a->status==='completed' && $a->payment_status==='succeeded')])</section>
+<section class="portal-panel portal-full"><h1>Мои отчёты</h1><p>Открытые отчёты и экспорт персональной сводки в CSV.</p>@include('account.partials.reports',['subset'=>$reports]){{ $reports->links() }}</section>
 @elseif($section==='subscription')
 <section class="portal-panel portal-full"><h1>Подписка</h1><p class="lead">Тарифная модель: первый доступ — 20 ₽, далее подписка 499 ₽ в месяц. Сейчас реализован демонстрационный сценарий без реальных списаний.</p><span @class(['portal-tag', 'portal-tag-green' => $demoActive > 0, 'portal-tag-neutral' => $demoActive === 0])>{{ $demoActive > 0 ? 'Активна (демо)' : 'Нет активных демо-продлений' }}</span><p>Это виртуальная подписка: платёжные реквизиты не запрашиваются, автоматических списаний нет. Открытые отчёты сохраняют доступ после отмены продления.</p><p>Активных демонстрационных продлений: <strong>{{ $demoActive }}</strong>.</p>@if($demoActive > 0)<a class="portal-main-action" href="{{ route('subscription.cancel') }}">Отменить демо-продление →</a>@else<a class="portal-main-action" href="{{ route('landing') }}#tests">Пройти тест →</a>@endif</section>
 @elseif($section==='profile')

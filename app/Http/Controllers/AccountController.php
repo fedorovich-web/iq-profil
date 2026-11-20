@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Support\PuzzleCatalog;
 use App\Support\QuestionBankIntegrity;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -17,26 +18,51 @@ final class AccountController extends Controller
     {
         $user = $request->user();
         $section = $request->query('section', 'overview');
-        abort_unless(in_array($section, ['overview', 'history', 'reports', 'subscription', 'profile', 'security', 'support'], true), 404);
-        $attempts = DB::table('quiz_attempts as q')
-            ->leftJoin('demo_payments as p', 'p.attempt_id', '=', 'q.id')
-            ->where('q.user_id', $user->id)
-            ->orderByDesc('q.started_at')
-            ->select('q.*', 'p.status as payment_status')
-            ->selectSub(function ($query): void {
-                $query->from('attempt_answers')
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('attempt_answers.attempt_id', 'q.id');
-            }, 'answered_count')
-            ->get();
-        $latest = $attempts->first(fn ($a) => $a->status === 'completed' && $a->payment_status === 'succeeded');
-        $finished = $attempts->where('status', 'completed');
-        $demoActive = DB::table('demo_subscriptions as s')
-            ->join('quiz_attempts as a', 'a.id', '=', 's.attempt_id')
-            ->where('a.user_id', $user->id)
-            ->where('s.status', 'active')->count();
+        abort_unless(in_array($section, [
+            'overview', 'history', 'reports', 'subscription', 'profile', 'security', 'support',
+        ], true), 404);
 
-        return view('account.home', compact('user', 'attempts', 'latest', 'finished', 'section', 'demoActive'));
+        $attempts = collect();
+        $reports = collect();
+        $latest = null;
+        $demoActive = 0;
+
+        if ($section === 'overview') {
+            $latest = $this->attemptsQuery($user->id)
+                ->where('q.status', 'completed')->where('p.status', 'succeeded')
+                ->orderByDesc('q.started_at')->first();
+            $attempts = $this->attemptsQuery($user->id)
+                ->orderByDesc('q.started_at')->limit(3)->get();
+            $reports = $this->attemptsQuery($user->id)
+                ->where('q.status', 'completed')->where('p.status', 'succeeded')
+                ->orderByDesc('q.started_at')->limit(3)->get();
+        } elseif ($section === 'history') {
+            $attempts = $this->attemptsQuery($user->id)
+                ->orderByDesc('q.started_at')
+                ->paginate(15, ['*'], 'historyPage')->withQueryString();
+        } elseif ($section === 'reports') {
+            $reports = $this->attemptsQuery($user->id)
+                ->where('q.status', 'completed')->where('p.status', 'succeeded')
+                ->orderByDesc('q.started_at')
+                ->paginate(15, ['*'], 'reportsPage')->withQueryString();
+        }
+
+        if ($section === 'overview' || $section === 'subscription') {
+            $demoActive = DB::table('demo_subscriptions as s')
+                ->join('quiz_attempts as a', 'a.id', '=', 's.attempt_id')
+                ->where('a.user_id', $user->id)
+                ->where('s.status', 'active')->count();
+        }
+
+        return view('account.home', compact('user', 'attempts', 'reports', 'latest', 'section', 'demoActive'));
+    }
+
+    private function attemptsQuery(int $userId): Builder
+    {
+        return DB::table('quiz_attempts as q')
+            ->leftJoin('demo_payments as p', 'p.attempt_id', '=', 'q.id')
+            ->where('q.user_id', $userId)
+            ->select('q.*', 'p.status as payment_status');
     }
 
     public function export(Request $request, string $uuid): StreamedResponse
