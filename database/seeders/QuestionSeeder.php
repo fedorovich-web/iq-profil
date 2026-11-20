@@ -16,7 +16,7 @@ final class QuestionSeeder extends Seeder
     {
         $definitions = PuzzleCatalog::definitions();
         if (count($definitions) !== PuzzleCatalog::COUNT) {
-            throw new LogicException('The catalog must contain exactly 25 questions.');
+            throw new LogicException('The question catalog count does not match PuzzleCatalog::COUNT.');
         }
 
         DB::transaction(function () use ($definitions): void {
