@@ -19,6 +19,11 @@ final class QuestionSeeder extends Seeder
         }
 
         DB::transaction(function () use ($definitions): void {
+            $publishedCount = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count();
+            if ($publishedCount !== 0 && $publishedCount !== PuzzleCatalog::COUNT) {
+                throw new LogicException('A published bank must contain exactly 25 questions.');
+            }
+
             foreach ($definitions as $index => [$slug, $motif, $prompt, $cells, $candidates, $explanation]) {
                 if (count($cells) !== 9 || count($candidates) !== 6
                     || count(array_unique($candidates)) !== 6
@@ -37,6 +42,13 @@ final class QuestionSeeder extends Seeder
                     'explanation' => $explanation.' Это авторское упражнение на поиск закономерностей.',
                     'source' => 'IQ.Profil original vector puzzle v'.$version,
                 ];
+                $answer = $cells[8];
+                $choices = array_values(array_filter(
+                    $candidates,
+                    static fn (int $value): bool => $value !== $answer
+                ));
+                array_splice($choices, ($index * 5 + 2) % 6, 0, [$answer]);
+
                 $row = DB::table('questions')->where('bank_version', $version)
                     ->where('position', $position)->first();
 
@@ -52,6 +64,14 @@ final class QuestionSeeder extends Seeder
                     if ($existing->count() !== 6) {
                         throw new LogicException("Immutable question {$row->id} must have six choices.");
                     }
+                    foreach ($existing as $slot => $option) {
+                        if ((int) $option->position !== $slot + 1
+                            || $option->code !== chr(65 + $slot)
+                            || (int) $option->graphic_value !== $choices[$slot]
+                            || (bool) $option->is_correct !== ($choices[$slot] === $answer)) {
+                            throw new LogicException("Published answer options for question {$row->id} differ from bank v{$version}.");
+                        }
+                    }
 
                     continue;
                 }
@@ -60,13 +80,6 @@ final class QuestionSeeder extends Seeder
                 $questionId = DB::table('questions')->insertGetId([
                     ...$fields, 'created_at' => $now, 'updated_at' => $now,
                 ]);
-
-                $answer = $cells[8];
-                $choices = array_values(array_filter(
-                    $candidates,
-                    static fn (int $value): bool => $value !== $answer
-                ));
-                array_splice($choices, ($index * 5 + 2) % 6, 0, [$answer]);
 
                 foreach ($choices as $slot => $value) {
                     DB::table('answer_options')->insert([

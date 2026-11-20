@@ -65,7 +65,7 @@ async function navigateAndTake(page, name) {
   await screenshot(page, name + '-quiz');
 
   const totalQuestions = Number((await page.locator('.quiz-counter').textContent()).match(/из\s+(\d+)/)?.[1]);
-  check(Number.isSafeInteger(totalQuestions) && totalQuestions > 0, name + ' question count is valid');
+  check(totalQuestions === 25, name + ' bank must have exactly 25 graphical questions');
 
   const waitForQuestion = position => page.waitForFunction(expected => {
     const counter = document.querySelector('.quiz-counter')?.textContent || '';

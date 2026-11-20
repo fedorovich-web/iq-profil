@@ -27,6 +27,7 @@ final class GraphicPuzzle
                 'dots', 'constellation' => 'Количество синих точек: '.$value,
                 'polygon' => 'Многоугольник с '.$value.' сторонами',
                 'gem' => (['Синий', 'Бирюзовый', 'Золотистый', 'Фиолетовый', 'Коралловый', 'Графитовый'][$value] ?? 'Неизвестный').' шестиугольник',
+                'shape-tone' => (['Синяя', 'Бирюзовая', 'Янтарная'][intdiv($value, 3)] ?? 'Неизвестная').' фигура: '.(['круг', 'квадрат', 'треугольник'][$value % 3]),
                 'nested' => 'Внутренняя фигура: '.(['круг', 'квадрат', 'треугольник', 'ромб', 'звезда', 'шестиугольник'][$value] ?? 'неизвестная'),
                 'direction' => 'Стрелка направлена '.(['вверх', 'вверх вправо', 'вниз вправо', 'вниз', 'вниз влево', 'вверх влево'][$value] ?? 'неизвестно куда'),
                 'direction-tone' => (['Синяя', 'Янтарная', 'Бирюзовая'][intdiv($value, 3)] ?? 'Неизвестная').' стрелка: '.(['вверх', 'вверх вправо', 'вниз вправо'][$value % 3]),
@@ -121,6 +122,7 @@ final class GraphicPuzzle
             'shapes3' => self::shapes3($value),
             'bars3' => self::bars3($value),
             'gem' => self::gem($value),
+            'shape-tone' => self::shapeTone($value),
             'nested' => self::nested($value),
             'corner' => self::corner($value),
             'bands' => self::stripes($value + 1),
@@ -208,6 +210,17 @@ final class GraphicPuzzle
         $color = $colors[$value] ?? self::INK;
 
         return '<path d="M50 13 L81 31 L81 68 L50 87 L19 68 L19 31 Z" fill="'.$color.'" stroke="'.self::INK.'" stroke-width="2.8" stroke-linejoin="round"/>';
+    }
+
+    private static function shapeTone(int $value): string
+    {
+        $color = [self::BLUE, self::TEAL, self::AMBER][intdiv($value, 3)];
+
+        return match ($value % 3) {
+            0 => '<circle cx="50" cy="50" r="27" fill="'.$color.'" stroke="'.self::INK.'" stroke-width="2.3"/>',
+            1 => '<rect x="24" y="24" width="52" height="52" rx="3" fill="'.$color.'" stroke="'.self::INK.'" stroke-width="2.3"/>',
+            2 => '<path d="M50 20 L79 75 H21 Z" fill="'.$color.'" stroke="'.self::INK.'" stroke-width="2.3" stroke-linejoin="round"/>',
+        };
     }
 
     private static function nested(int $value): string

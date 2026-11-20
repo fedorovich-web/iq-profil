@@ -159,47 +159,32 @@ final class QuizFlowTest extends TestCase
         $this->assertDatabaseHas('quiz_attempts', ['current_position' => 1]);
     }
 
-    public function test_question_count_is_derived_from_database_when_bank_grows(): void
+    public function test_exactly_25_questions_are_required_for_a_published_bank(): void
     {
         $source = (array) DB::table('questions')->where('position', 25)->first();
-        $sourceId = $source['id'];
         unset($source['id']);
         $source['position'] = 26;
-        $newQuestionId = DB::table('questions')->insertGetId($source);
+        DB::table('questions')->insert($source);
 
-        foreach (DB::table('answer_options')->where('question_id', $sourceId)->get() as $option) {
-            $fields = (array) $option;
-            unset($fields['id']);
-            $fields['question_id'] = $newQuestionId;
-            DB::table('answer_options')->insert($fields);
-        }
+        $this->post('/attempts')->assertStatus(503);
+        $this->assertDatabaseCount('quiz_attempts', 0);
 
-        $uuid = $this->startAttempt();
-        $this->get('/quiz')->assertOk()->assertSee('из 26');
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('exactly 25 questions');
+        $this->seed(QuestionSeeder::class);
+    }
 
-        for ($position = 1; $position <= 26; $position++) {
-            $qid = DB::table('questions')->where('position', $position)->value('id');
-            $optionId = DB::table('answer_options')
-                ->where('question_id', $qid)->where('is_correct', true)->value('id');
+    public function test_existing_attempt_refuses_bank_with_unexpected_extra_question(): void
+    {
+        $this->startAttempt();
+        $source = (array) DB::table('questions')->where('position', 25)->first();
+        unset($source['id']);
+        $source['position'] = 26;
+        DB::table('questions')->insert($source);
 
-            $this->post('/quiz/answer', [
-                'navigation' => $position === 26 ? 'finish' : 'next',
-                'answer_option_id' => $optionId,
-            ])->assertRedirect($position === 26 ? '/paywall/'.$uuid : '/quiz');
-
-            if (in_array($position, [9, 18], true)) {
-                $this->get('/quiz')->assertOk()
-                    ->assertSee('aria-valuenow="'.$position.'"', false)
-                    ->assertSee((int) round($position * 100 / 26).'%', false)
-                    ->assertSee('data-quiz-milestone', false);
-            }
-        }
-
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'correct_count' => 26]);
-        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
-        $this->get('/result/'.$uuid)->assertOk()
-            ->assertSee('из 26')
-            ->assertSee('100%');
+        $this->get('/quiz')->assertStatus(503);
+        $this->post('/quiz/answer', ['navigation' => 'next'])->assertStatus(503);
+        $this->assertDatabaseCount('attempt_answers', 0);
     }
 
     public function test_completed_attempt_skips_repeat_payment_when_report_is_already_opened(): void

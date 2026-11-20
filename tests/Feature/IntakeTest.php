@@ -57,6 +57,18 @@ final class IntakeTest extends TestCase
         $this->get('/quiz')->assertRedirect('/quiz/intake/gender');
     }
 
+    public function test_seeder_rejects_mutated_published_answer_key(): void
+    {
+        $correct = DB::table('answer_options')->where('is_correct', true)->first();
+        $this->assertNotNull($correct);
+
+        DB::table('answer_options')->where('id', $correct->id)->update(['is_correct' => false]);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('Published answer options for question');
+        $this->seed(QuestionSeeder::class);
+    }
+
     public function test_published_questions_are_immutable_when_seed_is_repeated(): void
     {
         $before = DB::table('questions')->orderBy('position')->pluck('cells', 'id')->all();

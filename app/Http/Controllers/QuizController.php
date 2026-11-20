@@ -19,7 +19,7 @@ final class QuizController extends Controller
 {
     public function start(Request $request): RedirectResponse
     {
-        abort_unless(DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->exists(), 503, 'Банк вопросов пока не подготовлен.');
+        $this->assertCurrentQuestionBank();
 
         $attempt = DB::transaction(function () use ($request): object {
             // Two simultaneous clicks must not create two unpaid attempts.
@@ -148,6 +148,8 @@ final class QuizController extends Controller
             return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $attempt->uuid]);
         }
 
+        $this->assertCurrentQuestionBank();
+
         if ($attempt->gender === null) {
             return redirect()->route('quiz.intake', ['step' => 'gender']);
         }
@@ -198,6 +200,8 @@ final class QuizController extends Controller
         if ($attempt->status !== 'completed' && (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
             return $this->start($request);
         }
+
+        $this->assertCurrentQuestionBank();
 
         if ($attempt->gender === null || $attempt->age_group === null || $attempt->quiz_started_at === null) {
             return redirect()->route('quiz.show');
@@ -369,9 +373,14 @@ final class QuizController extends Controller
                 'correct.graphic_value as correct_value', 'correct.code as correct_code',
             ])->get();
 
-        $totalQuestions = $answers->count() ?: PuzzleCatalog::COUNT;
+        // The score denominator belongs to the completed test revision,
+        // not to however many historical answer rows remain accessible.
+        $totalQuestions = (int) $attempt->question_revision >= 3
+            ? PuzzleCatalog::COUNT
+            : ($answers->count() ?: PuzzleCatalog::COUNT);
 
         $categoryBreakdown = ((int) $attempt->question_revision >= 3
+            && $answers->count() === PuzzleCatalog::COUNT
             ? $answers->where('bank_version', (int) $attempt->question_revision) : collect())
             ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
             ->map(function ($group, string $label): array {
@@ -427,6 +436,15 @@ final class QuizController extends Controller
                 break;
             }
         }
+    }
+
+    private function assertCurrentQuestionBank(): void
+    {
+        abort_unless(
+            DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count() === PuzzleCatalog::COUNT,
+            503,
+            'Банк должен содержать ровно 25 вопросов.'
+        );
     }
 
     private function hasReportAccess(int $attemptId): bool
