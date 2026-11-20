@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import './typography.css';
+@import './intake.css';
+@import './report-review.css';
 @import './portal.css';
 
 :root{font-family:var(--font-ui-family);color:#0a1638;background:#f3f7ff;font-synthesis:none}

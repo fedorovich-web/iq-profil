@@ -117,6 +117,9 @@ final class AccountSecurityTest extends TestCase
     {
         $this->seed(QuestionSeeder::class);
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session('active_attempt');
         $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'user_id' => null]);
 
@@ -178,6 +181,9 @@ final class AccountSecurityTest extends TestCase
     {
         $this->seed(QuestionSeeder::class);
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session('active_attempt');
         $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
 
@@ -239,7 +245,12 @@ final class AccountSecurityTest extends TestCase
 
         $this->seed(QuestionSeeder::class);
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session('active_attempt');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
         $this->get('/quiz')->assertOk()->assertSee('/assets/icons/client/history.avif');
         DB::table('quiz_attempts')->where('uuid', $uuid)->update([
             'status' => 'completed',
@@ -278,6 +289,12 @@ final class AccountSecurityTest extends TestCase
             ->assertDontSee('Отменить демо-продление');
 
         $this->post('/attempts')->assertRedirect('/quiz');
+
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session('active_attempt');
         $attemptId = DB::table('quiz_attempts')->where('uuid', $uuid)->value('id');
         DB::table('quiz_attempts')->where('id', $attemptId)->update([
@@ -316,6 +333,9 @@ final class AccountSecurityTest extends TestCase
         $stranger = User::factory()->create();
         $this->actingAs($owner);
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session('active_attempt');
         $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->first();
 

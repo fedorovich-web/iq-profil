@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Support;
 
 /**
- * Author-authored training puzzles. These are not normed IQ instruments.
- * Replaces the original 25 positions; historical attempt totals are retained.
+ * Author-authored visual reasoning tasks. Not a normed IQ instrument.
+ * Each published revision has immutable question rows and answer keys.
  */
 final class PuzzleCatalog
 {
-    public const VERSION = 3;
+    public const VERSION = 4;
 
     public const COUNT = 25;
 
@@ -29,9 +29,9 @@ final class PuzzleCatalog
             ['compass-step', 'direction', 'Как меняются направления стрелок по строкам и столбцам?',
                 [0, 1, 2, 2, 3, 4, 4, 5, 0], [0, 1, 2, 3, 4, 5],
                 'При движении вправо стрелка поворачивается на 60°, при движении вниз — на 120°. После полного оборота направление повторяется.'],
-            ['mosaic-repeat', 'mosaic', 'Сравните расположение закрашенных квадратов в каждой строке.',
-                [0, 1, 0, 2, 3, 2, 4, 5, 4], [0, 1, 2, 3, 4, 5],
-                'В каждой строке крайние композиции одинаковые; в нижней строке нужна копия левой композиции.'],
+            ['nested-cycle', 'nested', 'Какая внутренняя фигура должна завершить таблицу?',
+                [0, 1, 2, 1, 2, 0, 2, 0, 1], [0, 1, 2, 3, 4, 5],
+                'Три вида вложенных фигур циклически сменяются по строкам и столбцам. Пропущенная фигура повторяет состояние 1.'],
             ['polygon-steps', 'polygon', 'Как изменяются многоугольники по горизонтали и вертикали?',
                 [3, 4, 5, 4, 5, 6, 5, 6, 7], [3, 4, 5, 6, 7, 8],
                 'Количество сторон увеличивается на одну при движении вправо и при движении вниз. В пропущенной клетке — семиугольник.'],
@@ -67,9 +67,9 @@ final class PuzzleCatalog
             ['corners-dual', 'corner', 'Учитывайте положение угла и цвет внутреннего маркера.',
                 [0, 1, 2, 4, 5, 6, 8, 9, 10], [2, 6, 8, 9, 10, 11],
                 'При движении вправо угол поворачивается на четверть оборота, а в каждой следующей строке меняется цвет точки. Последний угол повернут на 180° и имеет третий цвет.'],
-            ['nested-cycle', 'nested', 'Какая внутренняя фигура должна завершить таблицу?',
-                [0, 1, 2, 1, 2, 0, 2, 0, 1], [0, 1, 2, 3, 4, 5],
-                'Три вида вложенных фигур циклически сменяются по строкам и столбцам. Пропущенная фигура повторяет состояние 1.'],
+            ['mosaic-xor', 'mosaic', 'Сравните закрашенные клетки в каждой строке и найдите правило.',
+                [0, 3, 1, 0, 4, 2, 3, 5, 4], [0, 1, 2, 3, 4, 5],
+                'Третья клетка содержит позиции, закрашенные ровно в одной из первых двух. Общий квадрат исчезает: в последней строке остаются верхний правый и нижний правый квадраты.'],
 
             ['bar-wrap', 'bands', 'Как изменяется число линий в соседних клетках?',
                 [4, 5, 0, 5, 0, 1, 0, 1, 2], [0, 1, 2, 3, 4, 5],
@@ -121,7 +121,7 @@ final class PuzzleCatalog
         return match ($kind) {
             'dots-add', 'count-subtract', 'bar-wrap', 'absolute-distance', 'growing-strides' => 'Количество и числовые закономерности',
             'compass-step', 'orbit-skip', 'direction-mirror', 'rotation-composition', 'grid-traversal' => 'Повороты и положение',
-            'mosaic-repeat', 'polygon-steps', 'color-latin', 'nested-cycle', 'color-count' => 'Фигуры и цветовые последовательности',
+            'mosaic-repeat', 'mosaic-xor', 'polygon-steps', 'color-latin', 'nested-cycle', 'color-count' => 'Фигуры и цветовые последовательности',
             'shape-union', 'bars-xor', 'shape-common', 'bar-complement', 'xor-two-axes' => 'Операции с наборами фигур',
             'corners-dual', 'arrow-colors', 'xor-four', 'four-band-union', 'master-four-layer' => 'Многокомпонентные матрицы',
             // Names of retired exercises, retained for legacy metadata.

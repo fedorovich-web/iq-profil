@@ -27,6 +27,31 @@ async function overflow(page, label) {
   const data = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, window: window.innerWidth }));
   check(data.scroll <= data.window + 1, label + ' no horizontal overflow: ' + JSON.stringify(data));
 }
+async function finishIntake(page, name = null) {
+  await page.waitForURL(/\/quiz\/intake\/gender/);
+  if (name) {
+    await overflow(page, name + ' gender intake');
+    await screenshot(page, name + '-gender-intake');
+    const artwork = await page.locator('.intake-gender svg').evaluateAll(nodes => nodes.map(svg => {
+      const box = svg.getBBox();
+      const bounds = svg.viewBox.baseVal;
+      return box.x >= 0 && box.y >= 0 && box.width > 0 && box.height > 0
+        && box.x + box.width <= bounds.width && box.y + box.height <= bounds.height;
+    }));
+    check(artwork.length === 3 && artwork.every(Boolean), name + ' all three intake icons remain inside SVG viewBoxes');
+  }
+  await page.locator('.intake-gender-choice').first().click();
+  await page.locator('.intake-submit').click();
+  await page.waitForURL(/\/quiz\/intake\/age/);
+  if (name) {
+    await overflow(page, name + ' age intake');
+    await screenshot(page, name + '-age-intake');
+  }
+  await page.locator('.intake-age-choice').first().click();
+  await page.locator('.intake-submit').click();
+  await page.waitForURL(/\/quiz$/);
+}
+
 async function navigateAndTake(page, name) {
   await page.goto(base + '/');
   check((await page.title()).includes('Тест на IQ'), name + ' landing title');
@@ -34,7 +59,8 @@ async function navigateAndTake(page, name) {
   await screenshot(page, name + '-landing');
 
   await page.locator('.hero-actions form button').click();
-  check(new URL(page.url()).pathname === '/quiz', name + ' quiz opened');
+  await finishIntake(page, name);
+  check(new URL(page.url()).pathname === '/quiz', name + ' quiz opened after intake');
   await overflow(page, name + ' quiz');
   await screenshot(page, name + '-quiz');
 
@@ -105,7 +131,8 @@ async function navigateAndTake(page, name) {
   check(new URL(page.url()).pathname === '/result/' + uuid, name + ' paid checkout skips repeated confirmation');
 
   await page.locator('.result-actions form button').click();
-  check(new URL(page.url()).pathname === '/quiz', name + ' new attempt opened');
+  await finishIntake(page);
+  check(new URL(page.url()).pathname === '/quiz', name + ' new attempt opened after intake');
   check((await page.locator('.quiz-counter').textContent()).includes('1'), name + ' new attempt starts at question one');
 
   return uuid;
@@ -130,6 +157,7 @@ try {
   const noJsPage = await noJsContext.newPage();
   await noJsPage.goto(base + '/');
   await noJsPage.locator('.hero-actions form button').first().click();
+  await finishIntake(noJsPage);
   check(new URL(noJsPage.url()).pathname === '/quiz', 'quiz starts without JavaScript');
   await noJsPage.locator('.answer-tile').first().click();
   await noJsPage.locator('button[name="navigation"][value="next"]').click();

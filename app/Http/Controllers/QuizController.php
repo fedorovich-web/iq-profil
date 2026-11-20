@@ -19,7 +19,7 @@ final class QuizController extends Controller
 {
     public function start(Request $request): RedirectResponse
     {
-        abort_unless(DB::table('questions')->exists(), 503, 'Банк вопросов пока не подготовлен.');
+        abort_unless(DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->exists(), 503, 'Банк вопросов пока не подготовлен.');
 
         $attempt = DB::transaction(function () use ($request): object {
             // Two simultaneous clicks must not create two unpaid attempts.
@@ -92,6 +92,52 @@ final class QuizController extends Controller
         return redirect()->route('quiz.show');
     }
 
+    public function intake(Request $request, string $step): View|RedirectResponse
+    {
+        $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
+        if ($attempt->status === 'completed') {
+            return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', $attempt->uuid);
+        }
+        if ((int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+            return $this->start($request);
+        }
+        if ($step === 'age' && $attempt->gender === null) {
+            return redirect()->route('quiz.intake', ['step' => 'gender']);
+        }
+        if ($step === 'gender' && $attempt->age_group !== null) {
+            // Revisiting the first screen is allowed; the saved value remains selected.
+        }
+
+        return view('intake', compact('attempt', 'step'));
+    }
+
+    public function saveIntake(Request $request, string $step): RedirectResponse
+    {
+        $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
+        abort_unless($attempt->status === 'in_progress'
+            && (int) $attempt->question_revision === PuzzleCatalog::VERSION, 409);
+
+        if ($step === 'gender') {
+            $validated = $request->validate(['gender' => 'required|in:male,female,unspecified']);
+            DB::table('quiz_attempts')->where('id', $attempt->id)->update([
+                'gender' => $validated['gender'],
+                'updated_at' => now(),
+            ]);
+
+            return redirect()->route('quiz.intake', ['step' => 'age']);
+        }
+
+        abort_unless($attempt->gender !== null, 409);
+        $validated = $request->validate(['age_group' => 'required|in:18_24,25_34,35_44,45_54,55_plus']);
+        DB::table('quiz_attempts')->where('id', $attempt->id)->update([
+            'age_group' => $validated['age_group'],
+            'profile_completed_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('quiz.show');
+    }
+
     public function show(Request $request): View|RedirectResponse
     {
         $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
@@ -102,7 +148,23 @@ final class QuizController extends Controller
             return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $attempt->uuid]);
         }
 
-        $question = DB::table('questions')->where('position', $attempt->current_position)->first();
+        if ($attempt->gender === null) {
+            return redirect()->route('quiz.intake', ['step' => 'gender']);
+        }
+        if ($attempt->age_group === null) {
+            return redirect()->route('quiz.intake', ['step' => 'age']);
+        }
+
+        // A pre-test intake never contributes to elapsed_seconds.
+        if ($attempt->quiz_started_at === null) {
+            DB::table('quiz_attempts')->where('id', $attempt->id)
+                ->whereNull('quiz_started_at')->update(['quiz_started_at' => now()]);
+            $attempt->quiz_started_at = DB::table('quiz_attempts')
+                ->where('id', $attempt->id)->value('quiz_started_at');
+        }
+
+        $question = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)
+            ->where('position', $attempt->current_position)->first();
         abort_unless($question !== null, 500, 'Не найден вопрос.');
 
         $options = DB::table('answer_options')->where('question_id', $question->id)->orderBy('position')->get();
@@ -117,9 +179,9 @@ final class QuizController extends Controller
             'cells' => json_decode($question->cells, true, 512, JSON_THROW_ON_ERROR),
             'options' => $options,
             'selected' => $selected,
-            'totalQuestions' => DB::table('questions')->count(),
+            'totalQuestions' => DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count(),
             'answeredQuestions' => DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count(),
-            'startedTimestamp' => CarbonImmutable::parse($attempt->started_at, 'UTC')->getTimestamp(),
+            'startedTimestamp' => CarbonImmutable::parse($attempt->quiz_started_at, 'UTC')->getTimestamp(),
             'serverTimestamp' => now()->getTimestamp(),
         ]);
     }
@@ -137,16 +199,21 @@ final class QuizController extends Controller
             return $this->start($request);
         }
 
+        if ($attempt->gender === null || $attempt->age_group === null || $attempt->quiz_started_at === null) {
+            return redirect()->route('quiz.show');
+        }
+
         $answeredBefore = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
 
         $completed = DB::transaction(function () use ($attempt, $validated): bool {
-            $questionCount = DB::table('questions')->count();
+            $questionCount = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count();
             $locked = DB::table('quiz_attempts')->where('id', $attempt->id)->lockForUpdate()->first();
             if ($locked->status === 'completed') {
                 return true;
             }
 
-            $question = DB::table('questions')->where('position', $locked->current_position)->first();
+            $question = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)
+                ->where('position', $locked->current_position)->first();
             abort_unless($question !== null, 500);
             // Reject stale submissions from another tab or a slow network response.
             if (isset($validated['question_id']) && (int) $validated['question_id'] !== (int) $question->id) {
@@ -217,7 +284,7 @@ final class QuizController extends Controller
                 ->where('a.attempt_id', $locked->id)
                 ->where('o.is_correct', true)->count();
 
-            $seconds = max(0, (int) abs(CarbonImmutable::parse($locked->started_at, 'UTC')->diffInSeconds(now())));
+            $seconds = max(0, (int) abs(CarbonImmutable::parse($locked->quiz_started_at, 'UTC')->diffInSeconds(now())));
 
             DB::table('quiz_attempts')->where('id', $locked->id)->update([
                 'status' => 'completed',
@@ -288,24 +355,24 @@ final class QuizController extends Controller
             return redirect()->route('paywall', $uuid);
         }
 
-        $answers = DB::table('questions as q')
-            ->leftJoin('attempt_answers as a', function ($join) use ($attempt): void {
-                $join->on('a.question_id', '=', 'q.id')->where('a.attempt_id', '=', $attempt->id);
-            })
-            ->leftJoin('answer_options as selected', 'selected.id', '=', 'a.answer_option_id')
-            ->leftJoin('answer_options as correct', function ($join): void {
+        $answers = DB::table('attempt_answers as a')
+            ->join('questions as q', 'q.id', '=', 'a.question_id')
+            ->join('answer_options as selected', 'selected.id', '=', 'a.answer_option_id')
+            ->join('answer_options as correct', function ($join): void {
                 $join->on('correct.question_id', '=', 'q.id')->where('correct.is_correct', '=', true);
             })
+            ->where('a.attempt_id', $attempt->id)
             ->orderBy('q.position')
             ->select([
-                'q.position', 'q.kind', 'q.explanation',
+                'q.position', 'q.kind', 'q.prompt', 'q.cells', 'q.explanation', 'q.bank_version',
                 'selected.graphic_value as selected_value', 'selected.code as selected_code',
                 'correct.graphic_value as correct_value', 'correct.code as correct_code',
             ])->get();
 
-        $totalQuestions = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
+        $totalQuestions = $answers->count() ?: PuzzleCatalog::COUNT;
 
-        $categoryBreakdown = ((int) $attempt->question_revision === PuzzleCatalog::VERSION ? $answers : collect())
+        $categoryBreakdown = ((int) $attempt->question_revision >= 3
+            ? $answers->where('bank_version', (int) $attempt->question_revision) : collect())
             ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
             ->map(function ($group, string $label): array {
                 $total = $group->count();
@@ -322,6 +389,7 @@ final class QuizController extends Controller
         return view('result', [
             'attempt' => $attempt,
             'categoryBreakdown' => $categoryBreakdown,
+            'answerReview' => (int) $attempt->question_revision === PuzzleCatalog::VERSION ? $answers : collect(),
             'percentage' => (int) round(($attempt->correct_count / max(1, $totalQuestions)) * 100),
             'totalQuestions' => $totalQuestions,
         ]);
@@ -333,7 +401,7 @@ final class QuizController extends Controller
      */
     private function flashProgressMilestone(Request $request, object $attempt, int $answeredBefore): void
     {
-        $total = DB::table('questions')->count();
+        $total = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count();
         if ($total < 3) {
             return;
         }

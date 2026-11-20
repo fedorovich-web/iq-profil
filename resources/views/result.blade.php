@@ -77,6 +77,51 @@
     <p class="result-legacy-note">Эта попытка была завершена до обновления графических заданий. Общий результат сохранён; разбивка по новым категориям для неё недоступна.</p>
   @endif
 
+
+  @if($answerReview->isNotEmpty())
+    <section class="result-review-section" aria-labelledby="review-heading">
+      <div class="result-section-intro">
+        <h2 id="review-heading">Разбор всех {{ $totalQuestions }} заданий</h2>
+        <p>Ваш выбор, правильная фигура и проверяемое объяснение каждой закономерности.</p>
+      </div>
+      <div class="result-review-list">
+        @foreach($answerReview as $answer)
+          @php($isRight = $answer->selected_code === $answer->correct_code)
+          @php($matrix = json_decode($answer->cells, true, 512, JSON_THROW_ON_ERROR))
+          <details class="result-review-item">
+            <summary>
+              <span>Вопрос {{ $answer->position }}</span>
+              <span class="review-status {{ $isRight ? 'is-right' : 'is-wrong' }}">{{ $isRight ? 'Верно' : 'Ошибка' }}</span>
+            </summary>
+            <div class="result-review-content">
+              <p class="result-review-prompt">{{ $answer->prompt }}</p>
+              <div class="result-review-matrix" role="group" aria-label="Матрица вопроса {{ $answer->position }}">
+                @foreach($matrix as $i => $value)
+                  <div class="result-review-matrix-cell {{ $i === 8 ? 'is-missing' : '' }}" role="img" aria-label="{{ $i === 8 ? 'Пропуск' : App\Support\GraphicPuzzle::name($answer->kind, $value) }}">
+                    @if($i === 8) ? @else {{ App\Support\GraphicPuzzle::image($answer->kind, $value, 72) }} @endif
+                  </div>
+                @endforeach
+              </div>
+              <div class="result-review-answers">
+                <div class="result-review-answer">
+                  <span>Ваш ответ: {{ $answer->selected_code }}</span>
+                  {{ App\Support\GraphicPuzzle::image($answer->kind, $answer->selected_value, 72) }}
+                  <strong>{{ $isRight ? 'Правильно' : 'Выбранный вариант' }}</strong>
+                </div>
+                <div class="result-review-answer">
+                  <span>Правильный: {{ $answer->correct_code }}</span>
+                  {{ App\Support\GraphicPuzzle::image($answer->kind, $answer->correct_value, 72) }}
+                  <strong>Правильная фигура</strong>
+                </div>
+              </div>
+              <p class="result-review-explanation">{{ $answer->explanation }}</p>
+            </div>
+          </details>
+        @endforeach
+      </div>
+    </section>
+  @endif
+
   <section class="result-interpretation" aria-labelledby="interpretation-title">
     <h2 id="interpretation-title">Как понимать результат</h2>
     <div class="interpretation-grid">
@@ -86,7 +131,7 @@
       </div>
       <div>
         <h3>Что означает процент</h3>
-        <p>Это доля верных решений в вашей попытке, а не процентиль относительно других людей.</p>
+        <p>Это точно рассчитанная доля правильных решений в этом наборе, а не IQ и не процентиль относительно населения.</p>
       </div>
       <div>
         <h3>Что можно сделать дальше</h3>

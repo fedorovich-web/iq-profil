@@ -68,4 +68,6 @@ Thumbs.db
 !/scripts/guest-session-gate-e2e.mjs
 !/scripts/session-cookie-e2e.mjs
 !/scripts/seo-content-qa.mjs
+!/scripts/svg-contact-sheet.php
+!/scripts/svg-visual-qa.mjs
 

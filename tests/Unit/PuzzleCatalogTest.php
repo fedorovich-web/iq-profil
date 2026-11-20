@@ -63,7 +63,7 @@ final class PuzzleCatalogTest extends TestCase
                 $valid = match ($slug) {
                     'dots-add' => self::every($rows, static fn (array $r): bool => $r[2] === $r[0] + $r[1]),
                     'compass-step' => self::step($rows, 1, 6) && self::step($cols, 2, 6),
-                    'mosaic-repeat' => self::every($rows, static fn (array $r): bool => $r[0] === $r[2]),
+                    'mosaic-xor' => self::every($rows, static fn (array $r): bool => ([3, 5, 9, 6, 10, 12][$r[0]] ^ [3, 5, 9, 6, 10, 12][$r[1]]) === [3, 5, 9, 6, 10, 12][$r[2]]),
                     'polygon-steps' => self::step($rows, 1) && self::step($cols, 1),
                     'orbit-skip' => self::step($rows, 2, 6) && self::step($cols, 1, 6),
                     'shape-union', 'four-band-union' => self::every($rows, static fn (array $r): bool => ($r[0] | $r[1]) === $r[2]),

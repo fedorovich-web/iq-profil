@@ -27,54 +27,57 @@ final class QuestionSeeder extends Seeder
                 }
 
                 $position = $index + 1;
-                $now = now();
-                $row = DB::table('questions')->where('position', $position)->first();
+                $version = PuzzleCatalog::VERSION;
                 $fields = [
+                    'bank_version' => $version,
+                    'position' => $position,
                     'kind' => $slug,
                     'prompt' => $prompt,
                     'cells' => json_encode($cells, JSON_THROW_ON_ERROR),
-                    'explanation' => $explanation.' Это авторское тренировочное упражнение, не стандартизированная психометрическая методика.',
-                    'source' => 'IQ.Profil original vector puzzle v'.PuzzleCatalog::VERSION,
-                    'updated_at' => $now,
+                    'explanation' => $explanation.' Это авторское упражнение на поиск закономерностей.',
+                    'source' => 'IQ.Profil original vector puzzle v'.$version,
                 ];
+                $row = DB::table('questions')->where('bank_version', $version)
+                    ->where('position', $position)->first();
 
-                if ($row === null) {
-                    $questionId = DB::table('questions')->insertGetId([
-                        ...$fields,
-                        'position' => $position,
-                        'created_at' => $now,
-                    ]);
-                    $existingOptions = collect();
-                } else {
-                    $questionId = $row->id;
-                    DB::table('questions')->where('id', $questionId)->update($fields);
-                    $existingOptions = DB::table('answer_options')
-                        ->where('question_id', $questionId)->orderBy('position')->get();
-                    if ($existingOptions->count() !== 6) {
-                        throw new LogicException("Expected six existing options for question {$position}");
+                // Never alter a published question: existing attempt_answers refer to its ID.
+                if ($row !== null) {
+                    foreach ($fields as $key => $value) {
+                        if ((string) $row->$key !== (string) $value) {
+                            throw new LogicException("Question bank v{$version} was modified at position {$position}; publish a new revision.");
+                        }
                     }
+                    $existing = DB::table('answer_options')->where('question_id', $row->id)
+                        ->orderBy('position')->get();
+                    if ($existing->count() !== 6) {
+                        throw new LogicException("Immutable question {$row->id} must have six choices.");
+                    }
+
+                    continue;
                 }
 
+                $now = now();
+                $questionId = DB::table('questions')->insertGetId([
+                    ...$fields, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+
                 $answer = $cells[8];
-                $choices = array_values(array_filter($candidates, static fn (int $value): bool => $value !== $answer));
+                $choices = array_values(array_filter(
+                    $candidates,
+                    static fn (int $value): bool => $value !== $answer
+                ));
                 array_splice($choices, ($index * 5 + 2) % 6, 0, [$answer]);
+
                 foreach ($choices as $slot => $value) {
-                    $fields = [
+                    DB::table('answer_options')->insert([
+                        'question_id' => $questionId,
                         'code' => chr(65 + $slot),
                         'position' => $slot + 1,
                         'graphic_value' => $value,
                         'is_correct' => $value === $answer,
+                        'created_at' => $now,
                         'updated_at' => $now,
-                    ];
-                    if ($existingOptions->isNotEmpty()) {
-                        DB::table('answer_options')->where('id', $existingOptions[$slot]->id)->update($fields);
-                    } else {
-                        DB::table('answer_options')->insert([
-                            'question_id' => $questionId,
-                            ...$fields,
-                            'created_at' => $now,
-                        ]);
-                    }
+                    ]);
                 }
             }
         });

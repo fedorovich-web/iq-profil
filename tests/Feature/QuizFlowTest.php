@@ -24,6 +24,11 @@ final class QuizFlowTest extends TestCase
     private function startAttempt(): string
     {
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])
+            ->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])
+            ->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
 
         return (string) session()->get('active_attempt');
     }

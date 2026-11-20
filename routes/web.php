@@ -80,6 +80,10 @@ Route::middleware(['auth', EnsureAdministrator::class])->group(function () {
 
 Route::post('/attempts', [QuizController::class, 'start'])->middleware('throttle:20,1')->name('attempt.start');
 Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
+Route::get('/quiz/intake/{step}', [QuizController::class, 'intake'])
+    ->whereIn('step', ['gender', 'age'])->name('quiz.intake');
+Route::post('/quiz/intake/{step}', [QuizController::class, 'saveIntake'])
+    ->whereIn('step', ['gender', 'age'])->middleware('throttle:20,1')->name('quiz.intake.save');
 Route::get('/attempts/{uuid}/resume', [QuizController::class, 'resume'])->name('attempt.resume');
 Route::post('/quiz/answer', [QuizController::class, 'answer'])->name('quiz.answer');
 Route::get('/paywall/{uuid}', [QuizController::class, 'paywall'])->name('paywall');

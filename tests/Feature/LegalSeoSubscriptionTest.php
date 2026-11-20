@@ -95,6 +95,9 @@ final class LegalSeoSubscriptionTest extends TestCase
     private function completeAsCurrentSession(): string
     {
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session()->get('active_attempt');
         for ($position = 1; $position <= 25; $position++) {
             $qid = DB::table('questions')->where('position', $position)->value('id');

@@ -32,6 +32,9 @@ final class CodeSafetyTest extends TestCase
     {
         $this->seed(QuestionSeeder::class);
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
 
         $firstQuestionId = (int) DB::table('questions')->where('position', 1)->value('id');
         $secondQuestionId = (int) DB::table('questions')->where('position', 2)->value('id');
@@ -61,6 +64,9 @@ final class CodeSafetyTest extends TestCase
     {
         $this->seed(QuestionSeeder::class);
         $this->post('/attempts')->assertRedirect('/quiz');
+        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
+        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
+        $this->get('/quiz')->assertOk();
         $uuid = (string) session('active_attempt');
 
         DB::table('quiz_attempts')->where('uuid', $uuid)->update([

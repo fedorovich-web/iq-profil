@@ -1,0 +1,32 @@
+/* Detailed reasoning report: original matrix and verified answer, no invented IQ scale. */
+.result-review-section{margin:32px 0 0}
+.result-review-section .result-section-intro{margin-bottom:18px}
+.result-review-list{display:grid;gap:11px}
+.result-review-item{background:#fff;border:1px solid #d9e6fa;border-radius:17px;overflow:hidden}
+.result-review-item[open]{border-color:#b9d2f7;box-shadow:0 9px 26px #17498410}
+.result-review-item>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px;cursor:pointer;font-weight:var(--type-weight-700);list-style:none}
+.result-review-item>summary::-webkit-details-marker{display:none}
+.result-review-item>summary::after{content:'+';font-size:23px;color:#426a9b;font-weight:400;margin-left:auto}
+.result-review-item[open]>summary::after{content:'−'}
+.result-review-item .review-status{font-size:var(--type-size-13px);font-weight:var(--type-weight-700);border-radius:99px;padding:5px 11px;white-space:nowrap}
+.result-review-item .review-status.is-right{background:#e4f8ee;color:#14683a}
+.result-review-item .review-status.is-wrong{background:#fff0ed;color:#a63b31}
+.result-review-content{border-top:1px solid #e6eefb;padding:20px;display:grid;gap:18px}
+.result-review-prompt{font-size:var(--type-size-15px);color:#425c7c;margin:0}
+.result-review-matrix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:min(100%,285px);padding:8px;border:1px solid #d9e5f5;border-radius:13px;background:#edf4ff}
+.result-review-matrix-cell{aspect-ratio:1;min-width:0;display:grid;place-items:center;background:#fff;border-radius:8px}
+.result-review-matrix-cell svg{max-width:90%;max-height:90%;width:73px;height:73px}
+.result-review-matrix-cell.is-missing{border:2px dashed #aac2e8;color:#4b6e9d;font-size:var(--type-size-28px)}
+.result-review-answers{display:flex;flex-wrap:wrap;gap:12px}
+.result-review-answer{width:min(100%,154px);display:grid;gap:8px;justify-items:center;background:#f7faff;border:1px solid #dce8fa;border-radius:13px;padding:12px}
+.result-review-answer span{color:#4b6484;font-size:var(--type-size-12px);text-align:center}
+.result-review-answer svg{width:72px;height:72px}
+.result-review-answer strong{font-size:var(--type-size-14px)}
+.result-review-explanation{margin:0;color:#2b4467;line-height:1.6;font-size:var(--type-size-14px)}
+@media(max-width:690px){
+  .result-review-item>summary{padding:14px 12px;gap:8px;font-size:var(--type-size-14px)}
+  .result-review-item .review-status{font-size:var(--type-size-11px);padding:5px 8px}
+  .result-review-content{padding:14px;gap:13px}
+  .result-review-matrix{width:min(100%,260px)}
+  .result-review-answer{width:calc(50% - 6px);min-width:0}
+}

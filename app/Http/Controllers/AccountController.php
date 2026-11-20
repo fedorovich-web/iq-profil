@@ -44,7 +44,7 @@ final class AccountController extends Controller
         abort_unless($attempt !== null && $attempt->status === 'completed', 404);
         abort_unless(DB::table('demo_payments')->where('attempt_id', $attempt->id)->where('status', 'succeeded')->exists(), 403);
 
-        $isCurrent = (int) $attempt->question_revision === PuzzleCatalog::VERSION;
+        $isCurrent = (int) $attempt->question_revision >= 3;
         $categoryBreakdown = collect();
 
         if ($isCurrent) {
