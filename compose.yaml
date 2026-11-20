@@ -3,6 +3,12 @@ services:
     build:
       context: .
       target: app
+    # Keep PHP-FPM off the shared Dokploy proxy network. The dedicated
+    # backend alias prevents collisions with other projects named "app".
+    networks:
+      backend:
+        aliases:
+          - iqprofil-php-fpm
     environment:
       APP_NAME: "IQ.Профиль"
       APP_ENV: production
@@ -33,6 +39,10 @@ services:
     build:
       context: .
       target: web
+    # Traefik reaches web on dokploy-network; web reaches PHP on backend.
+    networks:
+      - backend
+      - dokploy-network
     expose:
       - "80"
     # Dokploy's native Domain handles flatero.ru. These extra Traefik
@@ -68,3 +78,8 @@ services:
 
 volumes:
   iq_database:
+
+networks:
+  backend:
+  dokploy-network:
+    external: true
