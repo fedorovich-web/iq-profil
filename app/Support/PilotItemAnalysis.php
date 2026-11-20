@@ -15,13 +15,15 @@ final class PilotItemAnalysis
      *
      * @return array<string, mixed>
      */
-    public static function forRevision(int $revision): array
+    public static function forRevision(int $revision, string $testCode = PuzzleCatalog::TEST_CODE): array
     {
-        $questions = DB::table('questions')->where('bank_version', $revision)
+        $questions = DB::table('questions')->where('test_code', $testCode)
+            ->where('bank_version', $revision)
             ->orderBy('position')->get(['position', 'kind']);
 
-        if ($questions->count() !== PuzzleCatalog::COUNT) {
-            throw new RuntimeException('A pilot analysis requires an immutable bank of 25 questions.');
+        $questionCount = $questions->count();
+        if ($questionCount === 0) {
+            throw new RuntimeException('A pilot analysis requires an existing versioned question bank.');
         }
 
         $stats = [];
@@ -35,14 +37,20 @@ final class PilotItemAnalysis
         }
 
         $completed = DB::table('quiz_attempts')->where('status', 'completed')
+            ->where('test_code', $testCode)
             ->where('question_revision', $revision)->count();
 
         $rows = DB::table('quiz_attempts as attempt')
             ->join('attempt_answers as answer', 'answer.attempt_id', '=', 'attempt.id')
             ->join('questions as question', 'question.id', '=', 'answer.question_id')
-            ->join('answer_options as option', 'option.id', '=', 'answer.answer_option_id')
+            ->join('answer_options as option', function ($join): void {
+                $join->on('option.id', '=', 'answer.answer_option_id')
+                    ->on('option.question_id', '=', 'question.id');
+            })
             ->where('attempt.status', 'completed')
+            ->where('attempt.test_code', $testCode)
             ->where('attempt.question_revision', $revision)
+            ->where('question.test_code', $testCode)
             ->where('question.bank_version', $revision)
             ->orderBy('attempt.id')
             ->orderBy('question.position')
@@ -59,7 +67,7 @@ final class PilotItemAnalysis
         $attemptsWithAnswers = 0;
         $currentId = null;
         $responses = [];
-        $flush = static function () use (&$responses, &$stats, &$valid, &$invalid, &$attemptsWithAnswers): void {
+        $flush = static function () use (&$responses, &$stats, &$valid, &$invalid, &$attemptsWithAnswers, $questionCount): void {
             if ($responses === []) {
                 return;
             }
@@ -67,8 +75,8 @@ final class PilotItemAnalysis
             $attemptsWithAnswers++;
             $positions = array_map(static fn ($entry): int => (int) $entry->position, $responses);
             $score = array_sum(array_map(static fn ($entry): int => (int) $entry->is_correct, $responses));
-            $isComplete = count($responses) === PuzzleCatalog::COUNT
-                && count(array_unique($positions)) === PuzzleCatalog::COUNT
+            $isComplete = count($responses) === $questionCount
+                && count(array_unique($positions)) === $questionCount
                 && $score === (int) $responses[0]->stored_score;
 
             if (! $isComplete) {
@@ -127,7 +135,7 @@ final class PilotItemAnalysis
 
         return [
             'revision' => $revision,
-            'total_questions' => PuzzleCatalog::COUNT,
+            'total_questions' => $questionCount,
             'completed_attempts' => $completed,
             'valid_complete_attempts' => $valid,
             'invalid_or_inconsistent_attempts' => $invalid + $completed - $attemptsWithAnswers,

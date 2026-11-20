@@ -15,6 +15,9 @@
 .intake-radio{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .intake-choice-inner{display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-width:0;background:#fff;border:2px solid #dce5f2;border-radius:21px;color:#8ea1bb;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease,transform .18s ease}
 .intake-gender-choice .intake-choice-inner{min-height:235px;flex-direction:column;gap:22px;padding:24px}
+.intake-icon{display:block;width:112px;height:112px;object-fit:contain;flex:none;filter:invert(64%) sepia(14%) saturate(640%) hue-rotate(178deg) brightness(95%) contrast(92%)}
+.intake-icon-small{width:26px;height:26px}
+.intake-radio:checked + .intake-choice-inner .intake-icon{filter:invert(34%) sepia(55%) saturate(1200%) hue-rotate(184deg) brightness(100%) contrast(92%)}
 .intake-choice strong{font-size:var(--type-size-17px);font-weight:var(--type-weight-700);color:#152c4d}
 .intake-choice:hover .intake-choice-inner{border-color:#91b5ed;box-shadow:0 7px 28px #0e4e9e11}
 .intake-radio:checked + .intake-choice-inner{border-color:#1a63e7;background:#eff5ff;color:#316abe;box-shadow:inset 0 0 0 1px #1a63e7,0 8px 28px #1655b51a}
@@ -37,7 +40,7 @@
   .intake-heading p{font-size:var(--type-size-14px)}
   .intake-gender{gap:10px}
   .intake-gender-choice .intake-choice-inner{min-height:185px;padding:14px 8px;gap:14px;border-radius:16px}
-  .intake-gender-choice svg{width:55px;height:65px}
+  .intake-gender-choice .intake-icon{width:84px;height:84px}
   .intake-choice strong{font-size:var(--type-size-15px)}
   .intake-unspecified{width:100%}
   .intake-unspecified .intake-choice-inner{min-height:57px}

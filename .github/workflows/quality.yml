@@ -86,6 +86,12 @@ jobs:
           IQ_TEST_SVG_SCREENSHOT_DIR: .incoming/svg-qa
         run: node scripts/svg-visual-qa.mjs
 
+      - name: Mobile artwork raster dimensions and 25-question visual navigation
+        env:
+          IQ_TEST_BASE_URL: http://127.0.0.1:8123
+          IQ_TEST_ARTWORK_SCREENSHOT_DIR: .incoming/quiz-artwork-qa
+        run: node scripts/quiz-artwork-qa.mjs
+
       - name: FAQ animation, keyboard, and layout stability
         env:
           IQ_TEST_BASE_URL: http://127.0.0.1:8123
@@ -101,4 +107,5 @@ jobs:
             .incoming/browser-report.json
             .incoming/browser-screenshots/
             .incoming/svg-qa/
+            .incoming/quiz-artwork-qa/
           retention-days: 7

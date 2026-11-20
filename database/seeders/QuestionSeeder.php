@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Support\PublishedOptionOrder;
 use App\Support\PuzzleCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,8 @@ final class QuestionSeeder extends Seeder
         }
 
         DB::transaction(function () use ($definitions): void {
-            $publishedCount = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count();
+            $publishedCount = DB::table('questions')->where('test_code', PuzzleCatalog::TEST_CODE)
+                ->where('bank_version', PuzzleCatalog::VERSION)->count();
             if ($publishedCount !== 0 && $publishedCount !== PuzzleCatalog::COUNT) {
                 throw new LogicException('A published bank must contain exactly 25 questions.');
             }
@@ -34,6 +36,7 @@ final class QuestionSeeder extends Seeder
                 $position = $index + 1;
                 $version = PuzzleCatalog::VERSION;
                 $fields = [
+                    'test_code' => PuzzleCatalog::TEST_CODE,
                     'bank_version' => $version,
                     'position' => $position,
                     'kind' => $slug,
@@ -43,14 +46,12 @@ final class QuestionSeeder extends Seeder
                     'source' => 'IQ.Profil original vector puzzle v'.$version,
                 ];
                 $answer = $cells[8];
-                $choices = array_values(array_filter(
-                    $candidates,
-                    static fn (int $value): bool => $value !== $answer
-                ));
-                array_splice($choices, ($index * 5 + 2) % 6, 0, [$answer]);
+                // Canonical answer positions must not reveal a six-item cycle.
+                // This release-specific permutation is immutable once published.
+                $choices = PublishedOptionOrder::forQuestion($slug, $candidates);
 
-                $row = DB::table('questions')->where('bank_version', $version)
-                    ->where('position', $position)->first();
+                $row = DB::table('questions')->where('test_code', PuzzleCatalog::TEST_CODE)
+                    ->where('bank_version', $version)->where('position', $position)->first();
 
                 // Never alter a published question: existing attempt_answers refer to its ID.
                 if ($row !== null) {

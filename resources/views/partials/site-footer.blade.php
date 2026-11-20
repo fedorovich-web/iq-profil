@@ -5,7 +5,7 @@
     @else
       <a class="footer-brand" href="{{ route('landing') }}" aria-label="IQ.Профиль — главная">@include('partials.brand')</a>
     @endif
-    <p>Тесты на логическое мышление с графическими заданиями и персональными результатами.</p>
+    <p>Графические тесты на логику и закономерности с разбором решений.</p>
   </div>
   <details class="footer-group">
     <summary>Тесты</summary>

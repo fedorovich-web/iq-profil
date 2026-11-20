@@ -32,13 +32,13 @@ async function finishIntake(page, name = null) {
   if (name) {
     await overflow(page, name + ' gender intake');
     await screenshot(page, name + '-gender-intake');
-    const artwork = await page.locator('.intake-gender svg').evaluateAll(nodes => nodes.map(svg => {
-      const box = svg.getBBox();
-      const bounds = svg.viewBox.baseVal;
-      return box.x >= 0 && box.y >= 0 && box.width > 0 && box.height > 0
-        && box.x + box.width <= bounds.width && box.y + box.height <= bounds.height;
+    const artwork = await page.locator('.intake-gender .intake-icon').evaluateAll(nodes => nodes.map(img => {
+      const bounds = img.getBoundingClientRect();
+      return img.complete && img.naturalWidth > 0 && img.naturalHeight > 0
+        && bounds.width >= 24 && bounds.height >= 24
+        && Math.abs(bounds.width - bounds.height) < 1;
     }));
-    check(artwork.length === 3 && artwork.every(Boolean), name + ' all three intake icons remain inside SVG viewBoxes');
+    check(artwork.length === 3 && artwork.every(Boolean), name + ' all three licensed Material Symbols load and render square');
   }
   await page.locator('.intake-gender-choice').first().click();
   await page.locator('.intake-submit').click();
@@ -77,7 +77,11 @@ async function navigateAndTake(page, name) {
   await waitForQuestion(2);
   check(true, name + ' automatically advanced to question 2');
   check(await page.evaluate(() => window.__qaTimerElement === document.querySelector('#quiz-timer')), name + ' timer stays mounted through AJAX');
-  check(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 2), name + ' quiz fits viewport without document scrolling');
+  check(await page.evaluate(() => {
+    const nav = document.querySelector('.quiz-navigation').getBoundingClientRect();
+    return getComputedStyle(document.body).overflowY !== 'hidden'
+      && document.documentElement.scrollHeight + 2 >= nav.bottom + window.scrollY;
+  }), name + ' quiz may naturally exceed viewport without hiding navigation');
   await page.locator('button[name="navigation"][value="back"]').click();
   await waitForQuestion(1);
   await page.locator('.answer-tile').nth(1).click();

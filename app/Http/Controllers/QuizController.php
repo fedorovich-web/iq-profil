@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\AttemptScoring;
 use App\Support\DemoSubscriptionLifecycle;
+use App\Support\OptionPresentation;
 use App\Support\PuzzleCatalog;
+use App\Support\PuzzleCatalogV5;
+use App\Support\PuzzleCatalogV6;
+use App\Support\PuzzleCatalogV7;
+use App\Support\QuestionBankIntegrity;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +32,7 @@ final class QuizController extends Controller
             // A completed unpaid attempt takes precedence over a newer unfinished one.
             DemoSubscriptionLifecycle::lockOwner($request);
             $query = DB::table('quiz_attempts as a')
+                ->where('a.test_code', PuzzleCatalog::TEST_CODE)
                 ->leftJoin('demo_payments as p', function ($join): void {
                     $join->on('p.attempt_id', '=', 'a.id')->where('p.status', '=', 'succeeded');
                 });
@@ -56,7 +63,13 @@ final class QuizController extends Controller
                 'uuid' => $uuid,
                 'user_id' => $request->user()?->id,
                 'status' => 'in_progress',
+                'test_code' => PuzzleCatalog::TEST_CODE,
                 'question_revision' => PuzzleCatalog::VERSION,
+                'bank_fingerprint' => QuestionBankIntegrity::fingerprint(PuzzleCatalog::TEST_CODE, PuzzleCatalog::VERSION),
+                'option_shuffle_seed' => bin2hex(random_bytes(16)),
+                'question_count' => DB::table('questions')
+                    ->where('test_code', PuzzleCatalog::TEST_CODE)
+                    ->where('bank_version', PuzzleCatalog::VERSION)->count(),
                 'current_position' => 1,
                 'started_at' => now(),
                 'created_at' => now(),
@@ -149,6 +162,10 @@ final class QuizController extends Controller
         }
 
         $this->assertCurrentQuestionBank();
+        if ($attempt->bank_fingerprint !== null) {
+            abort_unless(QuestionBankIntegrity::matches($attempt), 409,
+                'Опубликованный набор вопросов изменился. Дождитесь восстановления версии теста.');
+        }
 
         if ($attempt->gender === null) {
             return redirect()->route('quiz.intake', ['step' => 'gender']);
@@ -165,11 +182,15 @@ final class QuizController extends Controller
                 ->where('id', $attempt->id)->value('quiz_started_at');
         }
 
-        $question = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)
+        $question = DB::table('questions')->where('test_code', $attempt->test_code)
+            ->where('bank_version', $attempt->question_revision)
             ->where('position', $attempt->current_position)->first();
         abort_unless($question !== null, 500, 'Не найден вопрос.');
 
-        $options = DB::table('answer_options')->where('question_id', $question->id)->orderBy('position')->get();
+        $options = OptionPresentation::ordered(
+            DB::table('answer_options')->where('question_id', $question->id)->orderBy('position')->get(),
+            $attempt->option_shuffle_seed
+        );
         $selected = DB::table('attempt_answers')
             ->where('attempt_id', $attempt->id)
             ->where('question_id', $question->id)
@@ -181,7 +202,7 @@ final class QuizController extends Controller
             'cells' => json_decode($question->cells, true, 512, JSON_THROW_ON_ERROR),
             'options' => $options,
             'selected' => $selected,
-            'totalQuestions' => DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count(),
+            'totalQuestions' => (int) $attempt->question_count,
             'answeredQuestions' => DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count(),
             'startedTimestamp' => CarbonImmutable::parse($attempt->quiz_started_at, 'UTC')->getTimestamp(),
             'serverTimestamp' => now()->getTimestamp(),
@@ -197,7 +218,10 @@ final class QuizController extends Controller
         ]);
 
         $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
-        if ($attempt->status !== 'completed' && (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+        if ($attempt->status === 'completed') {
+            return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', $attempt->uuid);
+        }
+        if ((int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
             return $this->start($request);
         }
 
@@ -210,13 +234,26 @@ final class QuizController extends Controller
         $answeredBefore = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
 
         $completed = DB::transaction(function () use ($attempt, $validated): bool {
-            $questionCount = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count();
             $locked = DB::table('quiz_attempts')->where('id', $attempt->id)->lockForUpdate()->first();
             if ($locked->status === 'completed') {
                 return true;
             }
 
-            $question = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)
+            $questionCount = (int) $locked->question_count;
+            abort_unless($questionCount > 0
+                && (string) $locked->test_code === PuzzleCatalog::TEST_CODE
+                && (int) $locked->question_revision === PuzzleCatalog::VERSION
+                && $questionCount === DB::table('questions')
+                    ->where('test_code', $locked->test_code)
+                    ->where('bank_version', $locked->question_revision)->count(), 409,
+                'Состав вопросов изменился. Завершение теста приостановлено.');
+            if ($locked->bank_fingerprint !== null) {
+                abort_unless(QuestionBankIntegrity::matches($locked), 409,
+                    'Опубликованный набор вопросов изменился. Ответы временно не принимаются.');
+            }
+
+            $question = DB::table('questions')->where('test_code', $locked->test_code)
+                ->where('bank_version', $locked->question_revision)
                 ->where('position', $locked->current_position)->first();
             abort_unless($question !== null, 500);
             // Reject stale submissions from another tab or a slow network response.
@@ -276,27 +313,19 @@ final class QuizController extends Controller
                 abort(409, 'Нельзя закончить тест до последнего вопроса.');
             }
 
-            $count = DB::table('attempt_answers')->where('attempt_id', $locked->id)->count();
-            if ($count !== $questionCount) {
-                throw ValidationException::withMessages([
-                    'answer_option_id' => 'Для завершения ответьте на все вопросы.',
+            $correct = AttemptScoring::grade($locked);
+
+            $seconds = max(0, now()->getTimestamp()
+                - CarbonImmutable::parse($locked->quiz_started_at, 'UTC')->getTimestamp());
+
+            DB::table('quiz_attempts')->where('id', $locked->id)
+                ->where('status', 'in_progress')->update([
+                    'status' => 'completed',
+                    'correct_count' => $correct,
+                    'elapsed_seconds' => $seconds,
+                    'completed_at' => now(),
+                    'updated_at' => now(),
                 ]);
-            }
-
-            $correct = DB::table('attempt_answers as a')
-                ->join('answer_options as o', 'o.id', '=', 'a.answer_option_id')
-                ->where('a.attempt_id', $locked->id)
-                ->where('o.is_correct', true)->count();
-
-            $seconds = max(0, (int) abs(CarbonImmutable::parse($locked->quiz_started_at, 'UTC')->diffInSeconds(now())));
-
-            DB::table('quiz_attempts')->where('id', $locked->id)->update([
-                'status' => 'completed',
-                'correct_count' => $correct,
-                'elapsed_seconds' => $seconds,
-                'completed_at' => now(),
-                'updated_at' => now(),
-            ]);
 
             return true;
         }, 3);
@@ -360,28 +389,75 @@ final class QuizController extends Controller
         }
 
         $answers = DB::table('attempt_answers as a')
-            ->join('questions as q', 'q.id', '=', 'a.question_id')
-            ->join('answer_options as selected', 'selected.id', '=', 'a.answer_option_id')
+            ->join('questions as q', function ($join) use ($attempt): void {
+                $join->on('q.id', '=', 'a.question_id')
+                    ->where('q.test_code', '=', $attempt->test_code)
+                    ->where('q.bank_version', '=', $attempt->question_revision);
+            })
+            ->join('answer_options as selected', function ($join): void {
+                $join->on('selected.id', '=', 'a.answer_option_id')
+                    ->on('selected.question_id', '=', 'q.id');
+            })
             ->join('answer_options as correct', function ($join): void {
                 $join->on('correct.question_id', '=', 'q.id')->where('correct.is_correct', '=', true);
             })
             ->where('a.attempt_id', $attempt->id)
             ->orderBy('q.position')
             ->select([
-                'q.position', 'q.kind', 'q.prompt', 'q.cells', 'q.explanation', 'q.bank_version',
-                'selected.graphic_value as selected_value', 'selected.code as selected_code',
-                'correct.graphic_value as correct_value', 'correct.code as correct_code',
+                'q.id as question_id', 'q.position', 'q.kind', 'q.prompt', 'q.cells', 'q.explanation', 'q.bank_version',
+                'selected.id as selected_option_id', 'selected.graphic_value as selected_value', 'selected.code as selected_code',
+                'correct.id as correct_option_id', 'correct.graphic_value as correct_value', 'correct.code as correct_code',
             ])->get();
 
-        // The score denominator belongs to the completed test revision,
-        // not to however many historical answer rows remain accessible.
-        $totalQuestions = (int) $attempt->question_revision >= 3
-            ? PuzzleCatalog::COUNT
-            : ($answers->count() ?: PuzzleCatalog::COUNT);
+        // The answer letters in the report must reproduce exactly what the
+        // user saw, including a per-attempt order and historical fixed labels.
+        if ($answers->isNotEmpty() && $attempt->option_shuffle_seed !== null) {
+            $optionsByQuestion = DB::table('answer_options')
+                ->whereIn('question_id', $answers->pluck('question_id')->all())
+                ->get(['id', 'question_id', 'position', 'code'])
+                ->groupBy('question_id');
 
-        $categoryBreakdown = ((int) $attempt->question_revision >= 3
-            && $answers->count() === PuzzleCatalog::COUNT
-            ? $answers->where('bank_version', (int) $attempt->question_revision) : collect())
+            foreach ($answers as $answer) {
+                $labels = OptionPresentation::labels(
+                    $optionsByQuestion->get($answer->question_id, collect()),
+                    $attempt->option_shuffle_seed
+                );
+                $answer->selected_code = $labels[(int) $answer->selected_option_id] ?? null;
+                $answer->correct_code = $labels[(int) $answer->correct_option_id] ?? null;
+            }
+        }
+
+        // Never use the current catalog's size to grade historical results.
+        // Pre-snapshot attempts use their archived revision only, when available.
+        $archivedCount = DB::table('questions')
+            ->where('test_code', $attempt->test_code)
+            ->where('bank_version', $attempt->question_revision)->count();
+        $totalQuestions = (int) ($attempt->question_count ?: $archivedCount);
+        $totalQuestions = $totalQuestions > 0 ? $totalQuestions : null;
+        $storedCorrect = (int) $attempt->correct_count;
+        $percentage = $totalQuestions !== null && $storedCorrect >= 0 && $storedCorrect <= $totalQuestions
+            ? (int) round($storedCorrect * 100 / $totalQuestions) : null;
+
+        $bankMatchesSnapshot = $attempt->bank_fingerprint === null
+            || ($archivedCount > 0 && QuestionBankIntegrity::matches($attempt));
+
+        // The current renderer is validated only for the two frozen visual
+        // banks. Older revisions keep their numerical result, not a guessed image.
+        $renderableRevision = in_array((int) $attempt->question_revision,
+            [PuzzleCatalog::VERSION, PuzzleCatalogV7::VERSION, PuzzleCatalogV6::VERSION, PuzzleCatalogV5::VERSION], true);
+
+        $validReview = $bankMatchesSnapshot && $renderableRevision
+            && $totalQuestions !== null
+            && $answers->count() === $totalQuestions
+            && $answers->unique('position')->count() === $totalQuestions
+            && $answers->every(static fn ($answer): bool => is_string($answer->selected_code)
+                && $answer->selected_code !== ''
+                && is_string($answer->correct_code)
+                && $answer->correct_code !== '')
+            && DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count() === $totalQuestions
+            && $answers->filter(fn ($answer): bool => $answer->selected_code === $answer->correct_code)->count() === $storedCorrect;
+
+        $categoryBreakdown = ($validReview ? $answers : collect())
             ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
             ->map(function ($group, string $label): array {
                 $total = $group->count();
@@ -395,11 +471,20 @@ final class QuizController extends Controller
                 ];
             })->values()->all();
 
+        $detailStatus = ! $bankMatchesSnapshot
+            ? 'integrity'
+            : ((int) $attempt->question_revision !== PuzzleCatalog::VERSION ? 'legacy' : 'incomplete');
+
         return view('result', [
             'attempt' => $attempt,
+            'detailStatus' => $detailStatus,
             'categoryBreakdown' => $categoryBreakdown,
-            'answerReview' => (int) $attempt->question_revision === PuzzleCatalog::VERSION ? $answers : collect(),
-            'percentage' => (int) round(($attempt->correct_count / max(1, $totalQuestions)) * 100),
+            // Archived graphical revisions keep their review when their saved
+            // question and option rows remain complete and renderable.
+            'answerReview' => $validReview && $answers->every(static fn ($answer): bool => PuzzleCatalog::find($answer->kind) !== null
+                || in_array($answer->kind, ['dots', 'polygon', 'rotation', 'stripes', 'position'], true))
+                ? $answers : collect(),
+            'percentage' => $percentage,
             'totalQuestions' => $totalQuestions,
         ]);
     }
@@ -410,7 +495,8 @@ final class QuizController extends Controller
      */
     private function flashProgressMilestone(Request $request, object $attempt, int $answeredBefore): void
     {
-        $total = DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count();
+        $total = DB::table('questions')->where('test_code', PuzzleCatalog::TEST_CODE)
+            ->where('bank_version', PuzzleCatalog::VERSION)->count();
         if ($total < 3) {
             return;
         }
@@ -441,9 +527,10 @@ final class QuizController extends Controller
     private function assertCurrentQuestionBank(): void
     {
         abort_unless(
-            DB::table('questions')->where('bank_version', PuzzleCatalog::VERSION)->count() === PuzzleCatalog::COUNT,
+            DB::table('questions')->where('test_code', PuzzleCatalog::TEST_CODE)
+                ->where('bank_version', PuzzleCatalog::VERSION)->count() === PuzzleCatalog::COUNT,
             503,
-            'Банк должен содержать ровно 25 вопросов.'
+            'Банк вопросов не соответствует опубликованной ревизии.'
         );
     }
 
@@ -460,7 +547,8 @@ final class QuizController extends Controller
         if (! is_string($uuid)) {
             throw new NotFoundHttpException;
         }
-        $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->first();
+        $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)
+            ->where('test_code', PuzzleCatalog::TEST_CODE)->first();
         if ($attempt === null) {
             throw new NotFoundHttpException;
         }

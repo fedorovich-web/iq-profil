@@ -313,6 +313,8 @@ final class QuizFlowTest extends TestCase
         DB::table('quiz_attempts')->where('uuid', $uuid)->update([
             'status' => 'completed',
             'question_revision' => PuzzleCatalog::VERSION - 1,
+            'bank_fingerprint' => null,
+            'option_shuffle_seed' => null,
             'correct_count' => 7,
             'elapsed_seconds' => 58,
             'completed_at' => now(),

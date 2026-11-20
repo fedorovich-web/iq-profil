@@ -13,7 +13,7 @@
 
   <header class="intake-heading">
     <h1 id="intake-title">{{ $step === 'gender' ? 'Для начала укажите пол' : 'Укажите вашу возрастную группу' }}</h1>
-    <p>{{ $step === 'gender' ? 'Не влияет на количество правильных ответов. Вы можете не указывать пол.' : 'Возраст поможет в будущем сравнивать результаты с подходящими нормативными данными.' }}</p>
+    <p>{{ $step === 'gender' ? 'Не влияет на количество правильных ответов. Вы можете не указывать пол.' : 'Возрастная группа сохраняется для будущего анализа. Сейчас она не влияет на подсчёт правильных ответов.' }}</p>
   </header>
 
   <form method="POST" action="{{ route('quiz.intake.save', ['step' => $step]) }}" class="intake-form">
@@ -24,21 +24,21 @@
         <label class="intake-choice intake-gender-choice">
           <input class="intake-radio" type="radio" name="gender" value="male" {{ old('gender', $attempt->gender) === 'male' ? 'checked' : '' }} required>
           <span class="intake-choice-inner">
-            <svg viewBox="0 0 96 112" width="72" height="84" aria-hidden="true" focusable="false"><circle cx="48" cy="18" r="13" fill="currentColor"/><path d="M32 39h32a14 14 0 0 1 14 14v31a7 7 0 0 1-14 0V58h-3v44a8 8 0 0 1-16 0V79h-2v23a8 8 0 0 1-16 0V58h-3v26a7 7 0 0 1-14 0V53a14 14 0 0 1 14-14Z" fill="currentColor"/></svg>
+            <img class="intake-icon" src="{{ asset('assets/icons/intake/man.svg') }}" width="84" height="84" alt="" loading="eager" decoding="async">
             <strong>Мужчина</strong>
           </span>
         </label>
         <label class="intake-choice intake-gender-choice">
           <input class="intake-radio" type="radio" name="gender" value="female" {{ old('gender', $attempt->gender) === 'female' ? 'checked' : '' }} required>
           <span class="intake-choice-inner">
-            <svg viewBox="0 0 96 112" width="72" height="84" aria-hidden="true" focusable="false"><circle cx="48" cy="18" r="13" fill="currentColor"/><path d="M35 39h26a14 14 0 0 1 13 9l13 35a7 7 0 0 1-13 5l-7-20 7 29H56v7a8 8 0 0 1-16 0v-7H22l7-29-7 20a7 7 0 0 1-13-5l13-35a14 14 0 0 1 13-9Z" fill="currentColor"/></svg>
+            <img class="intake-icon" src="{{ asset('assets/icons/intake/woman.svg') }}" width="84" height="84" alt="" loading="eager" decoding="async">
             <strong>Женщина</strong>
           </span>
         </label>
         <label class="intake-choice intake-unspecified">
           <input class="intake-radio" type="radio" name="gender" value="unspecified" {{ old('gender', $attempt->gender) === 'unspecified' ? 'checked' : '' }} required>
           <span class="intake-choice-inner">
-            <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c.4-4.6 3-7 7.5-7s7.1 2.4 7.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <img class="intake-icon intake-icon-small" src="{{ asset('assets/icons/intake/person-off.svg') }}" width="26" height="26" alt="" loading="eager" decoding="async">
             <strong>Не хочу указывать</strong>
           </span>
         </label>
@@ -61,6 +61,6 @@
       <button class="btn btn-primary intake-submit" type="submit">{{ $step === 'gender' ? 'Далее' : 'Начать тест' }}</button>
     </div>
   </form>
-  <p class="intake-footnote">Два подготовительных шага не входят в 25 вопросов. Таймер начнёт отсчёт с первого задания.</p>
+  <p class="intake-footnote">Подготовительные шаги не влияют на результат. Таймер начнёт отсчёт с первого задания.</p>
 </section>
 @endsection

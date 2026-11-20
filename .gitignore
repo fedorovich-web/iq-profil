@@ -56,6 +56,8 @@ Thumbs.db
 !/docs/development.md
 !/docs/legal-prelaunch-checklist.md
 !/docs/psychometric-audit-v4.md
+!/docs/seo-content-audit-v4.md
+!/docs/engineering-scoring-audit-2026-11-20.md
 !/docs/images/
 /docs/images/*
 !/docs/images/iq-profil-home-2026-11-19.png
@@ -71,4 +73,5 @@ Thumbs.db
 !/scripts/seo-content-qa.mjs
 !/scripts/svg-contact-sheet.php
 !/scripts/svg-visual-qa.mjs
+!/scripts/quiz-artwork-qa.mjs
 

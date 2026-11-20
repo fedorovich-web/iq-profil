@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Support\PuzzleCatalog;
+use App\Support\QuestionBankIntegrity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -44,36 +45,55 @@ final class AccountController extends Controller
         abort_unless($attempt !== null && $attempt->status === 'completed', 404);
         abort_unless(DB::table('demo_payments')->where('attempt_id', $attempt->id)->where('status', 'succeeded')->exists(), 403);
 
-        $isCurrent = (int) $attempt->question_revision >= 3;
-        $categoryBreakdown = collect();
+        $archivedCount = DB::table('questions')->where('test_code', $attempt->test_code)
+            ->where('bank_version', $attempt->question_revision)->count();
+        $questionCount = (int) ($attempt->question_count ?: $archivedCount);
 
-        if ($isCurrent) {
-            $categoryBreakdown = DB::table('attempt_answers as a')
-                ->join('questions as q', 'q.id', '=', 'a.question_id')
-                ->join('answer_options as selected', 'selected.id', '=', 'a.answer_option_id')
-                ->where('a.attempt_id', $attempt->id)
-                ->select('q.kind', 'selected.is_correct')
-                ->get()
-                ->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
+        $answers = DB::table('attempt_answers as a')
+            ->join('questions as q', function ($join) use ($attempt): void {
+                $join->on('q.id', '=', 'a.question_id')
+                    ->where('q.test_code', '=', $attempt->test_code)
+                    ->where('q.bank_version', '=', $attempt->question_revision);
+            })
+            ->join('answer_options as selected', function ($join): void {
+                $join->on('selected.id', '=', 'a.answer_option_id')
+                    ->on('selected.question_id', '=', 'q.id');
+            })
+            ->where('a.attempt_id', $attempt->id)
+            ->select('q.kind', 'selected.is_correct')
+            ->get();
+
+        $hasValidBreakdown = $questionCount > 0
+            && ($attempt->bank_fingerprint === null
+                || ($archivedCount > 0 && QuestionBankIntegrity::matches($attempt)))
+            && $answers->count() === $questionCount
+            && DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count() === $questionCount
+            && $answers->where('is_correct', 1)->count() === (int) $attempt->correct_count;
+
+        $categoryBreakdown = $hasValidBreakdown
+            ? $answers->groupBy(fn ($item): string => PuzzleCatalog::categoryFor($item->kind))
                 ->map(fn ($group): array => [
                     'correct' => $group->where('is_correct', 1)->count(),
                     'total' => $group->count(),
-                ]);
-        }
+                ])
+            : collect();
 
-        return response()->streamDownload(function () use ($attempt, $categoryBreakdown, $isCurrent): void {
+        return response()->streamDownload(function () use ($attempt, $categoryBreakdown, $hasValidBreakdown, $questionCount): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, ['IQ.Профиль — сводка прохождения', $attempt->uuid], ';');
+            fputcsv($output, ['Код теста', $attempt->test_code], ';');
+            fputcsv($output, ['Ревизия вопросов', $attempt->question_revision], ';');
+            fputcsv($output, ['Всего заданий', $questionCount > 0 ? $questionCount : 'Нет подтверждённых данных'], ';');
             fputcsv($output, ['Правильных решений', $attempt->correct_count], ';');
             fputcsv($output, ['Время, секунд', $attempt->elapsed_seconds], ';');
-            if ($isCurrent) {
+            if ($hasValidBreakdown) {
                 fputcsv($output, ['Категория', 'Правильно', 'Всего'], ';');
                 foreach ($categoryBreakdown as $label => $group) {
                     fputcsv($output, [$label, $group['correct'], $group['total']], ';');
                 }
             } else {
-                fputcsv($output, ['Примечание', 'Попытка относится к прежнему набору заданий; подробная разбивка недоступна.'], ';');
+                fputcsv($output, ['Примечание', 'Подробная разбивка недоступна: архивные ответы отсутствуют или не прошли проверку целостности.'], ';');
             }
             fclose($output);
         }, 'iq-profil-'.$attempt->uuid.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

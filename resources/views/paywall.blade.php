@@ -10,12 +10,12 @@
   <div class="paywall-copy">
     <span class="pill">Результат готов</span>
     <h1>Ваш результат<br>уже готов</h1>
-    <p class="lead">Узнайте, как вы справились с заданиями: сколько ответов оказались верными, сколько времени заняло прохождение и какие направления дались лучше.</p>
+    <p class="lead">Посмотрите результат теста, затраченное время и разбор выбранных ответов. Отчёт составляется на основе ваших решений.</p>
     <div class="paywall-benefits">
       <div class="benefit"><span class="benefit-icon"><img src="{{ asset('assets/icons/admin/analytics.avif') }}" width="34" height="34" alt="" loading="eager"></span><div><strong>Ваш результат</strong><p>Количество верных ответов и процент выполнения теста</p></div></div>
       <div class="benefit"><span class="benefit-icon"><img src="{{ asset('assets/icons/client/layers.avif') }}" width="34" height="34" alt="" loading="eager"></span><div><strong>Анализ по направлениям</strong><p>Результаты по доступным категориям графических задач</p></div></div>
       <div class="benefit"><span class="benefit-icon"><img src="{{ asset('assets/icons/client/history.avif') }}" width="34" height="34" alt="" loading="eager"></span><div><strong>Время прохождения</strong><p>Продолжительность вашей попытки</p></div></div>
-      <div class="benefit"><span class="benefit-icon"><img src="{{ asset('assets/icons/client/reports.avif') }}" width="34" height="34" alt="" loading="eager"></span><div><strong>Персональный отчёт</strong><p>Сводка, основанная на ваших ответах</p></div></div>
+      <div class="benefit"><span class="benefit-icon"><img src="{{ asset('assets/icons/client/reports.avif') }}" width="34" height="34" alt="" loading="eager"></span><div><strong>Разбор ваших решений</strong><p>@if((int) $attempt->question_revision === App\Support\PuzzleCatalog::VERSION) Каждая матрица с вашим ответом, правильным вариантом и объяснением @else Сводка по сохранённой версии теста @endif</p></div></div>
     </div>
   </div>
   <div class="paywall-right">

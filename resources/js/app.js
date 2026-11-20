@@ -99,7 +99,9 @@ function bindQuizForm(form) {
         }
 
         const oldContainer = document.querySelector('.quiz-container');
-        const savedScrollTop = oldContainer?.scrollTop ?? 0;
+        // Preserve the document viewport while replacing only the question. The
+        // quiz is allowed to extend beyond 100dvh; it must not jump to the top.
+        const savedScrollY = window.scrollY;
 
         try {
             const response = await fetch(form.action, {
@@ -153,7 +155,7 @@ function bindQuizForm(form) {
             }
 
             document.title = documentFragment.title;
-            oldContainer.scrollTop = savedScrollTop;
+            window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
             bindQuizForm(oldContainer.querySelector('#answer-form'));
             showQuizMilestone(documentFragment.querySelector('[data-quiz-milestone]'));
         } catch (error) {

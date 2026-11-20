@@ -7,6 +7,7 @@
 @php
   $score = (int) $attempt->correct_count;
   $summary = match (true) {
+    $percentage === null => 'Количество заданий архивной попытки не удалось подтвердить. Сохранённый балл показан без недостоверного процента.',
     $percentage >= 80 => 'Вы уверенно справились с большинством задач этого набора.',
     $percentage >= 60 => 'Вы нашли большую часть закономерностей. Некоторые задания потребовали более сложных преобразований.',
     $percentage >= 40 => 'Вы распознали часть закономерностей. Повторное прохождение поможет потренировать поиск правил.',
@@ -19,29 +20,31 @@
   <header class="result-head">
     <span class="pill">Персональный отчёт</span>
     <h1 id="result-title">Ваш результат</h1>
-    <p class="lead">Персональный отчёт по выполненным заданиям на логику и поиск закономерностей.</p>
+    <p class="lead">Сводка ваших ответов на графические матрицы: результат, время, группы заданий и объяснения решений.</p>
     <p class="result-report-date">Пройдено {{ \Carbon\Carbon::parse($attempt->completed_at)->format('d.m.Y в H:i') }}</p>
   </header>
 
   <section class="result-graph-card result-score-hero" aria-labelledby="result-chart-title">
     <div class="result-score-copy">
       <span class="result-score-caption">Решено правильно</span>
-      <h2 id="result-chart-title"><strong>{{ $score }}</strong> <span>из {{ $totalQuestions }}</span></h2>
+      <h2 id="result-chart-title"><strong>{{ $score }}</strong> <span>из {{ $totalQuestions ?? '—' }}</span></h2>
       <p>{{ $summary }}</p>
     </div>
     <div class="result-chart">
-      <div class="result-score-percentage">{{ $percentage }}<span>%</span></div>
-      <div class="chart-track" role="progressbar" aria-label="Доля верно решённых заданий" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $percentage }}">
-        <div style="width: {{ $percentage }}%"></div>
-      </div>
-      <p class="result-score-legend">Доля правильных решений в этой попытке</p>
+      <div class="result-score-percentage">{{ $percentage ?? '—' }}@if($percentage !== null)<span>%</span>@endif</div>
+      @if($percentage !== null)
+        <div class="chart-track" role="progressbar" aria-label="Доля верно решённых заданий" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $percentage }}">
+          <div style="width: {{ $percentage }}%"></div>
+        </div>
+      @endif
+      <p class="result-score-legend">{{ $percentage !== null ? 'Доля правильных решений в этой попытке' : 'Процент недоступен для неподтверждённой архивной ревизии' }}</p>
     </div>
   </section>
 
   <div class="stat-grid result-stat-grid" role="group" aria-label="Сводка прохождения">
     <article class="stat-card">
       <span>Всего заданий</span>
-      <strong>{{ $totalQuestions }}</strong>
+      <strong>{{ $totalQuestions ?? '—' }}</strong>
     </article>
     <article class="stat-card">
       <span>Правильных решений</span>
@@ -57,7 +60,7 @@
     <section class="result-category-section" aria-labelledby="category-title">
       <div class="result-section-intro">
         <h2 id="category-title">По направлениям заданий</h2>
-        <p>Сравните результаты по категориям заданий.</p>
+        <p>Пять групп задач показывают, какие закономерности удалось найти. Это не отдельные показатели IQ.</p>
       </div>
       <div class="result-category-grid">
         @foreach ($categoryBreakdown as $category)
@@ -74,14 +77,20 @@
       </div>
     </section>
   @else
-    <p class="result-legacy-note">Эта попытка была завершена до обновления графических заданий. Общий результат сохранён; разбивка по новым категориям для неё недоступна.</p>
+    @if($detailStatus === 'integrity')
+      <p class="result-legacy-note">Детальный разбор недоступен: проверка целостности опубликованного набора заданий не пройдена. Сохранённое количество правильных ответов не пересчитывается.</p>
+    @elseif($detailStatus === 'legacy')
+      <p class="result-legacy-note">Эта попытка была завершена до обновления графических заданий. Общий результат сохранён; разбивка по новым категориям для неё недоступна.</p>
+    @else
+      <p class="result-legacy-note">Детальный разбор недоступен: данные ответов неполные или не совпадают с сохранённым результатом. Сохранённый балл не изменён.</p>
+    @endif
   @endif
 
 
   @if($answerReview->isNotEmpty())
     <section class="result-review-section" aria-labelledby="review-heading">
       <div class="result-section-intro">
-        <h2 id="review-heading">Разбор всех {{ $totalQuestions }} заданий</h2>
+        <h2 id="review-heading">Разбор решений</h2>
         <p>Ваш выбор, правильная фигура и проверяемое объяснение каждой закономерности.</p>
       </div>
       <div class="result-review-list">
@@ -126,19 +135,19 @@
     <h2 id="interpretation-title">Как понимать результат</h2>
     <div class="interpretation-grid">
       <div>
-        <h3>Что вы узнали</h3>
-        <p>Сколько визуальных задач удалось решить и сколько времени заняло прохождение.</p>
+        <h3>Как начисляются баллы</h3>
+        <p>За правильное решение начисляется один балл. Максимум равен числу заданий пройденной версии теста; ошибки и время не изменяют количество баллов.</p>
       </div>
       <div>
         <h3>Что означает процент</h3>
-        <p>Это точно рассчитанная доля правильных решений в этом наборе, а не IQ и не процентиль относительно населения.</p>
+        <p>Доля верных решений относительно общего числа заданий, выраженная в процентах. Это не стандартизированный IQ и не процентиль относительно населения.</p>
       </div>
       <div>
-        <h3>Что можно сделать дальше</h3>
-        <p>Пройти тест повторно и потренировать поиск закономерностей. Задания могут повторяться, что способно повлиять на следующий результат.</p>
+        <h3>Как использовать отчёт</h3>
+        <p>Изучите разбор ответов, если он доступен для этой версии теста. При повторном прохождении задания могут повторяться и влиять на результат.</p>
       </div>
     </div>
-    <p class="result-interpretation-note">Результаты отражают выполнение заданий сервиса и не являются стандартизированной оценкой IQ.</p>
+    <p class="result-interpretation-note">Нормативный IQ и возрастные процентили не рассчитываются: для них нужны стандартизация теста и подходящие нормативные данные.</p>
   </section>
 
   <div class="result-actions">
