@@ -51,6 +51,7 @@ services:
     # Router names do not conflict with Dokploy's generated labels.
     labels:
       traefik.enable: "true"
+      traefik.docker.network: "dokploy-network"
       traefik.http.routers.iqprofil-www-http.rule: "Host(`www.flatero.ru`)"
       traefik.http.routers.iqprofil-www-http.entrypoints: "web"
       traefik.http.routers.iqprofil-www-http.middlewares: "iqprofil-www-redirect"
