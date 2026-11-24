@@ -23,7 +23,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class QuizController extends Controller
 {
-    private const INACTIVITY_HOURS = 2;
+    private const MAX_ATTEMPT_HOURS = 2;
 
     public function start(Request $request): RedirectResponse
     {
@@ -33,10 +33,10 @@ final class QuizController extends Controller
             // Two simultaneous clicks must not create two unpaid attempts.
             // A completed unpaid attempt takes precedence over a newer unfinished one.
             DemoSubscriptionLifecycle::lockOwner($request);
-            // Expire abandoned, started attempts without deleting their answers.
+            // A started attempt has a fixed deadline; later activity cannot extend it.
             $stale = DB::table('quiz_attempts')->where('test_code', PuzzleCatalog::TEST_CODE)
                 ->where('status', 'in_progress')->whereNotNull('quiz_started_at')
-                ->where('updated_at', '<=', now()->subHours(self::INACTIVITY_HOURS));
+                ->where('quiz_started_at', '<=', now()->subHours(self::MAX_ATTEMPT_HOURS));
             if ($request->user()) {
                 $stale->where('user_id', $request->user()->id);
             } else {
@@ -226,8 +226,7 @@ final class QuizController extends Controller
             'answeredQuestions' => DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count(),
             'startedTimestamp' => CarbonImmutable::parse($attempt->quiz_started_at, 'UTC')->getTimestamp(),
             'serverTimestamp' => now()->getTimestamp(),
-            'expiresTimestamp' => CarbonImmutable::parse($attempt->updated_at, 'UTC')
-                ->addHours(self::INACTIVITY_HOURS)->getTimestamp(),
+            'expiresTimestamp' => $this->deadline($attempt)->getTimestamp(),
         ]);
     }
 
@@ -555,8 +554,13 @@ final class QuizController extends Controller
     {
         return $attempt->status === 'expired'
             || ($attempt->status === 'in_progress' && $attempt->quiz_started_at !== null
-                && CarbonImmutable::parse($attempt->updated_at, 'UTC')
-                    ->addHours(self::INACTIVITY_HOURS)->lessThanOrEqualTo(now()));
+                && $this->deadline($attempt)->lessThanOrEqualTo(now()));
+    }
+
+    private function deadline(object $attempt): CarbonImmutable
+    {
+        return CarbonImmutable::parse($attempt->quiz_started_at, 'UTC')
+            ->addHours(self::MAX_ATTEMPT_HOURS);
     }
 
     private function assertCurrentQuestionBank(): void
