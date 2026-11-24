@@ -125,3 +125,9 @@ php artisan iq:pilot-report --revision=4
 ```
 
 Только чтение БД. Вывод включает частоты A–F, процент решивших каждое задание и, когда достаточно записей, предварительную корреляцию с результатом остальных 24 вопросов. Вывод не содержит индивидуальных ответов, не строит нормативы и не вычисляет IQ. При интерпретации учитывайте самоотбор и повторные прохождения.
+
+## Quiz timing and completion
+
+The quiz has no elapsed-time deadline. The browser counts visible active time using a monotonic clock, pauses when hidden or after 15 minutes without interaction, and ignores long scheduler gaps. It retains unsaved timing locally per attempt. Server checkpoints are saved together with answer navigation; no background HTTP polling is required. Across browsers/devices only the last server checkpoint is guaranteed. The recorded duration is telemetry, not a scoring input; malformed values never block answers. The counter is capped at 120:00+ without limiting completion. Legacy unfinished attempts with no duration are estimated from short intervals between stored answers; long gaps are omitted. The original completed records are not rewritten. Admin and account history are sorted by completion or latest activity, not creation ID.
+
+Regression coverage: tests/Feature/QuizFlowTest.php and scripts/quiz-timer-qa.mjs (included in quality gates). Use an isolated database for all browser and feature tests.

@@ -2,55 +2,113 @@
 document.documentElement.classList.add('js-ready');
 const timer = document.querySelector('#quiz-timer');
 let timerInterval = null;
-let timerAnchor = null;
+let timerState = null;
 
-function stopQuizTimer() {
+function timerStorageKey(uuid) {
+    return 'iq-active-time-v1:' + uuid;
+}
+
+function readLocalTimer(uuid) {
+    try {
+        const saved = Number(localStorage.getItem(timerStorageKey(uuid)));
+        return Number.isFinite(saved) && saved >= 0 ? saved : 0;
+    } catch {
+        return 0;
+    }
+}
+
+function saveLocalTimer() {
+    if (!timerState) return;
+    try {
+        const { uuid, milliseconds, max } = timerState;
+        localStorage.setItem(timerStorageKey(uuid), String(Math.min(max, Math.max(milliseconds, readLocalTimer(uuid)))));
+    } catch {
+        // Storage may be disabled. Server checkpoints still persist on answers.
+    }
+}
+
+function renderQuizTimer() {
+    if (!timerState) return;
+    const seconds = Math.floor(timerState.milliseconds / 1000);
+    const text = String(Math.floor(seconds / 60)).padStart(2, '0') + ':'
+        + String(seconds % 60).padStart(2, '0')
+        + (timerState.milliseconds >= timerState.max ? '+' : '');
+    if (timer.textContent !== text) timer.textContent = text;
+}
+
+function advanceQuizTimer() {
+    if (!timerState || timerState.tick === null) return;
+    const now = performance.now();
+    const delta = now - timerState.tick;
+    // A suspended browser or sleeping computer must not add hours on wake.
+    if (delta >= 0 && delta <= 5000) {
+        const activeDelta = Math.max(0, Math.min(delta, timerState.activity + timerState.idle - timerState.tick));
+        timerState.milliseconds = Math.min(timerState.max, timerState.milliseconds + activeDelta);
+    }
+    timerState.tick = now;
+    renderQuizTimer();
+    if (now >= timerState.activity + timerState.idle || timerState.milliseconds >= timerState.max) {
+        pauseQuizTimer();
+    }
+}
+
+function pauseQuizTimer() {
     if (timerInterval !== null) {
         window.clearInterval(timerInterval);
         timerInterval = null;
     }
-}
-
-function updateQuizTimer() {
-    if (!timerAnchor) return;
-    const serverNow = timerAnchor.server + (performance.now() - timerAnchor.monotonic) / 1000;
-    if (serverNow >= timerAnchor.expires) {
-        timer.textContent = 'Истекло';
-        stopQuizTimer();
-        return;
-    }
-    const seconds = Math.max(0, Math.floor(serverNow - timerAnchor.started));
-    const minutes = Math.floor(seconds / 60);
-    timer.textContent = (minutes >= 60
-        ? String(Math.floor(minutes / 60)).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0')
-        : String(minutes).padStart(2, '0'))
-        + ':' + String(seconds % 60).padStart(2, '0');
+    if (timerState) timerState.tick = null;
+    saveLocalTimer();
 }
 
 function resumeQuizTimer() {
-    stopQuizTimer();
-    if (!timerAnchor || document.hidden) return;
-    updateQuizTimer();
-    if (timer.textContent !== 'Истекло') {
-        timerInterval = window.setInterval(updateQuizTimer, 1000);
-    }
+    if (!timerState || document.hidden || timerInterval !== null || timerState.milliseconds >= timerState.max) return;
+    timerState.tick = performance.now();
+    timerState.activity = timerState.tick;
+    timerInterval = window.setInterval(advanceQuizTimer, 1000);
 }
 
 function syncQuizTimer(source) {
     if (!timer || !source) return;
-    const started = Number(source.dataset.start);
-    const server = Number(source.dataset.server);
-    const expires = Number(source.dataset.expires);
-    if (![started, server, expires].every(Number.isFinite) || started <= 0 || server <= 0 || expires <= 0) return;
-    timerAnchor = { started, server, expires, monotonic: performance.now() };
+    const uuid = source.dataset.attempt;
+    const elapsed = Number(source.dataset.elapsed) * 1000;
+    const max = Number(source.dataset.max) * 1000;
+    const idle = Number(source.dataset.idle) * 1000;
+    if (!uuid || ![elapsed, max, idle].every(Number.isFinite) || elapsed < 0 || max <= 0 || idle <= 0) return;
+    advanceQuizTimer();
+    const previous = timerState?.uuid === uuid ? timerState.milliseconds : 0;
+    pauseQuizTimer();
+    timerState = {
+        uuid, max, idle, tick: null, activity: 0,
+        milliseconds: Math.min(max, Math.max(elapsed, previous, readLocalTimer(uuid))),
+    };
+    renderQuizTimer();
     resumeQuizTimer();
 }
 
 if (timer) {
     syncQuizTimer(timer);
-    document.addEventListener('visibilitychange', resumeQuizTimer);
-    window.addEventListener('pagehide', stopQuizTimer);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            advanceQuizTimer();
+            pauseQuizTimer();
+        } else {
+            resumeQuizTimer();
+        }
+    });
+    window.addEventListener('pagehide', () => {
+        advanceQuizTimer();
+        pauseQuizTimer();
+    });
     window.addEventListener('pageshow', resumeQuizTimer);
+    const activity = () => {
+        if (!timerState || document.hidden) return;
+        advanceQuizTimer();
+        timerState.activity = performance.now();
+        resumeQuizTimer();
+    };
+    document.addEventListener('pointerdown', activity, { passive: true });
+    document.addEventListener('keydown', activity);
 }
 
 // Keep the question on the same page. Only the question, its answers and
@@ -134,6 +192,11 @@ function bindQuizForm(form) {
 
         const submitter = event.submitter;
         const payload = new FormData(form);
+        if (timerState && payload.get('attempt_uuid') === timerState.uuid) {
+            advanceQuizTimer();
+            payload.set('timer_elapsed', String(Math.floor(timerState.milliseconds / 1000)));
+            saveLocalTimer();
+        }
         if (submitter && submitter.name === 'navigation') {
             payload.set('navigation', submitter.value);
         }
@@ -165,6 +228,12 @@ function bindQuizForm(form) {
             const destination = new URL(response.url, window.location.href);
             if (destination.origin !== window.location.origin ||
                 destination.pathname !== '/quiz') {
+                if (timerState && destination.origin === window.location.origin &&
+                    destination.pathname.startsWith('/paywall/')) {
+                    pauseQuizTimer();
+                    try { localStorage.removeItem(timerStorageKey(timerState.uuid)); } catch {}
+                    timerState = null;
+                }
                 window.location.assign(destination.href);
                 return;
             }

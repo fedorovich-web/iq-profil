@@ -76,4 +76,5 @@ Thumbs.db
 !/scripts/svg-visual-qa.mjs
 !/scripts/quiz-artwork-qa.mjs
 !/scripts/quiz-ajax-atomicity-qa.mjs
+!/scripts/quiz-timer-qa.mjs
 

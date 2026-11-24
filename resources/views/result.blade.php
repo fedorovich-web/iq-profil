@@ -13,8 +13,7 @@
     $percentage >= 40 => 'Вы распознали часть закономерностей. Повторное прохождение поможет потренировать поиск правил.',
     default => 'Это отправная точка для тренировки визуальных закономерностей. Результат относится только к этому набору.',
   };
-  $minutes = intdiv((int) $attempt->elapsed_seconds, 60);
-  $seconds = (int) $attempt->elapsed_seconds % 60;
+  $duration = App\Support\AttemptTimer::format($attempt->elapsed_seconds === null ? null : (int) $attempt->elapsed_seconds);
 @endphp
 <section class="result-container" aria-labelledby="result-title">
   <header class="result-head">
@@ -52,7 +51,7 @@
     </article>
     <article class="stat-card">
       <span>Продолжительность</span>
-      <strong>{{ sprintf('%02d:%02d', $minutes, $seconds) }}</strong>
+      <strong>{{ $duration }}</strong>
     </article>
   </div>
 

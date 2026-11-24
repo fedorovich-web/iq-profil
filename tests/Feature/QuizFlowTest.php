@@ -9,6 +9,7 @@ use App\Support\PuzzleCatalog;
 use Database\Seeders\QuestionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 final class QuizFlowTest extends TestCase
@@ -352,112 +353,192 @@ final class QuizFlowTest extends TestCase
         $this->assertDatabaseCount('attempt_answers', 1);
     }
 
-    public function test_abandoned_attempt_starts_a_fresh_timer_and_preserves_history(): void
+    public function test_old_attempt_continues_with_saved_time_and_records_completion_after_days(): void
     {
-        $this->actingAs(User::factory()->create());
-        $old = $this->startAttempt();
-        $questionId = DB::table('questions')->where('position', 1)->value('id');
-        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
-        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
-            ->assertRedirect('/quiz');
+        $user = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($user);
+        $uuid = $this->startAttempt();
+        $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->first();
+        $this->travel(30)->seconds();
+        $first = DB::table('questions')->where('position', 1)->first();
+        $option = DB::table('answer_options')->where('question_id', $first->id)->value('id');
+        $this->post('/quiz/answer', [
+            'navigation' => 'next', 'question_id' => $first->id,
+            'answer_option_id' => $option, 'attempt_uuid' => $uuid, 'timer_elapsed' => 30,
+        ])->assertRedirect('/quiz');
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'elapsed_seconds' => 30, 'current_position' => 2]);
 
         $this->travel(4)->days();
-        // An older deployment may have touched updated_at on a stale attempt.
-        DB::table('quiz_attempts')->where('uuid', $old)->update(['updated_at' => now()]);
+        // The previous bug used this old start and counted the entire pause.
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update(['updated_at' => now()]);
         $this->post('/attempts')->assertRedirect('/quiz');
-        $new = (string) session('active_attempt');
-        $this->assertNotSame($old, $new);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'status' => 'expired', 'current_position' => 2]);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $new, 'current_position' => 1, 'quiz_started_at' => null]);
-        $this->assertDatabaseCount('attempt_answers', 1);
+        $this->assertSame($uuid, session('active_attempt'));
+        $this->get('/quiz')->assertOk()->assertViewHas('elapsedSeconds', 30);
+        $this->assertDatabaseCount('quiz_attempts', 1);
+        $this->withSession(['active_attempt' => null, 'owned_attempts' => []]);
+        $this->get('/quiz')->assertRedirect('/quiz');
+        $this->assertSame($uuid, session('active_attempt'));
+        $this->get('/quiz')->assertOk()->assertViewHas('elapsedSeconds', 30);
 
-        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
-        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
-        $view = $this->get('/quiz')->assertOk();
-        $this->assertEqualsWithDelta($view->viewData('serverTimestamp'), $view->viewData('startedTimestamp'), 1);
-        $this->assertEqualsWithDelta(7200, $view->viewData('expiresTimestamp') - $view->viewData('serverTimestamp'), 1);
+        for ($position = 2; $position <= 25; $position++) {
+            $this->travel(2)->seconds();
+            $questionId = DB::table('questions')->where('position', $position)->value('id');
+            $answer = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+            $this->post('/quiz/answer', [
+                'navigation' => $position === 25 ? 'finish' : 'next',
+                'question_id' => $questionId, 'answer_option_id' => $answer,
+                'attempt_uuid' => $uuid, 'timer_elapsed' => 30 + ($position - 1) * 2,
+            ])->assertRedirect($position === 25 ? '/paywall/'.$uuid : '/quiz');
+        }
 
-        $this->post('/quiz/answer', [
-            'navigation' => 'next', 'answer_option_id' => $optionId, 'attempt_uuid' => $old,
-        ])->assertStatus(409);
-        $this->assertDatabaseCount('attempt_answers', 1);
+        $this->assertDatabaseCount('attempt_answers', 25);
+        $this->assertDatabaseHas('quiz_attempts', [
+            'uuid' => $uuid, 'user_id' => $user->id, 'status' => 'completed', 'elapsed_seconds' => 78,
+        ]);
+        // A newer ID may have been created before this old attempt finished.
+        $other = (array) DB::table('quiz_attempts')->where('id', $attempt->id)->first();
+        unset($other['id']);
+        $other['uuid'] = (string) Str::uuid();
+        $other['user_id'] = null;
+        $other['started_at'] = now()->subDay();
+        $other['completed_at'] = now()->subDay();
+        $other['updated_at'] = now()->subDay();
+        DB::table('quiz_attempts')->insert($other);
+        $this->assertSame($attempt->id, $this->get('/admin')->assertOk()->viewData('attempts')->first()->id);
+        $this->assertSame($uuid, $this->get('/account?section=history')->assertOk()->viewData('attempts')->first()->uuid);
+        $this->post('/attempts')->assertRedirect('/paywall/'.$uuid);
+        $this->post('/checkout/'.$uuid.'/confirm')->assertRedirect('/result/'.$uuid);
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $this->assertNotSame($uuid, session('active_attempt'));
         $this->travelBack();
     }
 
-    public function test_short_resume_keeps_timer_and_answers_do_not_extend_fixed_deadline(): void
+    public function test_legacy_elapsed_time_is_reconstructed_without_idle_days(): void
     {
         $uuid = $this->startAttempt();
-        $start = $this->get('/quiz')->viewData('startedTimestamp');
-        $this->travel(15)->minutes();
-        $this->post('/attempts')->assertRedirect('/quiz');
-        $this->assertSame($uuid, session('active_attempt'));
-        $view = $this->get('/quiz')->assertOk();
-        $this->assertSame($start, $view->viewData('startedTimestamp'));
-        $this->assertEqualsWithDelta(900, $view->viewData('serverTimestamp') - $start, 1);
-
-        $questionId = DB::table('questions')->where('position', 1)->value('id');
-        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
-        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
-            ->assertRedirect('/quiz');
-        $this->travel(104)->minutes();
-        $view = $this->get('/quiz')->assertOk();
-        $this->assertSame($start, $view->viewData('startedTimestamp'));
-        $this->assertSame($start + 7200, $view->viewData('expiresTimestamp'));
-        $this->assertSame($uuid, session('active_attempt'));
-
-        $this->travel(1)->minutes();
-        $this->get('/quiz')->assertRedirect('/quiz');
-        $this->assertNotSame($uuid, session('active_attempt'));
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'status' => 'expired']);
+        $attempt = DB::table('quiz_attempts')->where('uuid', $uuid)->first();
+        $this->travel(30)->seconds();
+        $question = DB::table('questions')->where('position', 1)->first();
+        $option = DB::table('answer_options')->where('question_id', $question->id)->value('id');
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $option])->assertRedirect('/quiz');
+        $this->travel(4)->days();
+        DB::table('quiz_attempts')->where('id', $attempt->id)->update(['elapsed_seconds' => null, 'updated_at' => now()]);
+        $this->get('/quiz')->assertOk()->assertViewHas('elapsedSeconds', 30);
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'elapsed_seconds' => 30, 'current_position' => 2]);
         $this->travelBack();
     }
 
-    public function test_recently_updated_four_day_old_attempt_is_replaced_on_direct_quiz_reload(): void
+    public function test_previously_expired_attempt_with_answers_is_recovered_instead_of_empty_replacement(): void
     {
         $this->actingAs(User::factory()->create());
         $old = $this->startAttempt();
         $questionId = DB::table('questions')->where('position', 1)->value('id');
-        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
-        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $optionId])
-            ->assertRedirect('/quiz');
+        $option = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $option])->assertRedirect('/quiz');
+        DB::table('quiz_attempts')->where('uuid', $old)->update(['status' => 'expired']);
+        $row = (array) DB::table('quiz_attempts')->where('uuid', $old)->first();
+        unset($row['id']);
+        $row['uuid'] = (string) Str::uuid();
+        $row['status'] = 'in_progress';
+        $row['current_position'] = 1;
+        $row['elapsed_seconds'] = 0;
+        DB::table('quiz_attempts')->insert($row);
 
-        DB::table('quiz_attempts')->where('uuid', $old)->update([
-            'quiz_started_at' => now()->subHours(92),
-            'updated_at' => now(),
-        ]);
-
-        $this->get('/quiz')->assertRedirect('/quiz');
-        $new = (string) session('active_attempt');
-        $this->assertNotSame($old, $new);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'status' => 'expired', 'current_position' => 2]);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $new, 'current_position' => 1, 'quiz_started_at' => null]);
+        $this->post('/attempts')->assertRedirect('/quiz');
+        $this->assertSame($old, session('active_attempt'));
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'status' => 'in_progress', 'current_position' => 2]);
         $this->assertDatabaseCount('attempt_answers', 1);
-        $this->get('/quiz')->assertRedirect('/quiz/intake/gender');
-        $this->post('/quiz/intake/gender', ['gender' => 'unspecified'])->assertRedirect('/quiz/intake/age');
-        $this->post('/quiz/intake/age', ['age_group' => '25_34'])->assertRedirect('/quiz');
-        $view = $this->get('/quiz')->assertOk();
-        $this->assertEqualsWithDelta($view->viewData('serverTimestamp'), $view->viewData('startedTimestamp'), 1);
+        $this->get('/quiz')->assertOk();
     }
 
-    public function test_expired_attempt_rejects_answer_even_when_recently_updated(): void
+    public function test_explicit_resume_keeps_requested_eligible_attempt(): void
     {
+        $this->actingAs(User::factory()->create());
         $old = $this->startAttempt();
-        $questionId = DB::table('questions')->where('position', 1)->value('id');
-        $optionId = DB::table('answer_options')->where('question_id', $questionId)->value('id');
-        DB::table('quiz_attempts')->where('uuid', $old)->update([
-            'quiz_started_at' => now()->subHours(92),
-            'updated_at' => now(),
-        ]);
+        DB::table('quiz_attempts')->where('uuid', $old)->update(['status' => 'expired']);
+        $row = (array) DB::table('quiz_attempts')->where('uuid', $old)->first();
+        unset($row['id']);
+        $row['uuid'] = (string) Str::uuid();
+        $row['status'] = 'in_progress';
+        DB::table('quiz_attempts')->insert($row);
 
+        $this->get('/attempts/'.$old.'/resume')->assertRedirect('/quiz');
+        $this->assertSame($old, session('active_attempt'));
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'status' => 'in_progress']);
+        $this->get('/quiz')->assertOk();
+    }
+
+    public function test_timer_checkpoints_are_bounded_and_never_decrease(): void
+    {
+        $uuid = $this->startAttempt();
+        $this->travel(10)->seconds();
+        $questionId = DB::table('questions')->where('position', 1)->value('id');
+        $option = DB::table('answer_options')->where('question_id', $questionId)->value('id');
         $this->post('/quiz/answer', [
-            'navigation' => 'next',
-            'question_id' => $questionId,
-            'answer_option_id' => $optionId,
-            'attempt_uuid' => $old,
+            'navigation' => 'back', 'answer_option_id' => $option, 'timer_elapsed' => 7200,
         ])->assertRedirect('/quiz');
-        $this->assertDatabaseCount('attempt_answers', 0);
-        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $old, 'status' => 'expired']);
-        $this->assertNotSame($old, session('active_attempt'));
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'elapsed_seconds' => 10]);
+        $this->post('/quiz/answer', ['navigation' => 'back', 'timer_elapsed' => 1])->assertRedirect('/quiz');
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'elapsed_seconds' => 10]);
+        $this->travel(4)->days();
+        $this->get('/quiz')->assertOk()->assertViewHas('elapsedSeconds', 10);
+        $this->travelBack();
+    }
+
+    public function test_invalid_timer_telemetry_cannot_prevent_completion(): void
+    {
+        $uuid = $this->startAttempt();
+        $this->travel(3)->hours();
+
+        for ($position = 1; $position <= 25; $position++) {
+            $questionId = DB::table('questions')->where('position', $position)->value('id');
+            $answer = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+            $this->post('/quiz/answer', [
+                'navigation' => $position === 25 ? 'finish' : 'next',
+                'question_id' => $questionId, 'answer_option_id' => $answer,
+                'attempt_uuid' => $uuid, 'timer_elapsed' => $position === 25 ? ['invalid'] : 999999,
+            ])->assertRedirect($position === 25 ? '/paywall/'.$uuid : '/quiz');
+        }
+
+        $this->assertDatabaseCount('attempt_answers', 25);
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'status' => 'completed', 'elapsed_seconds' => 0]);
+        $this->travelBack();
+    }
+
+    public function test_tracking_limit_does_not_expire_attempt_or_prevent_finishing(): void
+    {
+        $uuid = $this->startAttempt();
+        $this->travel(3)->hours();
+        DB::table('quiz_attempts')->where('uuid', $uuid)->update(['elapsed_seconds' => 7200]);
+        $this->get('/quiz')->assertOk()->assertViewHas('elapsedSeconds', 7200)->assertSee('120:00+');
+        for ($position = 1; $position <= 25; $position++) {
+            $questionId = DB::table('questions')->where('position', $position)->value('id');
+            $answer = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+            $this->post('/quiz/answer', [
+                'navigation' => $position === 25 ? 'finish' : 'next',
+                'question_id' => $questionId, 'answer_option_id' => $answer,
+                'attempt_uuid' => $uuid, 'timer_elapsed' => 7200,
+            ])->assertRedirect($position === 25 ? '/paywall/'.$uuid : '/quiz');
+        }
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'status' => 'completed', 'elapsed_seconds' => 7200]);
+        $this->travelBack();
+    }
+
+    public function test_no_javascript_timer_does_not_include_long_pause(): void
+    {
+        $uuid = $this->startAttempt();
+        $this->travel(25)->seconds();
+        $questionId = DB::table('questions')->where('position', 1)->value('id');
+        $option = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $option])->assertRedirect('/quiz');
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'elapsed_seconds' => 25]);
+        $this->get('/quiz')->assertOk();
+        $this->travel(4)->days();
+        $questionId = DB::table('questions')->where('position', 2)->value('id');
+        $option = DB::table('answer_options')->where('question_id', $questionId)->value('id');
+        $this->post('/quiz/answer', ['navigation' => 'next', 'answer_option_id' => $option])->assertRedirect('/quiz');
+        $this->assertDatabaseHas('quiz_attempts', ['uuid' => $uuid, 'elapsed_seconds' => 25, 'current_position' => 3]);
+        $this->travelBack();
     }
 
     public function test_unpaid_completed_attempt_blocks_new_attempt_until_demo_confirmation(): void

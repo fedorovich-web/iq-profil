@@ -30,20 +30,20 @@ final class AccountController extends Controller
         if ($section === 'overview') {
             $latest = $this->attemptsQuery($user->id)
                 ->where('q.status', 'completed')->where('p.status', 'succeeded')
-                ->orderByDesc('q.started_at')->first();
+                ->orderByDesc('q.completed_at')->orderByDesc('q.id')->first();
             $attempts = $this->attemptsQuery($user->id)
-                ->orderByDesc('q.started_at')->limit(3)->get();
+                ->orderByRaw('COALESCE(q.completed_at, q.updated_at, q.started_at) DESC')->orderByDesc('q.id')->limit(3)->get();
             $reports = $this->attemptsQuery($user->id)
                 ->where('q.status', 'completed')->where('p.status', 'succeeded')
-                ->orderByDesc('q.started_at')->limit(3)->get();
+                ->orderByDesc('q.completed_at')->orderByDesc('q.id')->limit(3)->get();
         } elseif ($section === 'history') {
             $attempts = $this->attemptsQuery($user->id)
-                ->orderByDesc('q.started_at')
+                ->orderByRaw('COALESCE(q.completed_at, q.updated_at, q.started_at) DESC')->orderByDesc('q.id')
                 ->paginate(15, ['*'], 'historyPage')->withQueryString();
         } elseif ($section === 'reports') {
             $reports = $this->attemptsQuery($user->id)
                 ->where('q.status', 'completed')->where('p.status', 'succeeded')
-                ->orderByDesc('q.started_at')
+                ->orderByDesc('q.completed_at')->orderByDesc('q.id')
                 ->paginate(15, ['*'], 'reportsPage')->withQueryString();
         }
 

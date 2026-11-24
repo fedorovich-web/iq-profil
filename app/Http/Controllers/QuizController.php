@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Support\AttemptScoring;
+use App\Support\AttemptTimer;
 use App\Support\DemoSubscriptionLifecycle;
 use App\Support\OptionPresentation;
 use App\Support\PuzzleCatalog;
@@ -12,7 +13,6 @@ use App\Support\PuzzleCatalogV5;
 use App\Support\PuzzleCatalogV6;
 use App\Support\PuzzleCatalogV7;
 use App\Support\QuestionBankIntegrity;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,27 +23,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class QuizController extends Controller
 {
-    private const MAX_ATTEMPT_HOURS = 2;
-
-    public function start(Request $request): RedirectResponse
+    public function start(Request $request, ?string $preferredUuid = null): RedirectResponse
     {
         $this->assertCurrentQuestionBank();
 
-        $attempt = DB::transaction(function () use ($request): object {
+        $attempt = DB::transaction(function () use ($request, $preferredUuid): object {
             // Two simultaneous clicks must not create two unpaid attempts.
             // A completed unpaid attempt takes precedence over a newer unfinished one.
             DemoSubscriptionLifecycle::lockOwner($request);
-            // A started attempt has a fixed deadline; later activity cannot extend it.
-            $stale = DB::table('quiz_attempts')->where('test_code', PuzzleCatalog::TEST_CODE)
-                ->where('status', 'in_progress')->whereNotNull('quiz_started_at')
-                ->where('quiz_started_at', '<=', now()->subHours(self::MAX_ATTEMPT_HOURS));
-            if ($request->user()) {
-                $stale->where('user_id', $request->user()->id);
-            } else {
-                $stale->whereNull('user_id')->whereIn('uuid', $request->session()->get('owned_attempts', []));
-            }
-            $stale->update(['status' => 'expired', 'updated_at' => now()]);
-
             $query = DB::table('quiz_attempts as a')
                 ->where('a.test_code', PuzzleCatalog::TEST_CODE)
                 ->leftJoin('demo_payments as p', function ($join): void {
@@ -56,18 +43,28 @@ final class QuizController extends Controller
                 $query->whereNull('a.user_id')->whereIn('a.uuid', $request->session()->get('owned_attempts', []));
             }
 
-            $blocked = $query->where(function ($query): void {
+            $lastCompletedId = (clone $query)->where('a.status', 'completed')->max('a.id') ?? 0;
+            $blocked = $query->where(function ($query) use ($lastCompletedId): void {
                 $query->where(function ($query): void {
                     $query->where('a.status', 'completed')->whereNull('p.id');
-                })->orWhere(function ($query): void {
-                    $query->where('a.status', 'in_progress')
-                        ->where('a.question_revision', PuzzleCatalog::VERSION);
+                })->orWhere(function ($query) use ($lastCompletedId): void {
+                    $query->where('a.question_revision', PuzzleCatalog::VERSION)
+                        ->where('a.id', '>', $lastCompletedId)
+                        ->whereIn('a.status', ['in_progress', 'expired']);
                 });
-            })->orderByRaw("CASE WHEN a.status = 'completed' THEN 0 ELSE 1 END")
+            })->orderByRaw("CASE WHEN a.status = 'completed' THEN 0 WHEN a.uuid = ? THEN 1 WHEN EXISTS (SELECT 1 FROM attempt_answers AS aa WHERE aa.attempt_id = a.id) THEN 2 ELSE 3 END", [$preferredUuid ?? ''])
                 ->orderByDesc('a.id')
-                ->select('a.uuid', 'a.status')->first();
+                ->select('a.id', 'a.uuid', 'a.status')->first();
 
             if ($blocked !== null) {
+                // Recover the most advanced eligible attempt affected by the old
+                // expiry policy. A completed result always remains immutable.
+                if ($blocked->status === 'expired') {
+                    DB::table('quiz_attempts')->where('id', $blocked->id)
+                        ->where('status', 'expired')->update(['status' => 'in_progress']);
+                    $blocked->status = 'in_progress';
+                }
+
                 return $blocked;
             }
 
@@ -106,17 +103,12 @@ final class QuizController extends Controller
     public function resume(Request $request, string $uuid): RedirectResponse
     {
         $attempt = $this->attempt($request, $uuid);
-        if ($attempt->status !== 'completed' && ($this->isExpired($attempt)
-            || (int) $attempt->question_revision !== PuzzleCatalog::VERSION)) {
-            return $this->start($request);
+        if ($attempt->status !== 'completed') {
+            return $this->start($request, $uuid);
         }
         $request->session()->put('active_attempt', $uuid);
 
-        if ($attempt->status === 'completed') {
-            return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $uuid]);
-        }
-
-        return redirect()->route('quiz.show');
+        return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $uuid]);
     }
 
     public function intake(Request $request, string $step): View|RedirectResponse
@@ -125,7 +117,7 @@ final class QuizController extends Controller
         if ($attempt->status === 'completed') {
             return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', $attempt->uuid);
         }
-        if ($this->isExpired($attempt) || (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+        if ($attempt->status !== 'in_progress' || (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
             return $this->start($request);
         }
         if ($step === 'age' && $attempt->gender === null) {
@@ -141,7 +133,7 @@ final class QuizController extends Controller
     public function saveIntake(Request $request, string $step): RedirectResponse
     {
         $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
-        if ($this->isExpired($attempt)) {
+        if ($attempt->status === 'expired') {
             return $this->start($request);
         }
         abort_unless($attempt->status === 'in_progress'
@@ -170,10 +162,15 @@ final class QuizController extends Controller
 
     public function show(Request $request): View|RedirectResponse
     {
-        $attempt = $this->attempt($request, $request->session()->get('active_attempt'));
-        if ($attempt->status !== 'completed' && ($this->isExpired($attempt)
-            || (int) $attempt->question_revision !== PuzzleCatalog::VERSION)) {
+        $uuid = $request->session()->get('active_attempt');
+        if (! is_string($uuid) && ($request->user() || $request->session()->get('owned_attempts', []) !== [])) {
             return $this->start($request);
+        }
+
+        $attempt = $this->attempt($request, $uuid);
+        if ($attempt->status !== 'completed' && ($attempt->status !== 'in_progress'
+            || (int) $attempt->question_revision !== PuzzleCatalog::VERSION)) {
+            return $this->start($request, $attempt->uuid);
         }
         if ($attempt->status === 'completed') {
             return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', ['uuid' => $attempt->uuid]);
@@ -197,7 +194,7 @@ final class QuizController extends Controller
             $now = now();
             DB::table('quiz_attempts')->where('id', $attempt->id)
                 ->where('status', 'in_progress')->whereNull('quiz_started_at')
-                ->update(['quiz_started_at' => $now, 'updated_at' => $now]);
+                ->update(['quiz_started_at' => $now, 'elapsed_seconds' => 0, 'updated_at' => $now]);
             $attempt = DB::table('quiz_attempts')->where('id', $attempt->id)->first();
             abort_unless($attempt->status === 'in_progress' && $attempt->quiz_started_at !== null, 409);
         }
@@ -216,6 +213,14 @@ final class QuizController extends Controller
             ->where('question_id', $question->id)
             ->value('answer_option_id');
 
+        $elapsed = AttemptTimer::saved($attempt);
+        if ($attempt->elapsed_seconds === null) {
+            DB::table('quiz_attempts')->where('id', $attempt->id)->where('status', 'in_progress')
+                ->whereNull('elapsed_seconds')->update(['elapsed_seconds' => $elapsed]);
+            $elapsed = (int) DB::table('quiz_attempts')->where('id', $attempt->id)->value('elapsed_seconds');
+        }
+        $request->session()->put('quiz_timer_view', ['uuid' => $attempt->uuid, 'at' => now()->getTimestamp()]);
+
         return view('quiz', [
             'attempt' => $attempt,
             'question' => $question,
@@ -224,9 +229,9 @@ final class QuizController extends Controller
             'selected' => $selected,
             'totalQuestions' => (int) $attempt->question_count,
             'answeredQuestions' => DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count(),
-            'startedTimestamp' => CarbonImmutable::parse($attempt->quiz_started_at, 'UTC')->getTimestamp(),
-            'serverTimestamp' => now()->getTimestamp(),
-            'expiresTimestamp' => $this->deadline($attempt)->getTimestamp(),
+            'elapsedSeconds' => $elapsed,
+            'timerMaxSeconds' => AttemptTimer::MAX_SECONDS,
+            'timerIdleSeconds' => AttemptTimer::IDLE_SECONDS,
         ]);
     }
 
@@ -243,7 +248,14 @@ final class QuizController extends Controller
         if ($attempt->status === 'completed') {
             return redirect()->route($this->hasReportAccess($attempt->id) ? 'result' : 'paywall', $attempt->uuid);
         }
-        if ($this->isExpired($attempt) || (int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
+        if ($attempt->status === 'expired') {
+            $redirect = $this->start($request, $attempt->uuid);
+            if ($request->session()->get('active_attempt') !== $attempt->uuid) {
+                return $redirect;
+            }
+            $attempt = $this->attempt($request, $attempt->uuid);
+        }
+        if ((int) $attempt->question_revision !== PuzzleCatalog::VERSION) {
             return $this->start($request);
         }
         if (isset($validated['attempt_uuid']) && $validated['attempt_uuid'] !== $attempt->uuid) {
@@ -258,12 +270,19 @@ final class QuizController extends Controller
 
         $answeredBefore = DB::table('attempt_answers')->where('attempt_id', $attempt->id)->count();
 
-        $completed = DB::transaction(function () use ($attempt, $validated): bool {
+        $view = $request->session()->get('quiz_timer_view');
+        $reported = AttemptTimer::reported($request->input('timer_elapsed'));
+        $completed = DB::transaction(function () use ($attempt, $validated, $view, $reported, $request): bool {
             $locked = DB::table('quiz_attempts')->where('id', $attempt->id)->lockForUpdate()->first();
+            abort_unless($locked !== null, 404);
+            $owned = $request->user()
+                ? (int) $locked->user_id === (int) $request->user()->id
+                : $locked->user_id === null && in_array($locked->uuid, $request->session()->get('owned_attempts', []), true);
+            abort_unless($owned, 404);
             if ($locked->status === 'completed') {
                 return true;
             }
-            abort_unless($locked->status === 'in_progress' && ! $this->isExpired($locked), 409);
+            abort_unless($locked->status === 'in_progress', 409);
 
             $questionCount = (int) $locked->question_count;
             abort_unless($questionCount > 0
@@ -286,6 +305,8 @@ final class QuizController extends Controller
             if (isset($validated['question_id']) && (int) $validated['question_id'] !== (int) $question->id) {
                 abort(409, 'Вопрос уже изменился. Обновите тест.');
             }
+
+            $seconds = AttemptTimer::checkpoint($locked, $reported, $view, AttemptTimer::saved($locked));
 
             if (isset($validated['answer_option_id'])) {
                 $option = DB::table('answer_options')
@@ -310,6 +331,7 @@ final class QuizController extends Controller
             if ($validated['navigation'] === 'back') {
                 DB::table('quiz_attempts')->where('id', $locked->id)->update([
                     'current_position' => max(1, (int) $locked->current_position - 1),
+                    'elapsed_seconds' => $seconds,
                     'updated_at' => now(),
                 ]);
 
@@ -329,6 +351,7 @@ final class QuizController extends Controller
             if ($validated['navigation'] === 'next') {
                 DB::table('quiz_attempts')->where('id', $locked->id)->update([
                     'current_position' => min($questionCount, (int) $locked->current_position + 1),
+                    'elapsed_seconds' => $seconds,
                     'updated_at' => now(),
                 ]);
 
@@ -340,9 +363,6 @@ final class QuizController extends Controller
             }
 
             $correct = AttemptScoring::grade($locked);
-
-            $seconds = max(0, now()->getTimestamp()
-                - CarbonImmutable::parse($locked->quiz_started_at, 'UTC')->getTimestamp());
 
             DB::table('quiz_attempts')->where('id', $locked->id)
                 ->where('status', 'in_progress')->update([
@@ -548,19 +568,6 @@ final class QuizController extends Controller
                 break;
             }
         }
-    }
-
-    private function isExpired(object $attempt): bool
-    {
-        return $attempt->status === 'expired'
-            || ($attempt->status === 'in_progress' && $attempt->quiz_started_at !== null
-                && $this->deadline($attempt)->lessThanOrEqualTo(now()));
-    }
-
-    private function deadline(object $attempt): CarbonImmutable
-    {
-        return CarbonImmutable::parse($attempt->quiz_started_at, 'UTC')
-            ->addHours(self::MAX_ATTEMPT_HOURS);
     }
 
     private function assertCurrentQuestionBank(): void

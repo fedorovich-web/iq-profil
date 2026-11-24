@@ -81,6 +81,11 @@ jobs:
           IQ_TEST_REPORT_FILE: .incoming/browser-report.json
         run: node scripts/browser-e2e.mjs
 
+      - name: Active quiz timer and resume lifecycle
+        env:
+          IQ_TEST_BASE_URL: http://127.0.0.1:8123
+        run: node scripts/quiz-timer-qa.mjs
+
       - name: Reject truncated AJAX quiz responses without corrupting the visible question
         env:
           IQ_TEST_BASE_URL: http://127.0.0.1:8123

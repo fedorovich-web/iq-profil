@@ -45,8 +45,10 @@ final class AdminController extends Controller
         if ($section === 'overview' || $section === 'attempts') {
             $query = DB::table('quiz_attempts as a')
                 ->leftJoin('users as u', 'u.id', '=', 'a.user_id')
-                ->select('a.id', 'a.uuid', 'a.status', 'a.correct_count', 'a.started_at', 'a.completed_at',
+                ->select('a.id', 'a.uuid', 'a.status', 'a.correct_count', 'a.started_at', 'a.completed_at', 'a.updated_at', 'a.question_count',
                     'u.name as user_name', 'u.email as user_email')
+                ->selectSub(DB::table('attempt_answers')->selectRaw('count(*)')->whereColumn('attempt_id', 'a.id'), 'answered_count')
+                ->orderByRaw('COALESCE(a.completed_at, a.updated_at, a.started_at) DESC')
                 ->orderByDesc('a.id');
             $attempts = $section === 'attempts'
                 ? $query->paginate(10, ['*'], 'attemptsPage')->withQueryString()
