@@ -6,7 +6,7 @@
 <section class="quiz-container" aria-labelledby="question-heading">
   <div class="quiz-toolbar">
     <span class="quiz-counter">Вопрос <strong>{{ $question->position }}</strong> из {{ $totalQuestions }}</span>
-    <div class="quiz-timer" role="timer" aria-label="Продолжительность теста"><span class="quiz-timer-icon" aria-hidden="true"><img src="{{ asset('assets/icons/client/history.avif') }}" width="20" height="20" alt=""></span><time id="quiz-timer" data-start="{{ $startedTimestamp }}" data-server="{{ $serverTimestamp }}">00:00</time></div>
+    <div class="quiz-timer" role="timer" aria-label="Продолжительность теста"><span class="quiz-timer-icon" aria-hidden="true"><img src="{{ asset('assets/icons/client/history.avif') }}" width="20" height="20" alt=""></span><time id="quiz-timer" data-start="{{ $startedTimestamp }}" data-server="{{ $serverTimestamp }}" data-expires="{{ $expiresTimestamp }}">00:00</time></div>
   </div>
   <div class="progress" role="progressbar" aria-label="Прогресс тестирования" aria-valuemin="0" aria-valuemax="{{ $totalQuestions }}" aria-valuenow="{{ $answeredQuestions }}"><span style="width: {{ $totalQuestions > 0 ? $answeredQuestions / $totalQuestions * 100 : 0 }}%"></span></div>
   <div class="quiz-headline">
@@ -28,6 +28,7 @@
     <form id="answer-form" action="{{ route('quiz.answer') }}" method="POST">
       <input type="hidden" name="_token" value="{{ csrf_token() }}">
       <input type="hidden" name="question_id" value="{{ $question->id }}">
+      <input type="hidden" name="attempt_uuid" value="{{ $attempt->uuid }}">
       <div class="answer-grid" role="radiogroup" aria-label="Варианты ответа">
       @foreach ($options as $option)
         <label class="answer-tile">

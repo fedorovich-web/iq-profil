@@ -8,7 +8,7 @@
           <td data-label="Пользователь">{{ $attempt->user_name ?: 'Гость' }}</td>
           <td data-label="Тест">Графический тест</td>
           <td data-label="Результат">{{ $attempt->status === 'completed' ? $attempt->correct_count.' верно' : '—' }}</td>
-          <td data-label="Статус"><span @class(['portal-tag', 'portal-tag-green' => $attempt->status === 'completed', 'portal-tag-neutral' => $attempt->status !== 'completed'])>{{ $attempt->status === 'completed' ? 'Завершён' : 'В процессе' }}</span></td>
+          <td data-label="Статус"><span @class(['portal-tag', 'portal-tag-green' => $attempt->status === 'completed', 'portal-tag-neutral' => $attempt->status !== 'completed'])>{{ match($attempt->status) { 'completed' => 'Завершён', 'expired' => 'Не завершён', default => 'В процессе' } }}</span></td>
           <td data-label="Дата">{{ \Carbon\Carbon::parse($attempt->started_at)->format('d.m.Y H:i') }}</td>
         </tr>
       @empty

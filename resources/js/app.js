@@ -1,16 +1,56 @@
 // IQ.Профиль — progressive enhancement. Quiz and authentication remain functional without JS.
 document.documentElement.classList.add('js-ready');
 const timer = document.querySelector('#quiz-timer');
+let timerInterval = null;
+let timerAnchor = null;
+
+function stopQuizTimer() {
+    if (timerInterval !== null) {
+        window.clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function updateQuizTimer() {
+    if (!timerAnchor) return;
+    const serverNow = timerAnchor.server + (performance.now() - timerAnchor.monotonic) / 1000;
+    if (serverNow >= timerAnchor.expires) {
+        timer.textContent = 'Истекло';
+        stopQuizTimer();
+        return;
+    }
+    const seconds = Math.max(0, Math.floor(serverNow - timerAnchor.started));
+    const minutes = Math.floor(seconds / 60);
+    timer.textContent = (minutes >= 60
+        ? String(Math.floor(minutes / 60)).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0')
+        : String(minutes).padStart(2, '0'))
+        + ':' + String(seconds % 60).padStart(2, '0');
+}
+
+function resumeQuizTimer() {
+    stopQuizTimer();
+    if (!timerAnchor || document.hidden) return;
+    updateQuizTimer();
+    if (timer.textContent !== 'Истекло') {
+        timerInterval = window.setInterval(updateQuizTimer, 1000);
+    }
+}
+
+function syncQuizTimer(source) {
+    if (!timer || !source) return;
+    const started = Number(source.dataset.start);
+    const server = Number(source.dataset.server);
+    const expires = Number(source.dataset.expires);
+    if (![started, server, expires].every(Number.isFinite) || started <= 0 || server <= 0 || expires <= 0) return;
+    timerAnchor = { started, server, expires, monotonic: performance.now() };
+    resumeQuizTimer();
+}
+
 if (timer) {
-    const startedAt = Number(timer.dataset.start) * 1000;
-    const serverOffset = Number(timer.dataset.server) * 1000 - Date.now();
-    const updateTimer = () => {
-        const seconds = Math.max(0, Math.floor((Date.now() + serverOffset - startedAt) / 1000));
-        timer.textContent = String(Math.floor(seconds / 60)).padStart(2, '0')
-            + ':' + String(seconds % 60).padStart(2, '0');
-    };
-    updateTimer();
-    setInterval(updateTimer, 1000);
+    syncQuizTimer(timer);
+    document.addEventListener('visibilitychange', resumeQuizTimer);
+    window.addEventListener('pagehide', stopQuizTimer);
+    window.addEventListener('pageshow', resumeQuizTimer);
 }
 
 // Keep the question on the same page. Only the question, its answers and
@@ -150,9 +190,10 @@ function bindQuizForm(form) {
             const progressBar = progress?.querySelector('span');
             const nextProgressBar = nextProgress?.querySelector('span');
             const nextForm = nextContainer.querySelector('#answer-form');
+            const nextTimer = nextContainer.querySelector('#quiz-timer');
 
             if (!counter || !nextCounter || !progress || !nextProgress
-                || !progressBar || !nextProgressBar || !nextForm) {
+                || !progressBar || !nextProgressBar || !nextForm || !nextTimer) {
                 throw new Error('Incomplete quiz state in response');
             }
 
@@ -161,6 +202,7 @@ function bindQuizForm(form) {
             progress.setAttribute('aria-valuenow', nextProgress.getAttribute('aria-valuenow'));
             progress.setAttribute('aria-valuemax', nextProgress.getAttribute('aria-valuemax'));
             progressBar.style.width = nextProgressBar.style.width;
+            syncQuizTimer(nextTimer);
 
             document.title = documentFragment.title;
             window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
